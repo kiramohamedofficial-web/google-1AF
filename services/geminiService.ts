@@ -1,56 +1,57 @@
+
 import { Question, ExamResult, SubjectScore } from '../types';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+
+const questionSchema = {
+    type: Type.OBJECT,
+    properties: {
+        subject: { type: Type.STRING, description: "The subject of the question in Arabic" },
+        text: { type: Type.STRING, description: "The question text in Arabic" },
+        options: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "An array of exactly 4 possible string answers in Arabic"
+        },
+        correctOptionIndex: { type: Type.INTEGER, description: "The 0-based index of the correct answer in the options array" }
+    },
+    required: ["subject", "text", "options", "correctOptionIndex"]
+};
+
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
-    const schema = {
-        type: Type.ARRAY,
-        items: {
-            type: Type.OBJECT,
-            properties: {
-                id: { type: Type.STRING, description: 'A unique identifier for the question, like "q1".' },
-                subject: { type: Type.STRING, description: 'The subject of the question.' },
-                text: { type: Type.STRING, description: 'The question text.' },
-                options: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING },
-                    description: 'An array of exactly 4 possible string answers.'
-                },
-                correctOptionIndex: { type: Type.INTEGER, description: 'The 0-based index of the correct answer in the options array.' }
-            },
-            required: ['id', 'subject', 'text', 'options', 'correctOptionIndex']
-        }
-    };
-
+    
     const prompt = `
-        أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.
-        يجب أن تكون الأسئلة مناسبة تمامًا لمستوى طالب في "${gradeLevel}" وتتبع المنهج التعليمي المصري.
-        يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات لكل سؤال، وإجابة واحدة صحيحة فقط.
-        نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
-        وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.
-        يجب أن يكون الناتج حصريًا بصيغة JSON مطابقة للمخطط المحدد.
+        System instruction: أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.
+        
+        Task: أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.
+        - يجب أن تكون الأسئلة مناسبة تمامًا لمستوى طالب في "${gradeLevel}" وتتبع المنهج التعليمي المصري.
+        - يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات لكل سؤال، وإجابة واحدة صحيحة فقط.
+        - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
+        - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.
     `;
 
     try {
-        console.log("Generating exam questions with prompt:", prompt);
+        console.log("Generating exam questions with @google/genai...");
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
-                systemInstruction: "أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.",
-                responseMimeType: "application/json",
-                responseSchema: schema
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: questionSchema
+                }
             }
         });
 
-        const jsonText = response.text.trim();
-        const generatedQuestions = JSON.parse(jsonText);
+        const generatedQuestions = JSON.parse(response.text);
 
         if (!Array.isArray(generatedQuestions)) {
             throw new Error("API did not return a valid array of questions.");
