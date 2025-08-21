@@ -1,59 +1,67 @@
 
 import { Question, ExamResult, SubjectScore } from '../types';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
     
-    const prompt = `
-        System instruction: أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.
-        
-        Task: أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.
-        - يجب أن تكون الأسئلة مناسبة تمامًا لمستوى طالب في "${gradeLevel}" وتتبع المنهج التعليمي المصري.
-        - يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات لكل سؤال، وإجابة واحدة صحيحة فقط.
-        - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
-        - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.
+    const questionSchema = {
+        type: Type.OBJECT,
+        properties: {
+            subject: { type: Type.STRING, description: 'المادة الدراسية للسؤال باللغة العربية' },
+            text: { type: Type.STRING, description: 'نص السؤال باللغة العربية' },
+            options: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'مصفوفة تحتوي على أربعة خيارات نصية بالضبط للسؤال'
+            },
+            correctOptionIndex: { type: Type.NUMBER, description: 'مؤشر الإجابة الصحيحة في مصفوفة الخيارات (من 0 إلى 3)' },
+        },
+        required: ['subject', 'text', 'options', 'correctOptionIndex'],
+    };
 
-        Output format: Respond ONLY with a valid JSON array of question objects. Do not include any other text, explanations, or markdown formatting like \`\`\`json. The array must follow this exact structure:
-        [
-          {
-            "subject": "المادة بالعربية",
-            "text": "نص السؤال بالعربية",
-            "options": ["الخيار ١", "الخيار ٢", "الخيار ٣", "الخيار ٤"],
-            "correctOptionIndex": 0
-          }
-        ]
-    `;
+    const responseSchema = {
+        type: Type.ARRAY,
+        items: questionSchema,
+        description: `مصفوفة من ${questionCount} سؤال.`
+    };
+
+    const systemInstruction = `أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.
+    - يجب أن تكون الأسئلة مناسبة تمامًا لمستوى طالب في "${gradeLevel}" وتتبع المنهج التعليمي المصري.
+    - يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات بالضبط لكل سؤال، وإجابة واحدة صحيحة فقط.
+    - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
+    - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.`;
+    
+    const contents = `أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.`;
 
     try {
-        console.log("Generating exam questions with @google/generative-ai...");
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text();
+        console.log("Generating exam questions with @google/genai...");
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: contents,
+            config: {
+                systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: responseSchema,
+            },
+        });
 
-        // Clean the response to ensure it's valid JSON
-        text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        
+        const text = response.text.trim();
         const generatedQuestions = JSON.parse(text);
 
         if (!Array.isArray(generatedQuestions)) {
             throw new Error("API did not return a valid array of questions.");
         }
         
-        // Validate that the generated questions have the required fields
+        // Basic validation
         const isValid = generatedQuestions.every(q => 
-            typeof q.subject === 'string' &&
-            typeof q.text === 'string' &&
-            Array.isArray(q.options) &&
-            q.options.length === 4 &&
-            typeof q.correctOptionIndex === 'number'
+            q.subject && q.text && Array.isArray(q.options) && q.options.length === 4 && typeof q.correctOptionIndex === 'number'
         );
 
         if (!isValid) {
@@ -68,13 +76,8 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
     }
 };
 
-// This is a MOCK service. It simulates a call to the Gemini API for grading.
 export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[]): Promise<ExamResult> => {
-    console.log("Simulating Gemini API call with:", { questions, answers });
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
+    // Perform local grading first
     const feedback = questions.map(q => {
         const studentAnswerObj = answers.find(a => a.questionId === q.id);
         const studentAnswerIndex = studentAnswerObj ? studentAnswerObj.answerIndex : -1;
@@ -86,12 +89,10 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
             studentAnswer: studentAnswerIndex > -1 ? q.options[studentAnswerIndex] : "لم تتم الإجابة",
             correctAnswer: q.options[q.correctOptionIndex],
             isCorrect: isCorrect,
-            explanation: isCorrect ? undefined : "تذكر أن تراجع الفصل الخاص بهذا المفهوم.",
         };
     });
 
     const subjectScores: Record<string, SubjectScore> = {};
-
     feedback.forEach(f => {
         if (!subjectScores[f.subject]) {
             subjectScores[f.subject] = { score: 0, total: 0 };
@@ -105,41 +106,81 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
     const totalScore = feedback.filter(f => f.isCorrect).length;
     const totalQuestions = questions.length;
 
-    // Generate Neo Message
-    let neoMessage = "";
-    const percentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
-    
-    if (percentage >= 85) {
-        neoMessage = "🌟 عمل رائع ومستوى ممتاز! أنت تتقن المواد جيدًا. استمر في هذا الأداء المتميز.";
-    } else if (percentage >= 65) {
-        neoMessage = "👍 مجهود جيد جدًا! نتيجتك تظهر فهمًا جيدًا للمواد. هناك بعض النقاط التي يمكنك تحسينها لتصل إلى القمة.";
-    } else if (percentage >= 50) {
-        neoMessage = "مجهود جيد! لديك أساس لا بأس به. كل خطأ هو فرصة للتعلم. ركز على مراجعة النقاط التي أخطأت فيها.";
-    } else {
-        neoMessage = "لا بأس، البدايات دائمًا تحتاج إلى مجهود. استخدم هذا الاختبار لتحديد نقاط ضعفك والعمل على تقويتها. أنا هنا لمساعدتك!";
-    }
+    // Now, call Gemini for AI-powered feedback and explanations
+    const incorrectAnswers = feedback.filter(f => !f.isCorrect);
+    let aiGeneratedFeedback = { neoMessage: '', explanations: [] as {question: string, explanation: string}[] };
 
-    // Add subject-specific feedback
-    const subjects = Object.keys(subjectScores);
-    if (subjects.length > 1) {
-        const worstSubject = subjects.reduce((a, b) => (subjectScores[a].score / subjectScores[a].total) < (subjectScores[b].score / subjectScores[b].total) ? a : b);
-        const bestSubject = subjects.reduce((a, b) => (subjectScores[a].score / subjectScores[a].total) > (subjectScores[b].score / subjectScores[b].total) ? a : b);
+    if (incorrectAnswers.length > 0 || totalQuestions > 0) {
+        const promptData = {
+            totalScore,
+            totalQuestions,
+            subjectScores,
+            incorrectAnswers: incorrectAnswers.map(f => ({
+                question: f.question,
+                subject: f.subject,
+                studentAnswer: f.studentAnswer,
+                correctAnswer: f.correctAnswer
+            }))
+        };
+
+        const systemInstruction = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo.`;
+        const contents = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}\n\nمهمتك هي:\n1. كتابة رسالة تشجيعية عامة (neoMessage) للطالب بناءً على أدائه العام وأدائه في المواد المختلفة. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.\n2. لكل سؤال من الأسئلة التي أجاب عنها الطالب بشكل خاطئ، قدم شرحًا موجزًا وواضحًا (explanation) يوضح لماذا كانت إجابته خاطئة ولماذا الإجابة الصحيحة هي الصواب.`;
         
-        const bestScore = subjectScores[bestSubject];
-        const worstScore = subjectScores[worstSubject];
+        const gradingResponseSchema = {
+            type: Type.OBJECT,
+            properties: {
+                neoMessage: { type: Type.STRING, description: 'رسالة تشجيعية للطالب' },
+                explanations: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            question: { type: Type.STRING },
+                            explanation: { type: Type.STRING },
+                        },
+                        required: ['question', 'explanation'],
+                    },
+                    description: 'شروحات للإجابات الخاطئة'
+                },
+            },
+            required: ['neoMessage', 'explanations'],
+        };
 
-        if ((bestScore.score / bestScore.total) >= 0.8 && (worstScore.score / worstScore.total) < 0.6 && bestSubject !== worstSubject) {
-             neoMessage += `\n\nأداؤك كان استثنائيًا في ${bestSubject}، لكن يبدو أن مادة ${worstSubject} تحتاج المزيد من التركيز. ما رأيك في مراجعة دروسها؟`;
+        try {
+            console.log("Generating exam feedback with @google/genai...");
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                config: {
+                    systemInstruction: systemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema: gradingResponseSchema,
+                },
+            });
+            const text = response.text.trim();
+            aiGeneratedFeedback = JSON.parse(text);
+        } catch(error) {
+            console.error("Error generating exam feedback with Gemini:", error);
+            // Fallback to a simpler message if AI fails
+            aiGeneratedFeedback.neoMessage = "تم تصحيح اختبارك. راجع إجاباتك جيدًا لتحديد نقاط القوة والضعف.";
         }
     }
 
+    const finalFeedback = feedback.map(f => {
+        if (f.isCorrect) return { ...f, explanation: undefined };
+        const explanationObj = aiGeneratedFeedback.explanations.find(e => e.question === f.question);
+        return {
+            ...f,
+            explanation: explanationObj ? explanationObj.explanation : "تذكر أن تراجع الفصل الخاص بهذا المفهوم."
+        };
+    });
 
     const result: ExamResult = {
         totalScore,
         totalQuestions,
         subjectScores,
-        feedback,
-        neoMessage
+        feedback: finalFeedback,
+        neoMessage: aiGeneratedFeedback.neoMessage || "أنهيت الاختبار بنجاح! تفقد تقريرك المفصل."
     };
 
     return result;
