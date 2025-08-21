@@ -1,29 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { User, Lesson } from '../types';
-
-// Enhanced styles to cover all subjects for consistency
-const subjectStyles: Record<string, { icon: string; color: string; bgColor: string }> = {
-    'فيزياء': { icon: '⚛️', color: 'blue', bgColor: 'bg-blue-500/10 border-blue-500/20' },
-    'كيمياء': { icon: '🧪', color: 'green', bgColor: 'bg-green-500/10 border-green-500/20' },
-    'لغة عربية': { icon: '📖', color: 'red', bgColor: 'bg-red-500/10 border-red-500/20' },
-    'رياضيات': { icon: '➗', color: 'purple', bgColor: 'bg-purple-500/10 border-purple-500/20' },
-    'أحياء': { icon: '🧬', color: 'teal', bgColor: 'bg-teal-500/10 border-teal-500/20' },
-    'جيولوجيا': { icon: '🌍', color: 'orange', bgColor: 'bg-orange-500/10 border-orange-500/20' },
-    'لغة إنجليزية': { icon: '🇬🇧', color: 'indigo', bgColor: 'bg-indigo-500/10 border-indigo-500/20' },
-    'تاريخ': { icon: '📜', color: 'amber', bgColor: 'bg-amber-500/10 border-amber-500/20' },
-    'فلسفة وعلم نفس': { icon: '🤔', color: 'pink', bgColor: 'bg-pink-500/10 border-pink-500/20' },
-    'لغة فرنسية': { icon: '🇫🇷', color: 'cyan', bgColor: 'bg-cyan-500/10 border-cyan-500/20' },
-    'لغة إيطالية': { icon: '🇮🇹', color: 'lime', bgColor: 'bg-lime-500/10 border-lime-500/20' },
-    'دين': { icon: '🕌', color: 'emerald', bgColor: 'bg-emerald-500/10 border-emerald-500/20' },
-    'جغرافيا': { icon: '🗺️', color: 'sky', bgColor: 'bg-sky-500/10 border-sky-500/20'},
-    'Default': { icon: '📚', color: 'gray', bgColor: 'bg-gray-500/10 border-gray-500/20' },
-};
-
-const getSubjectStyle = (subject: string) => {
-    // Handles cases like "مراجعة فيزياء" by finding the subject key within the string
-    const key = Object.keys(subjectStyles).find(s => subject.includes(s) && s !== 'Default') || 'Default';
-    return subjectStyles[key];
-};
+import { getSubjectStyle } from '../constants';
 
 interface FullSchedulePageProps {
   user: User;
