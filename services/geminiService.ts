@@ -1,29 +1,13 @@
 
 import { Question, ExamResult, SubjectScore } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-
-const questionSchema = {
-    type: Type.OBJECT,
-    properties: {
-        subject: { type: Type.STRING, description: "The subject of the question in Arabic" },
-        text: { type: Type.STRING, description: "The question text in Arabic" },
-        options: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "An array of exactly 4 possible string answers in Arabic"
-        },
-        correctOptionIndex: { type: Type.INTEGER, description: "The 0-based index of the correct answer in the options array" }
-    },
-    required: ["subject", "text", "options", "correctOptionIndex"]
-};
-
+const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
     
@@ -35,26 +19,45 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
         - يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات لكل سؤال، وإجابة واحدة صحيحة فقط.
         - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
         - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.
+
+        Output format: Respond ONLY with a valid JSON array of question objects. Do not include any other text, explanations, or markdown formatting like \`\`\`json. The array must follow this exact structure:
+        [
+          {
+            "subject": "المادة بالعربية",
+            "text": "نص السؤال بالعربية",
+            "options": ["الخيار ١", "الخيار ٢", "الخيار ٣", "الخيار ٤"],
+            "correctOptionIndex": 0
+          }
+        ]
     `;
 
     try {
-        console.log("Generating exam questions with @google/genai...");
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: questionSchema
-                }
-            }
-        });
+        console.log("Generating exam questions with @google/generative-ai...");
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text();
 
-        const generatedQuestions = JSON.parse(response.text);
+        // Clean the response to ensure it's valid JSON
+        text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        
+        const generatedQuestions = JSON.parse(text);
 
         if (!Array.isArray(generatedQuestions)) {
             throw new Error("API did not return a valid array of questions.");
+        }
+        
+        // Validate that the generated questions have the required fields
+        const isValid = generatedQuestions.every(q => 
+            typeof q.subject === 'string' &&
+            typeof q.text === 'string' &&
+            Array.isArray(q.options) &&
+            q.options.length === 4 &&
+            typeof q.correctOptionIndex === 'number'
+        );
+
+        if (!isValid) {
+             throw new Error("The generated questions do not match the required format.");
         }
         
         return generatedQuestions.map((q, index) => ({ ...q, id: `gen_q_${index + 1}` }));
