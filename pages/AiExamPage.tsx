@@ -8,6 +8,7 @@ import { FlagIcon } from '../components/common/Icons.tsx';
 
 type ExamStatus = 'not_started' | 'generating_questions' | 'in_progress' | 'loading' | 'finished';
 type ExamSystem = 'عام' | 'لغات' | 'ازهري';
+type AiModel = 'A1' | 'A2';
 
 const difficultyMap = { M1: 'سهل', M2: 'متوسط', M3: 'متقدم' };
 const cognitiveLevelMap = {
@@ -19,15 +20,25 @@ const cognitiveLevelMap = {
     Create: 'إبداع'
 };
 
-const loadingMessages = [
+const getLoadingMessages = (model: AiModel) => model === 'A1' ? [
     "يقوم Neo 🤖 باستشارة قاعدة بياناته المعرفية...",
+    "صياغة أسئلة تتحدى تفكيرك...",
+    "تحضير مشتتات ذكية ومضللة...",
+    "لحظات ويصبح اختبارك الفريد جاهزًا...",
+] : [
+    "يقوم المساعد الذكي باستشارة قاعدة بياناته المعرفية...",
     "صياغة أسئلة تتحدى تفكيرك...",
     "تحضير مشتتات ذكية ومضللة...",
     "لحظات ويصبح اختبارك الفريد جاهزًا...",
 ];
 
-const gradingMessages = [
+const getGradingMessages = (model: AiModel) => model === 'A1' ? [
     "يقوم Neo 🤖 بتحليل إجاباتك العبقرية...",
+    "حساب نقاط القوة والضعف لديك...",
+    "إعداد تقرير مفصل ونصائح مخصصة...",
+    "النتائج على وشك الظهور!",
+] : [
+    "يقوم المساعد الذكي بتحليل إجاباتك العبقرية...",
     "حساب نقاط القوة والضعف لديك...",
     "إعداد تقرير مفصل ونصائح مخصصة...",
     "النتائج على وشك الظهور!",
@@ -158,16 +169,17 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     const [answers, setAnswers] = useState<{ questionId: string, answerIndex: number }[]>([]);
     const [result, setResult] = useState<ExamResult | null>(null);
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-    const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+    const [loadingMessage, setLoadingMessage] = useState('');
     const [markedQuestions, setMarkedQuestions] = useState<string[]>([]);
     const [examSystem, setExamSystem] = useState<ExamSystem>('عام');
+    const [aiModel, setAiModel] = useState<AiModel>('A1');
 
     const finishExam = useCallback(async () => {
         setStatus('loading');
-        const examResult = await gradeExamAndGetFeedbackAI(questions, answers, user.grade, examSystem);
+        const examResult = await gradeExamAndGetFeedbackAI(questions, answers, user.grade, examSystem, aiModel);
         setResult(examResult);
         setStatus('finished');
-    }, [answers, questions, user.grade, examSystem]);
+    }, [answers, questions, user.grade, examSystem, aiModel]);
     
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout>;
@@ -182,20 +194,24 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
         if (status === 'generating_questions') {
+            const messages = getLoadingMessages(aiModel);
             let i = 0;
+            setLoadingMessage(messages[0]);
             interval = setInterval(() => {
-                i = (i + 1) % loadingMessages.length;
-                setLoadingMessage(loadingMessages[i]);
+                i = (i + 1) % messages.length;
+                setLoadingMessage(messages[i]);
             }, 2500);
         } else if (status === 'loading') {
+            const messages = getGradingMessages(aiModel);
             let i = 0;
+            setLoadingMessage(messages[0]);
             interval = setInterval(() => {
-                i = (i + 1) % gradingMessages.length;
-                setLoadingMessage(gradingMessages[i]);
+                i = (i + 1) % messages.length;
+                setLoadingMessage(messages[i]);
             }, 2500);
         }
         return () => clearInterval(interval);
-    }, [status]);
+    }, [status, aiModel]);
     
     const startExam = async () => {
         setStatus('generating_questions');
@@ -205,7 +221,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
         setResult(null);
 
         try {
-            const generatedQuestions = await generateExamQuestions(selectedSubjects, questionCount, user.grade, examSystem);
+            const generatedQuestions = await generateExamQuestions(selectedSubjects, questionCount, user.grade, examSystem, aiModel);
             if (generatedQuestions.length === 0) throw new Error("AI did not generate any questions.");
 
             setQuestions(generatedQuestions);
@@ -213,7 +229,11 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
             setStatus('in_progress');
         } catch (error) {
             console.error(error);
-            if (confirm("عذرًا، واجه Neo 🤖 صعوبة في إعداد اختبارك المخصص. هل تود تجربة اختبار جاهز بدلاً من ذلك؟")) {
+            const fallbackMessage = aiModel === 'A1'
+                ? "عذرًا، واجه Neo 🤖 صعوبة في إعداد اختبارك المخصص. هل تود تجربة اختبار جاهز بدلاً من ذلك؟"
+                : "عذرًا، واجه المساعد الذكي صعوبة في إعداد اختبارك المخصص. هل تود تجربة اختبار جاهز بدلاً من ذلك؟";
+
+            if (confirm(fallbackMessage)) {
                 const mockForSubjects = MOCK_QUESTIONS.filter(q => selectedSubjects.includes(q.subject));
                 
                 if (mockForSubjects.length > 0) {
@@ -270,9 +290,9 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
                 <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
                     <div className="flex items-start gap-4">
-                         <div className="text-4xl">🤖</div>
+                         <div className="text-4xl">{aiModel === 'A1' ? '🤖' : '🧠'}</div>
                          <div className="flex-1">
-                            <h3 className="text-2xl font-bold mb-2">رسالة من Neo</h3>
+                            <h3 className="text-2xl font-bold mb-2">{aiModel === 'A1' ? 'رسالة من Neo' : 'رسالة من المساعد الذكي'}</h3>
                             <div className="bg-[hsl(var(--color-background))] p-4 rounded-xl relative before:content-[''] before:absolute before:top-4 before:right-full before:border-8 before:border-transparent before:border-r-[hsl(var(--color-background))]">
                                 <p className="font-semibold text-lg text-[hsl(var(--color-text-primary))]">{result.neoMessage}</p>
                             </div>
@@ -294,7 +314,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
                 {result.improvementTips && result.improvementTips.length > 0 && (
                     <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
-                        <h3 className="text-2xl font-bold mb-4">💡 نصائح ذكية من Neo</h3>
+                        <h3 className="text-2xl font-bold mb-4">{aiModel === 'A1' ? '💡 نصائح ذكية من Neo' : '💡 نصائح للتحسين'}</h3>
                         <ul className="space-y-3">
                             {result.improvementTips.map((tip, index) => (
                                 <li key={index} className="flex items-start gap-3 text-lg"><span className="text-xl">💡</span><span>{tip}</span></li>
@@ -403,10 +423,15 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     return (
         <div className="space-y-8 animate-fade-in-up">
             <Card3D className="bg-[hsl(var(--color-surface))] p-8 text-center rounded-2xl border border-[hsl(var(--color-border))] overflow-hidden">
-                <div className="absolute -top-10 -right-10 text-8xl opacity-10">🤖</div>
-                <h1 className="text-4xl font-extrabold text-[hsl(var(--color-text-primary))] relative">الاختبارات الذكية مع Neo</h1>
+                <div className="absolute -top-10 -right-10 text-8xl opacity-10">{aiModel === 'A1' ? '🤖' : '🧠'}</div>
+                <h1 className="text-4xl font-extrabold text-[hsl(var(--color-text-primary))] relative">
+                    {aiModel === 'A1' ? 'الاختبارات الذكية مع Neo' : 'الاختبارات الذكية'}
+                </h1>
                 <p className="text-lg text-[hsl(var(--color-text-secondary))] mt-4 max-w-2xl mx-auto relative">
-                    مرحباً بك! يقوم مساعدنا Neo 🤖 بتوليد اختبارات فريدة لك في المواد التي تختارها لمساعدتك على تقييم مستواك والاستعداد بشكل أفضل.
+                    {aiModel === 'A1' 
+                        ? 'مرحباً بك! يقوم مساعدنا Neo 🤖 بتوليد اختبارات فريدة لك في المواد التي تختارها لمساعدتك على تقييم مستواك والاستعداد بشكل أفضل.'
+                        : 'مرحباً بك! يقوم مساعدنا الذكي بتوليد اختبارات فريدة لك في المواد التي تختارها لمساعدتك على تقييم مستواك والاستعداد بشكل أفضل.'
+                    }
                 </p>
             </Card3D>
             
@@ -428,7 +453,36 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
             </div>
 
             <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                <h2 className="text-2xl font-bold mb-4">2. اختر نظام الأسئلة</h2>
+                <h2 className="text-2xl font-bold mb-4">2. اختر نموذج الأسئلة</h2>
+                <p className="text-sm text-[hsl(var(--color-text-secondary))] -mt-3 mb-4">
+                    نماذج مختلفة من الذكاء الاصطناعي لتوليد أسئلة متنوعة.
+                </p>
+                <div className="flex bg-[hsl(var(--color-background))] p-1 rounded-xl gap-1">
+                    <button
+                        onClick={() => setAiModel('A1')}
+                        className={`w-full text-center py-2 px-4 font-bold rounded-lg transition-all duration-300 ${
+                            aiModel === 'A1'
+                                ? 'bg-[hsl(var(--color-primary))] text-white shadow'
+                                : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
+                        }`}
+                    >
+                        نموذج A1
+                    </button>
+                    <button
+                        onClick={() => setAiModel('A2')}
+                        className={`w-full text-center py-2 px-4 font-bold rounded-lg transition-all duration-300 ${
+                            aiModel === 'A2'
+                                ? 'bg-[hsl(var(--color-primary))] text-white shadow'
+                                : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
+                        }`}
+                    >
+                        نموذج A2
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
+                <h2 className="text-2xl font-bold mb-4">3. اختر نظام الأسئلة</h2>
                 <div className="flex bg-[hsl(var(--color-background))] p-1 rounded-xl gap-1">
                     {(['عام', 'لغات', 'ازهري'] as ExamSystem[]).map(system => (
                         <button
@@ -448,7 +502,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                    <h2 className="text-2xl font-bold mb-4">3. عدد الأسئلة</h2>
+                    <h2 className="text-2xl font-bold mb-4">4. عدد الأسئلة</h2>
                      <div className="flex items-center gap-4">
                         <input type="range" min="10" max="30" step="5" value={questionCount} onChange={e => setQuestionCount(Number(e.target.value))} className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"/>
                         <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-28 text-center">{questionCount} سؤال</span>
@@ -456,7 +510,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                 </div>
 
                 <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                    <h2 className="text-2xl font-bold mb-4">4. مدة الاختبار</h2>
+                    <h2 className="text-2xl font-bold mb-4">5. مدة الاختبار</h2>
                     <div className="flex items-center gap-4">
                          <input type="range" min="10" max="60" step="5" value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"/>
                         <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-28 text-center">{duration} دقيقة</span>
