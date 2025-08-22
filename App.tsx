@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking } from './types.ts';
 import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS } from './constants.ts';
