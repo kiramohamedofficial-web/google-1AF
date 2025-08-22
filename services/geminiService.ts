@@ -1,65 +1,60 @@
 
 import { Question, ExamResult, SubjectScore } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// Per user request, switching to @google/generative-ai
+const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
+
+// A helper to extract JSON from a string that might contain markdown backticks
+function extractJson(text: string): any {
+    const match = text.match(/```json\n([\s\S]*?)\n```/);
+    if (match && match[1]) {
+        try {
+            return JSON.parse(match[1]);
+        } catch (e) {
+             console.error("Failed to parse extracted JSON, content was:", match[1]);
+        }
+    }
+    // Fallback for cases where there are no backticks
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("Failed to parse JSON directly, text was:", text);
+        throw new Error("Invalid JSON response from AI");
+    }
+}
+
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
-    
-    const questionSchema = {
-        type: Type.OBJECT,
-        properties: {
-            subject: { type: Type.STRING, description: 'المادة الدراسية للسؤال باللغة العربية' },
-            text: { type: Type.STRING, description: 'نص السؤال باللغة العربية' },
-            options: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: 'مصفوفة تحتوي على أربعة خيارات نصية بالضبط للسؤال'
-            },
-            correctOptionIndex: { type: Type.NUMBER, description: 'مؤشر الإجابة الصحيحة في مصفوفة الخيارات (من 0 إلى 3)' },
-        },
-        required: ['subject', 'text', 'options', 'correctOptionIndex'],
-    };
-
-    const responseSchema = {
-        type: Type.ARRAY,
-        items: questionSchema,
-        description: `مصفوفة من ${questionCount} سؤال.`
-    };
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const systemInstruction = `أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.
     - يجب أن تكون الأسئلة مناسبة تمامًا لمستوى طالب في "${gradeLevel}" وتتبع المنهج التعليمي المصري.
     - يجب أن تكون جميع الأسئلة من نوع الاختيار من متعدد (MCQ) مع أربعة خيارات بالضبط لكل سؤال، وإجابة واحدة صحيحة فقط.
     - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
-    - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.`;
+    - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.
+    - يجب أن يكون الرد الخاص بك بتنسيق JSON فقط، بدون أي نص إضافي أو علامات markdown. يجب أن يكون الرد عبارة عن مصفوفة (array) من كائنات الأسئلة.
+    - كل كائن سؤال يجب أن يحتوي على المفاتيح التالية: "subject" (string), "text" (string), "options" (array of 4 strings), and "correctOptionIndex" (number from 0 to 3).`;
     
-    const contents = `أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.`;
+    const prompt = `أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}. ${systemInstruction}`;
 
     try {
-        console.log("Generating exam questions with @google/genai...");
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: contents,
-            config: {
-                systemInstruction: systemInstruction,
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-            },
-        });
-
-        const text = response.text.trim();
-        const generatedQuestions = JSON.parse(text);
+        console.log("Generating exam questions with @google/generative-ai...");
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        const generatedQuestions = extractJson(text);
 
         if (!Array.isArray(generatedQuestions)) {
             throw new Error("API did not return a valid array of questions.");
         }
         
-        // Basic validation
         const isValid = generatedQuestions.every(q => 
             q.subject && q.text && Array.isArray(q.options) && q.options.length === 4 && typeof q.correctOptionIndex === 'number'
         );
@@ -111,6 +106,8 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
     let aiGeneratedFeedback = { neoMessage: '', explanations: [] as {question: string, explanation: string}[] };
 
     if (incorrectAnswers.length > 0 || totalQuestions > 0) {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
         const promptData = {
             totalScore,
             totalQuestions,
@@ -123,42 +120,19 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
             }))
         };
 
-        const systemInstruction = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo.`;
-        const contents = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}\n\nمهمتك هي:\n1. كتابة رسالة تشجيعية عامة (neoMessage) للطالب بناءً على أدائه العام وأدائه في المواد المختلفة. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.\n2. لكل سؤال من الأسئلة التي أجاب عنها الطالب بشكل خاطئ، قدم شرحًا موجزًا وواضحًا (explanation) يوضح لماذا كانت إجابته خاطئة ولماذا الإجابة الصحيحة هي الصواب.`;
+        const prompt = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo.
+        طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}\n\n
+        مهمتك هي الرد بتنسيق JSON فقط، بدون أي نص إضافي أو علامات markdown. يجب أن يكون الرد كائنًا يحتوي على مفتاحين:
+        1. "neoMessage": سلسلة نصية (string) تحتوي على رسالة تشجيعية عامة للطالب بناءً على أدائه العام وأدائه في المواد المختلفة. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.
+        2. "explanations": مصفوفة (array) من الكائنات. كل كائن يمثل شرحًا لسؤال خاطئ ويجب أن يحتوي على مفتاحين: "question" (نص السؤال الخاطئ) و "explanation" (شرح موجز وواضح لماذا كانت إجابته خاطئة ولماذا الإجابة الصحيحة هي الصواب).`;
         
-        const gradingResponseSchema = {
-            type: Type.OBJECT,
-            properties: {
-                neoMessage: { type: Type.STRING, description: 'رسالة تشجيعية للطالب' },
-                explanations: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            question: { type: Type.STRING },
-                            explanation: { type: Type.STRING },
-                        },
-                        required: ['question', 'explanation'],
-                    },
-                    description: 'شروحات للإجابات الخاطئة'
-                },
-            },
-            required: ['neoMessage', 'explanations'],
-        };
 
         try {
-            console.log("Generating exam feedback with @google/genai...");
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: contents,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: gradingResponseSchema,
-                },
-            });
-            const text = response.text.trim();
-            aiGeneratedFeedback = JSON.parse(text);
+            console.log("Generating exam feedback with @google/generative-ai...");
+            const result = await model.generateContent(prompt);
+            const response = result.response;
+            const text = response.text();
+            aiGeneratedFeedback = extractJson(text);
         } catch(error) {
             console.error("Error generating exam feedback with Gemini:", error);
             // Fallback to a simpler message if AI fails
@@ -168,7 +142,7 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
 
     const finalFeedback = feedback.map(f => {
         if (f.isCorrect) return { ...f, explanation: undefined };
-        const explanationObj = aiGeneratedFeedback.explanations.find(e => e.question === f.question);
+        const explanationObj = aiGeneratedFeedback.explanations?.find(e => e.question === f.question);
         return {
             ...f,
             explanation: explanationObj ? explanationObj.explanation : "تذكر أن تراجع الفصل الخاص بهذا المفهوم."
