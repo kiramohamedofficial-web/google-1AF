@@ -35,25 +35,94 @@ const examQuestionsSchema = {
     items: questionSchema
 };
 
+const getGradeSpecificInstructions = (gradeLevel: string): string => {
+    switch (gradeLevel) {
+        case 'الصف الأول الثانوي':
+            return `
+                **CRITICAL INSTRUCTIONS FOR: "الصف الأول الثانوي" (1st Secondary Grade)**
+                - **Overall Goal:** Design a transitional exam that helps students adapt from preparatory to secondary level thinking.
+                - **Difficulty Distribution:**
+                    - 60% Medium (M2)
+                    - 30% Hard (M3)
+                    - 10% Easy (M1)
+                - **Bloom's Taxonomy Distribution:**
+                    - 40% Apply
+                    - 30% Understand
+                    - 20% Analyze
+                    - 10% Evaluate/Create
+                - **Question Style:**
+                    - Use simple scenarios.
+                    - Questions can be based on short texts, simple graphs, or small data tables.
+                    - Focus on clear comprehension and direct application of concepts.
+            `;
+        case 'الصف الثاني الثانوي':
+            return `
+                **CRITICAL INSTRUCTIONS FOR: "الصف الثاني الثانوي" (2nd Secondary Grade)**
+                - **Overall Goal:** Design a deeper exam that tests the integration of multiple skills and concepts.
+                - **Difficulty Distribution:**
+                    - 50% Hard (M3)
+                    - 40% Medium (M2)
+                    - 10% Easy (M1)
+                - **Bloom's Taxonomy Distribution:**
+                    - 40% Analyze
+                    - 30% Apply
+                    - 30% Evaluate/Create
+                - **Question Style:**
+                    - Create multi-step problems.
+                    - Include questions comparing two different states or scenarios (e.g., "before" and "after" a change).
+                    - Focus on analysis and problem-solving.
+            `;
+        case 'الصف الثالث الثانوي':
+            return `
+                **CRITICAL INSTRUCTIONS FOR: "الصف الثالث الثانوي" (3rd Secondary Grade - Thanaweya Amma)**
+                - **Overall Goal:** Generate a highly challenging exam that mirrors the modern Egyptian Thanaweya Amma system. The focus is entirely on critical thinking, inference, and deep contextual understanding.
+                - **Difficulty Distribution:**
+                    - 80% Advanced (M3)
+                    - 20% Medium (M2)
+                    - **Strictly 0% Easy (M1).**
+                - **Bloom's Taxonomy Distribution:**
+                    - 40% Evaluate
+                    - 30% Analyze
+                    - 30% Create
+                    - **Avoid direct recall questions entirely.**
+                - **Question Style:**
+                    - Use complex case studies with rich, and sometimes superfluous, data.
+                    - Design challenging MCQs with highly plausible distractors that are very similar to the correct answer.
+                    - Questions must require significant analysis and critical thinking, not just knowledge retrieval.
+            `;
+        default:
+            return `
+                **GENERAL INSTRUCTIONS (For other grades):**
+                - **Difficulty Distribution:** 50% Medium (M2), 30% Easy (M1), 20% Hard (M3).
+                - **Bloom's Taxonomy Distribution:** 40% Apply, 30% Understand, 20% Analyze, 10% Remember.
+                - **Question Style:** Create clear, standard, grade-appropriate questions.
+            `;
+    }
+};
+
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
-    console.log(`Generating exam questions with ${MODEL_NAME}...`);
+    console.log(`Generating exam questions for ${gradeLevel} with ${MODEL_NAME}...`);
+    
+    const gradeInstructions = getGradeSpecificInstructions(gradeLevel);
     
     const prompt = `
-        You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center, following modern pedagogical standards like Bloom's Taxonomy and PISA.
+        You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center. Your primary goal is to generate an exam that precisely follows the grade-specific instructions provided below.
 
-        Your task is to generate a complete exam based on these specifications:
-        - Grade Level: "${gradeLevel}"
-        - Subjects: ${subjects.join(', ')}
-        - Total Number of Questions: ${questionCount}
+        **Primary Task: Generate an exam with these core specifications:**
+        - **Grade Level:** "${gradeLevel}"
+        - **Subjects:** ${subjects.join(', ')}
+        - **Total Number of Questions:** ${questionCount}
 
-        IMPORTANT INSTRUCTIONS:
+        ${gradeInstructions}
+
+        **General Requirements (Must be followed for ALL questions):**
         1.  **Unique IDs**: Each question must have a unique ID, like "q_physics_1", "q_chem_1", etc.
-        2.  **Diverse Questions**: Distribute questions across the specified subjects. Ensure a mix of cognitive levels (Remember, Understand, Apply, Analyze) and difficulties (M1, M2, M3).
+        2.  **Subject Distribution**: Distribute questions across the specified subjects as evenly as possible.
         3.  **Four Options**: Every question MUST have exactly four multiple-choice options.
         4.  **Clear Rationale**: Provide a concise and clear explanation (rationale) for why the correct answer is correct.
-        5.  **Context**: Use the 'context' field for questions that require a preceding text, scenario, or data description. Otherwise, it can be omitted.
-        6.  **Egyptian Context**: Questions should be relevant to the Egyptian curriculum where applicable.
-        7.  **Output Format**: Strictly adhere to the provided JSON schema.
+        5.  **Context Field**: Use the 'context' field for questions that require a preceding text, scenario, or data description. Otherwise, it can be omitted.
+        6.  **Egyptian Curriculum**: Ensure questions are relevant to the Egyptian curriculum where applicable.
+        7.  **Output Format**: Strictly adhere to the provided JSON schema. Your entire response must be a single valid JSON array of question objects.
     `;
     
     try {

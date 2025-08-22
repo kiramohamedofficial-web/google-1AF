@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_STUDENTS } from '../constants.ts';
 import { Lesson, Trip, Teacher, Post, User, Booking } from '../types.ts';
@@ -81,7 +80,7 @@ const TeacherFormModal: React.FC<TeacherFormModalProps> = ({ isOpen, onClose, on
         e.preventDefault(); 
         let finalImageUrl = teacherToEdit?.imageUrl || '';
         if (selectedImageFile) {
-            finalImageUrl = URL.createObjectURL(selectedImageFile);
+            finalImageUrl = URL.createObjectURL(selectedImageFile as File);
         } else if (!teacherToEdit) { // If creating new teacher and no file selected
             finalImageUrl = `https://picsum.photos/seed/${Date.now()}/200`;
         }
@@ -105,7 +104,7 @@ const TeacherFormModal: React.FC<TeacherFormModalProps> = ({ isOpen, onClose, on
                             <label className="block text-sm font-medium mb-1">الصورة الشخصية</label>
                             <input type="file" accept="image/*" onChange={(e) => setSelectedImageFile(e.target.files ? e.target.files[0] : null)} className="mt-1 block w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 cursor-pointer"/>
                             {(formData.imageUrl || selectedImageFile) && (
-                                <img src={selectedImageFile ? URL.createObjectURL(selectedImageFile) : formData.imageUrl} alt="Preview" className="mt-2 w-24 h-24 rounded-full object-cover"/>
+                                <img src={selectedImageFile ? URL.createObjectURL(selectedImageFile as File) : formData.imageUrl} alt="Preview" className="mt-2 w-24 h-24 rounded-full object-cover"/>
                             )}
                         </div>
                         <div className="md:col-span-2"><InputField as="textarea" label="نبذة تعريفية" name="bio" value={formData.bio} onChange={handleChange} /></div>
@@ -139,7 +138,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
         e.preventDefault(); 
         let finalImageUrls = tripToEdit?.imageUrls || [];
         if (selectedImageFiles && selectedImageFiles.length > 0) {
-            finalImageUrls = Array.from(selectedImageFiles).map(file => URL.createObjectURL(file));
+            finalImageUrls = Array.from(selectedImageFiles).map(file => URL.createObjectURL(file as File));
         } else if (!tripToEdit && finalImageUrls.length === 0) {
             finalImageUrls = [`https://picsum.photos/seed/${formData.title.replace(/\s/g, '')}/400/300`];
         }
@@ -166,7 +165,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
                             <input type="file" multiple accept="image/*" onChange={(e) => setSelectedImageFiles(e.target.files)} className="mt-1 block w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 cursor-pointer"/>
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {(selectedImageFiles ? Array.from(selectedImageFiles) : []).map((file, index) => (
-                                    <img key={index} src={URL.createObjectURL(file)} alt="Preview" className="w-20 h-20 rounded-md object-cover"/>
+                                    <img key={index} src={URL.createObjectURL(file as File)} alt="Preview" className="w-20 h-20 rounded-md object-cover"/>
                                 ))}
                                 {!selectedImageFiles && formData.imageUrls.map((url, index) => (
                                      <img key={index} src={url} alt="Existing" className="w-20 h-20 rounded-md object-cover"/>
@@ -202,7 +201,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
         e.preventDefault(); 
         let finalImageUrls = postToEdit?.imageUrls || [];
         if (selectedImageFiles && selectedImageFiles.length > 0) {
-            finalImageUrls = Array.from(selectedImageFiles).map(file => URL.createObjectURL(file));
+            finalImageUrls = Array.from(selectedImageFiles).map(file => URL.createObjectURL(file as File));
         }
         onSave({ ...formData, imageUrls: finalImageUrls, id: postToEdit ? postToEdit.id : `post_${Date.now()}`, timestamp: `منذ لحظات` }); 
         onClose(); 
@@ -221,7 +220,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
                             <input type="file" multiple accept="image/*" onChange={(e) => setSelectedImageFiles(e.target.files)} className="mt-1 block w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 cursor-pointer"/>
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {(selectedImageFiles ? Array.from(selectedImageFiles) : []).map((file, index) => (
-                                    <img key={index} src={URL.createObjectURL(file)} alt="Preview" className="w-20 h-20 rounded-md object-cover"/>
+                                    <img key={index} src={URL.createObjectURL(file as File)} alt="Preview" className="w-20 h-20 rounded-md object-cover"/>
                                 ))}
                                 {!selectedImageFiles && formData.imageUrls?.map((url, index) => (
                                      <img key={index} src={url} alt="Existing" className="w-20 h-20 rounded-md object-cover"/>

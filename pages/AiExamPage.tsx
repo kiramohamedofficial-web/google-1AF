@@ -73,7 +73,7 @@ const BreakdownSection: React.FC<{ title: string; data: Record<string, SubjectSc
         <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
             <h3 className="text-2xl font-bold mb-4">{title}</h3>
             <div className="space-y-4">
-                {Object.entries(data).sort((a,b) => b[1].total - a[1].total).map(([key, scores]) => {
+                {(Object.entries(data) as [string, SubjectScore][]).sort(([, a],[, b]) => b.total - a.total).map(([key, scores]) => {
                     const percentage = scores.total > 0 ? (scores.score / scores.total) * 100 : 0;
                     const style = getSubjectStyle(key);
                     const colorClass = title.includes("المادة") ? style.progressBarClass : 'bg-[hsl(var(--color-primary))]';
