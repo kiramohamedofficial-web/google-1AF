@@ -1,9 +1,8 @@
 import { Question, ExamResult, SubjectScore } from '../types.ts';
 import { MOCK_QUESTIONS } from '../constants.ts';
 
-const OPENROUTER_API_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL_NAME = "moonshotai/kimi-k2:free";
-const API_KEY = process.env.API_KEY;
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const MODEL_NAME = 'moonshotai/kimi-k2:free';
 
 interface Answer {
     questionId: string;
@@ -19,56 +18,41 @@ const shuffleArray = <T>(array: T[]): T[] => {
     return shuffled;
 };
 
-const callOpenRouterAPI = async (prompt: string) => {
-    if (!API_KEY) {
-        throw new Error("OpenRouter API key is not set in environment variables (API_KEY).");
+const callAiApi = async (prompt: string) => {
+    if (!process.env.API_KEY) {
+        throw new Error("API key is not set in environment variables (API_KEY).");
     }
 
-    const response = await fetch(OPENROUTER_API_ENDPOINT, {
+    const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://google-edu-center.netlify.app',
-            'X-Title': 'Google Educational Center',
+            'Authorization': `Bearer ${process.env.API_KEY}`,
         },
         body: JSON.stringify({
             model: MODEL_NAME,
-            messages: [
-                { role: "user", content: prompt }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.8,
+            messages: [{ role: 'user', content: prompt }],
+            response_format: { type: 'json_object' }
         }),
     });
 
     if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`);
+        const errorBody = await response.text();
+        console.error("AI API Error Response:", errorBody);
+        throw new Error(`AI API request failed with status ${response.status}`);
     }
 
     const data = await response.json();
-    if (!data.choices || data.choices.length === 0 || !data.choices[0].message.content) {
-        throw new Error("Invalid response structure from OpenRouter API.");
+    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        console.error("Invalid AI API response structure:", data);
+        throw new Error("Invalid AI API response structure.");
     }
     return JSON.parse(data.choices[0].message.content);
 };
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
-    console.log(`Generating exam questions with OpenRouter (${MODEL_NAME})...`);
-
-    const jsonStructure = `{
-        "questions": [
-            {
-                "id": "q1",
-                "text": "نص السؤال هنا",
-                "options": ["خيار 1", "خيار 2", "خيار 3", "خيار 4"],
-                "correctOptionIndex": 0,
-                "subject": "المادة الدراسية"
-            }
-        ]
-    }`;
-
+    console.log(`Generating exam questions with ${MODEL_NAME}...`);
+    
     const prompt = `
         أنت خبير في إنشاء الاختبارات التعليمية لمركز تعليمي في مصر.
         مهمتك هي إنشاء اختبار عالي الجودة وصعب.
@@ -79,23 +63,36 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
         3. يجب توزيع الأسئلة على المواد التالية: ${subjects.join('، ')}.
         4. كل سؤال يجب أن يحتوي على 4 خيارات بالضبط.
         5. لغة الأسئلة والإجابات يجب أن تكون العربية.
-        6. قدم الفهرس الرقمي (يبدأ من 0) للإجابة الصحيحة.
-        7. يجب أن يكون الإخراج بتنسيق JSON صالحًا تمامًا. لا تضف أي نص أو تعليقات خارج كائن JSON.
-        8. يجب أن يتبع الإخراج البنية التالية بدقة:
-        ${jsonStructure}
-    `;
+        6. يجب أن يكون الرد عبارة عن كائن JSON فقط. يجب أن يحتوي كائن JSON على مفتاح "questions"، وهو عبارة عن مصفوفة من كائنات الأسئلة. يجب أن يحتوي كل كائن سؤال على الخصائص التالية:
+           - "text": string (نص السؤال)
+           - "options": string[] (مصفوفة من 4 خيارات بالضبط)
+           - "correctOptionIndex": number (فهرس الإجابة الصحيحة الذي يبدأ من 0)
+           - "subject": string (المادة الدراسية للسؤال)
 
+        مثال على التنسيق:
+        {
+          "questions": [
+            {
+              "text": "ما هي عاصمة مصر؟",
+              "options": ["القاهرة", "الإسكندرية", "الجيزة", "الأقصر"],
+              "correctOptionIndex": 0,
+              "subject": "جغرافيا"
+            }
+          ]
+        }
+    `;
+    
     try {
-        const jsonResponse = await callOpenRouterAPI(prompt);
-        
+        const jsonResponse = await callAiApi(prompt);
+
         if (jsonResponse.questions && Array.isArray(jsonResponse.questions) && jsonResponse.questions.length > 0) {
-            return jsonResponse.questions.map((q: any, index: number) => ({ ...q, id: `q${index + 1}`})) as Question[];
+            return jsonResponse.questions.map((q: any, index: number) => ({ ...q, id: `q${index + 1}` })) as Question[];
         }
         
         throw new Error("AI response did not contain a valid questions array.");
 
     } catch (error) {
-        console.error("Error generating questions with OpenRouter AI:", error);
+        console.error(`Error generating questions with ${MODEL_NAME}:`, error);
         console.log("Falling back to local mock questions.");
         const relevantQuestions = MOCK_QUESTIONS.filter(q => subjects.includes(q.subject));
         const shuffledQuestions = shuffleArray(relevantQuestions);
@@ -145,16 +142,6 @@ export const gradeExamAndGetFeedbackAI = async (questions: Question[], answers: 
     };
 
     try {
-        const jsonStructure = `{
-            "neoMessage": "رسالة تشجيعية ومحفزة للطالب.",
-            "performanceAnalysis": "تحليل أداء الطالب، مع ذكر نقاط القوة والضعف حسب المواد.",
-            "improvementTips": [
-                "نصيحة 1",
-                "نصيحة 2",
-                "نصيحة 3"
-            ]
-        }`;
-
         const prompt = `
             أنت مساعد تعليمي ذكي ومشجع اسمه "Neo 🤖".
             مهمتك هي تحليل نتائج اختبار طالب وتقديم ملاحظات بناءة.
@@ -168,12 +155,24 @@ export const gradeExamAndGetFeedbackAI = async (questions: Question[], answers: 
             1.  اكتب رسالة تشجيعية ("neoMessage") للطالب بناءً على نتيجته. يجب أن تكون الرسالة إيجابية ومحفزة، حتى لو كانت النتيجة منخفضة.
             2.  قدم تحليلاً للأداء ("performanceAnalysis") يوضح نقاط القوة والضعف. إذا كان الاختبار يحتوي على مواد متعددة، قارن بين الأداء في كل مادة.
             3.  قدم 3 نصائح قابلة للتنفيذ ("improvementTips") لمساعدة الطالب على التحسن في المرات القادمة. يجب أن تكون النصائح محددة ومركزة على نقاط الضعف التي لاحظتها.
-            4.  يجب أن يكون الإخراج بتنسيق JSON صالحًا تمامًا. لا تضف أي نص أو تعليقات خارج كائن JSON.
-            5.  يجب أن يتبع الإخراج البنية التالية بدقة:
-            ${jsonStructure}
-        `;
+            4.  يجب أن يكون الرد عبارة عن كائن JSON فقط بالخصائص التالية:
+               - "neoMessage": string (رسالة تشجيعية ومحفزة للطالب)
+               - "performanceAnalysis": string (تحليل أداء الطالب، مع ذكر نقاط القوة والضعف حسب المواد)
+               - "improvementTips": string[] (قائمة من 3 نصائح قابلة للتنفيذ)
 
-        const aiFeedback = await callOpenRouterAPI(prompt);
+            مثال على التنسيق:
+            {
+              "neoMessage": "عمل رائع! لقد أبليت بلاءً حسنًا.",
+              "performanceAnalysis": "أظهرت قوة في مادة الفيزياء، ولكن تحتاج إلى بعض التركيز على الكيمياء.",
+              "improvementTips": [
+                "راجع الفصل الثاني في الكيمياء.",
+                "حل المزيد من المسائل على المعادلات الكيميائية.",
+                "شاهد فيديوهات شرح إضافية لموازنة المعادلات."
+              ]
+            }
+        `;
+        
+        const aiFeedback = await callAiApi(prompt);
 
         return {
             ...baseResult,
@@ -183,7 +182,7 @@ export const gradeExamAndGetFeedbackAI = async (questions: Question[], answers: 
         };
 
     } catch (error) {
-        console.error("Error getting AI feedback from OpenRouter:", error);
+        console.error(`Error getting AI feedback from ${MODEL_NAME}:`, error);
         const percentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
         let neoMessage = "أنهيت الاختبار بنجاح! تفقد تقريرك المفصل.";
         if (totalQuestions > 0) {
