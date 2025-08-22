@@ -7,7 +7,7 @@ interface HeaderProps {
 
 const NotificationIcon: React.FC = () => (
     <button
-        className="p-3 rounded-full bg-[hsl(var(--color-background))] text-hsl-var-text-secondary hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative"
+        className="p-3 rounded-full bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative"
         aria-label="Notifications"
     >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,7 +25,7 @@ const NotificationIcon: React.FC = () => (
 const MenuButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
      <button
         onClick={onClick}
-        className="p-3 rounded-full bg-[hsl(var(--color-background))] text-hsl-var-text-secondary hover:bg-black/5 dark:hover:bg-white/10 transition-colors lg:hidden"
+        className="p-3 rounded-full bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 transition-colors lg:hidden"
         aria-label="Open menu"
     >
          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>

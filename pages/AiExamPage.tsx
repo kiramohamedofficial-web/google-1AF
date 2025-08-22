@@ -4,8 +4,10 @@ import { Question, ExamResult, User, SubjectScore } from '../types.ts';
 import { gradeExamAndGetFeedbackAI, generateExamQuestions } from '../services/geminiService.ts';
 import Card3D from '../components/common/Card3D.tsx';
 import AnimatedCat from '../components/common/AnimatedCat.tsx';
+import { FlagIcon } from '../components/common/Icons.tsx';
 
 type ExamStatus = 'not_started' | 'generating_questions' | 'in_progress' | 'loading' | 'finished';
+type ExamSystem = 'عام' | 'لغات' | 'ازهري';
 
 const difficultyMap = { M1: 'سهل', M2: 'متوسط', M3: 'متقدم' };
 const cognitiveLevelMap = {
@@ -30,6 +32,53 @@ const gradingMessages = [
     "إعداد تقرير مفصل ونصائح مخصصة...",
     "النتائج على وشك الظهور!",
 ];
+
+const QuestionNavigator: React.FC<{
+    count: number;
+    currentIndex: number;
+    answers: { questionId: string; answerIndex: number; }[];
+    questionIds: string[];
+    markedQuestions: string[];
+    onJump: (index: number) => void;
+}> = ({ count, currentIndex, answers, questionIds, markedQuestions, onJump }) => {
+    return (
+        <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl border border-[hsl(var(--color-border))] mt-6">
+            <h3 className="font-bold mb-3 text-center">خريطة الأسئلة</h3>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                {Array.from({ length: count }).map((_, index) => {
+                    const questionId = questionIds[index];
+                    const isAnswered = answers.some(a => a.questionId === questionId);
+                    const isMarked = markedQuestions.includes(questionId);
+                    const isCurrent = index === currentIndex;
+
+                    let statusClass = 'bg-[hsl(var(--color-background))] hover:border-[hsl(var(--color-primary))] border-transparent';
+                    if (isCurrent) {
+                        statusClass = 'bg-[hsl(var(--color-primary))] text-white border-[hsl(var(--color-primary))] ring-2 ring-offset-2 ring-[hsl(var(--color-primary))] ring-offset-[hsl(var(--color-surface))]';
+                    } else if (isAnswered) {
+                        statusClass = 'bg-green-500/20 border-green-500 text-green-800 dark:text-green-300';
+                    }
+                    if (isMarked && !isCurrent) {
+                        statusClass = 'bg-yellow-400/20 border-yellow-500 text-yellow-800 dark:text-yellow-300';
+                    }
+
+
+                    return (
+                        <button
+                            key={index}
+                            onClick={() => onJump(index)}
+                            className={`w-full aspect-square rounded-md font-bold text-lg flex items-center justify-center transition-all border-2 relative ${statusClass}`}
+                            aria-label={`Go to question ${index + 1}`}
+                        >
+                            {isMarked && <span className="absolute top-0.5 right-0.5 text-base">🚩</span>}
+                            {index + 1}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 
 const ScoreCircle: React.FC<{ score: number; total: number }> = ({ score, total }) => {
     const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -110,13 +159,15 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     const [result, setResult] = useState<ExamResult | null>(null);
     const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
     const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+    const [markedQuestions, setMarkedQuestions] = useState<string[]>([]);
+    const [examSystem, setExamSystem] = useState<ExamSystem>('عام');
 
     const finishExam = useCallback(async () => {
         setStatus('loading');
-        const examResult = await gradeExamAndGetFeedbackAI(questions, answers, user.grade);
+        const examResult = await gradeExamAndGetFeedbackAI(questions, answers, user.grade, examSystem);
         setResult(examResult);
         setStatus('finished');
-    }, [answers, questions, user.grade]);
+    }, [answers, questions, user.grade, examSystem]);
     
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout>;
@@ -149,11 +200,12 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     const startExam = async () => {
         setStatus('generating_questions');
         setAnswers([]);
+        setMarkedQuestions([]);
         setCurrentQuestionIndex(0);
         setResult(null);
 
         try {
-            const generatedQuestions = await generateExamQuestions(selectedSubjects, questionCount, user.grade);
+            const generatedQuestions = await generateExamQuestions(selectedSubjects, questionCount, user.grade, examSystem);
             if (generatedQuestions.length === 0) throw new Error("AI did not generate any questions.");
 
             setQuestions(generatedQuestions);
@@ -181,6 +233,14 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
     const handleAnswer = (questionId: string, answerIndex: number) => {
         setAnswers(prev => [...prev.filter(a => a.questionId !== questionId), { questionId, answerIndex }]);
+    };
+
+    const handleMarkForReview = (questionId: string) => {
+        setMarkedQuestions(prev => 
+            prev.includes(questionId) 
+                ? prev.filter(id => id !== questionId) 
+                : [...prev, questionId]
+        );
     };
     
     const restartExam = () => { setStatus('not_started'); setSelectedSubjects([]); };
@@ -305,6 +365,19 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                             </button>
                         ))}
                     </div>
+                    <div className="mt-6 text-center">
+                        <button 
+                            onClick={() => handleMarkForReview(currentQuestion.id)}
+                            className={`inline-flex items-center gap-2 font-semibold py-2 px-4 rounded-lg transition-colors border-2 ${
+                                markedQuestions.includes(currentQuestion.id)
+                                ? 'bg-yellow-400/10 border-yellow-500 text-yellow-600 dark:text-yellow-400'
+                                : 'bg-transparent border-transparent hover:bg-black/5 dark:hover:bg-white/5'
+                            }`}
+                        >
+                            <FlagIcon />
+                            {markedQuestions.includes(currentQuestion.id) ? 'إلغاء التأشير' : 'تأشير للمراجعة'}
+                        </button>
+                    </div>
                 </Card3D>
                  <div className="mt-8 flex gap-4 justify-between">
                     <button onClick={goToPrevious} disabled={currentQuestionIndex === 0} className="bg-[hsl(var(--color-surface))] hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed text-[hsl(var(--color-text-secondary))] font-bold py-3 px-8 rounded-lg transition-all">
@@ -314,6 +387,14 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                         {currentQuestionIndex === questions.length - 1 ? 'إنهاء الاختبار' : 'التالي'}
                     </button>
                 </div>
+                <QuestionNavigator 
+                    count={questions.length}
+                    currentIndex={currentQuestionIndex}
+                    answers={answers}
+                    questionIds={questions.map(q => q.id)}
+                    markedQuestions={markedQuestions}
+                    onJump={setCurrentQuestionIndex}
+                />
                 <AnimatedCat />
             </div>
         );
@@ -345,10 +426,29 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                     )})}
                 </div>
             </div>
+
+            <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
+                <h2 className="text-2xl font-bold mb-4">2. اختر نظام الأسئلة</h2>
+                <div className="flex bg-[hsl(var(--color-background))] p-1 rounded-xl gap-1">
+                    {(['عام', 'لغات', 'ازهري'] as ExamSystem[]).map(system => (
+                        <button
+                            key={system}
+                            onClick={() => setExamSystem(system)}
+                            className={`w-full text-center py-2 px-4 font-bold rounded-lg transition-all duration-300 ${
+                                examSystem === system
+                                    ? 'bg-[hsl(var(--color-primary))] text-white shadow'
+                                    : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
+                            }`}
+                        >
+                            {system.charAt(0).toUpperCase() + system.slice(1)}
+                        </button>
+                    ))}
+                </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                    <h2 className="text-2xl font-bold mb-4">2. عدد الأسئلة</h2>
+                    <h2 className="text-2xl font-bold mb-4">3. عدد الأسئلة</h2>
                      <div className="flex items-center gap-4">
                         <input type="range" min="10" max="30" step="5" value={questionCount} onChange={e => setQuestionCount(Number(e.target.value))} className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"/>
                         <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-28 text-center">{questionCount} سؤال</span>
@@ -356,7 +456,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                 </div>
 
                 <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                    <h2 className="text-2xl font-bold mb-4">3. مدة الاختبار</h2>
+                    <h2 className="text-2xl font-bold mb-4">4. مدة الاختبار</h2>
                     <div className="flex items-center gap-4">
                          <input type="range" min="10" max="60" step="5" value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"/>
                         <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-28 text-center">{duration} دقيقة</span>

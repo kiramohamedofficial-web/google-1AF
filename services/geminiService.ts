@@ -9,6 +9,8 @@ interface Answer {
     answerIndex: number;
 }
 
+type ExamSystem = 'عام' | 'لغات' | 'ازهري';
+
 // Schema for generating questions
 const questionSchema = {
     type: Type.OBJECT,
@@ -75,20 +77,24 @@ const getGradeSpecificInstructions = (gradeLevel: string): string => {
         case 'الصف الثالث الثانوي':
             return `
                 **CRITICAL INSTRUCTIONS FOR: "الصف الثالث الثانوي" (3rd Secondary Grade - Thanaweya Amma)**
-                - **Overall Goal:** Generate a highly challenging exam that mirrors the modern Egyptian Thanaweya Amma system. The focus is entirely on critical thinking, inference, and deep contextual understanding.
-                - **Difficulty Distribution:**
-                    - 80% Advanced (M3)
-                    - 20% Medium (M2)
-                    - **Strictly 0% Easy (M1).**
-                - **Bloom's Taxonomy Distribution:**
-                    - 40% Evaluate
-                    - 30% Analyze
-                    - 30% Create
-                    - **Avoid direct recall questions entirely.**
-                - **Question Style:**
-                    - Use complex case studies with rich, and sometimes superfluous, data.
-                    - Design challenging MCQs with highly plausible distractors that are very similar to the correct answer.
-                    - Questions must require significant analysis and critical thinking, not just knowledge retrieval.
+                - **Overall Goal:** Generate a highly challenging exam that mirrors the modern Egyptian Thanaweya Amma system. The focus is entirely on critical thinking, inference, and deep contextual understanding, not rote memorization.
+                - **Difficulty Distribution (Strict):**
+                    - **80% Advanced (M3):** Very Hard questions requiring multi-step reasoning or synthesis of information.
+                    - **20% Medium (M2):** Challenging but more straightforward application questions.
+                    - **Strictly 0% Easy (M1).** Easy, direct-recall questions are forbidden.
+                - **Bloom's Taxonomy Distribution (Strict):**
+                    - **35% Analyze:** Break down information into component parts to explore relationships.
+                    - **35% Evaluate:** Justify a stand or decision; appraise, argue, defend.
+                    - **30% Create:** Generate new ideas, products, or ways of viewing things.
+                    - **Avoid 'Remember' and 'Understand' levels.** Questions must test higher-order thinking.
+                - **Question Style & Content:**
+                    - **Context is Key:** Many questions should be based on a provided context (passage, data table, graph description, case study). The context should be rich and may contain extraneous information to test analytical skills.
+                    - **Question Types:** Focus on application-based scenarios, data analysis, case studies, and problems that require multiple logical steps to solve.
+                - **Distractor (Incorrect Options) Generation Rules (VERY IMPORTANT):**
+                    - **Plausible & Close:** All distractors MUST be highly plausible and conceptually close to the correct answer. Avoid obviously wrong options.
+                    - **Common Misconceptions:** One distractor should represent a common student error or misconception related to the topic.
+                    - **Calculation Errors:** For numerical problems, distractors should be the result of a single logical or calculation error (e.g., sign error, using the wrong formula).
+                    - **Similar Phrasing:** Options should have similar grammatical structure and length to avoid giving away the answer.
             `;
         default:
             return `
@@ -100,18 +106,49 @@ const getGradeSpecificInstructions = (gradeLevel: string): string => {
     }
 };
 
-export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
-    console.log(`Generating exam questions for ${gradeLevel} with ${MODEL_NAME}...`);
+const getSystemSpecificInstructions = (system: ExamSystem): string => {
+    switch (system) {
+        case 'لغات':
+            return `
+                **System Constraint: "لغات" (Language Schools System)**
+                - Questions for scientific subjects (Physics, Chemistry, Biology, Math, etc.) MUST be generated in ENGLISH.
+                - The terminology and context must align with the Egyptian language school curriculum.
+                - For literature/humanities subjects (Arabic, History, etc.), questions should remain in Arabic but might test more advanced language skills or different curriculum points.
+            `;
+        case 'ازهري':
+            return `
+                **System Constraint: "ازهري" (Al-Azhar System)**
+                - The exam MUST align with the Al-Azhar curriculum, which differs from the general curriculum.
+                - Incorporate the specific "Al-Azhar" style of questioning, which may be more direct, text-based, or have a different focus.
+                - If religious subjects ("Tafsir", "Hadith", "Fiqh", "Tawhid") are selected, questions must be strictly based on the Azhari syllabus for the specified grade level. The tone must be formal and respectful.
+                - For scientific and literary subjects, adhere to the Azhari curriculum's scope, which might include additional or different topics compared to the general system.
+            `;
+        case 'عام':
+        default:
+            return `
+                **System Constraint: "عام" (General / Thanaweya Amma System)**
+                - This is the standard Egyptian national curriculum. Follow the grade-specific instructions for this system precisely.
+            `;
+    }
+};
+
+
+export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string, examSystem: ExamSystem): Promise<Question[]> => {
+    console.log(`Generating exam questions for ${gradeLevel} (${examSystem} system) with ${MODEL_NAME}...`);
     
     const gradeInstructions = getGradeSpecificInstructions(gradeLevel);
+    const systemInstructions = getSystemSpecificInstructions(examSystem);
     
     const prompt = `
-        You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center. Your primary goal is to generate an exam that precisely follows the grade-specific instructions provided below.
+        You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center. Your primary goal is to generate an exam that precisely follows the grade-specific and system-specific instructions provided below.
 
         **Primary Task: Generate an exam with these core specifications:**
         - **Grade Level:** "${gradeLevel}"
+        - **Exam System:** "${examSystem}"
         - **Subjects:** ${subjects.join(', ')}
         - **Total Number of Questions:** ${questionCount}
+
+        ${systemInstructions}
 
         ${gradeInstructions}
 
@@ -121,7 +158,7 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
         3.  **Four Options**: Every question MUST have exactly four multiple-choice options.
         4.  **Clear Rationale**: Provide a concise and clear explanation (rationale) for why the correct answer is correct.
         5.  **Context Field**: Use the 'context' field for questions that require a preceding text, scenario, or data description. Otherwise, it can be omitted.
-        6.  **Egyptian Curriculum**: Ensure questions are relevant to the Egyptian curriculum where applicable.
+        6.  **Egyptian Curriculum**: Ensure questions are relevant to the specified Egyptian curriculum (General, Languages, or Azhari).
         7.  **Output Format**: Strictly adhere to the provided JSON schema. Your entire response must be a single valid JSON array of question objects.
     `;
     
@@ -160,7 +197,8 @@ const aiFeedbackSchema = {
 export const gradeExamAndGetFeedbackAI = async (
     questions: Question[],
     answers: Answer[],
-    gradeLevel: string
+    gradeLevel: string,
+    examSystem: ExamSystem
 ): Promise<ExamResult> => {
     
     const locallyCalculateResults = () => {
@@ -228,6 +266,7 @@ export const gradeExamAndGetFeedbackAI = async (
 
         Here is the student's exam performance data:
         - Grade Level: "${gradeLevel}"
+        - Exam System: "${examSystem}"
         - Total Score: ${totalScore} out of ${totalQuestions}
         - Performance Breakdown by Subject: ${JSON.stringify(performanceBreakdown.bySubject)}
         - Performance Breakdown by Cognitive Skill (Bloom's Taxonomy): ${JSON.stringify(performanceBreakdown.byCognitiveLevel)}
