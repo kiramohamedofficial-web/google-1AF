@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MOCK_SUBJECTS } from '../constants.ts';
 import { Question, ExamResult, User, SubjectScore } from '../types.ts';
-import { gradeExamWithNeoAI, generateExamQuestions } from '../services/geminiService.ts';
+import { gradeExamAndGetFeedbackAI, generateExamQuestions } from '../services/geminiService.ts';
 import Card3D from '../components/common/Card3D.tsx';
 
 type ExamStatus = 'not_started' | 'generating_questions' | 'in_progress' | 'loading' | 'finished';
-const TOTAL_QUESTIONS_IN_EXAM = 10;
 
 interface AiExamPageProps {
     user: User;
 }
 
 const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
+    const [questionCount, setQuestionCount] = useState(10);
     const [duration, setDuration] = useState(30);
     const [timeLeft, setTimeLeft] = useState(duration * 60);
     const [status, setStatus] = useState<ExamStatus>('not_started');
@@ -23,10 +23,10 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
     const finishExam = useCallback(async () => {
         setStatus('loading');
-        const examResult = await gradeExamWithNeoAI(questions, answers);
+        const examResult = await gradeExamAndGetFeedbackAI(questions, answers, user.grade);
         setResult(examResult);
         setStatus('finished');
-    }, [answers, questions]);
+    }, [answers, questions, user.grade]);
     
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout>;
@@ -47,7 +47,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
         try {
             const generatedQuestions = await generateExamQuestions(
                 selectedSubjects,
-                TOTAL_QUESTIONS_IN_EXAM,
+                questionCount,
                 user.grade
             );
             
@@ -88,7 +88,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
     const goToPrevious = () => {
         if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(prev => prev - 1);
+            setCurrentQuestionIndex(prev => prev + 1);
         }
     };
     
@@ -141,9 +141,27 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                     <p className="text-6xl font-extrabold my-4 text-[hsl(var(--color-primary))]">{result.totalScore}<span className="text-3xl text-[hsl(var(--color-text-secondary))]"> / {result.totalQuestions}</span></p>
                     <div className="bg-[hsl(var(--color-background))] p-4 rounded-lg">
                         <p className="font-semibold">رسالة من Neo 🤖:</p>
-                        <p className="italic whitespace-pre-line">{result.neoMessage}</p>
+                        <p className="italic whitespace-pre-line text-lg">{result.neoMessage}</p>
                     </div>
                 </div>
+
+                {result.performanceAnalysis && (
+                    <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
+                        <h3 className="text-2xl font-bold mb-4">📊 تحليل المستوى</h3>
+                        <p className="text-[hsl(var(--color-text-secondary))] whitespace-pre-line text-lg">{result.performanceAnalysis}</p>
+                    </div>
+                )}
+
+                {result.improvementTips && result.improvementTips.length > 0 && (
+                    <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
+                        <h3 className="text-2xl font-bold mb-4">💡 نصائح ذكية من Neo</h3>
+                        <ul className="space-y-3 list-disc list-inside pr-4">
+                            {result.improvementTips.map((tip, index) => (
+                                <li key={index} className="text-[hsl(var(--color-text-secondary))] text-lg">{tip}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
                 
                 {Object.keys(result.subjectScores).length > 1 && (
                      <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
@@ -253,7 +271,23 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
             </div>
             
             <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
-                <h2 className="text-2xl font-bold mb-4">2. حدد مدة الاختبار (بالدقائق)</h2>
+                <h2 className="text-2xl font-bold mb-4">2. اختر عدد الأسئلة</h2>
+                 <div className="flex items-center gap-4">
+                    <input 
+                        type="range" 
+                        min="10" 
+                        max="30" 
+                        step="5" 
+                        value={questionCount} 
+                        onChange={e => setQuestionCount(Number(e.target.value))}
+                        className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-28 text-center">{questionCount} سؤال</span>
+                </div>
+            </div>
+
+            <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
+                <h2 className="text-2xl font-bold mb-4">3. حدد مدة الاختبار (بالدقائق)</h2>
                 <div className="flex items-center gap-4">
                      <input 
                         type="range" 
@@ -273,7 +307,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                 disabled={selectedSubjects.length === 0}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg text-xl transition-all shadow-[0_4px_14px_0_rgba(34,197,94,0.25)]"
             >
-                🚀 ابدأ الاختبار الآن ({TOTAL_QUESTIONS_IN_EXAM} أسئلة)
+                🚀 ابدأ الاختبار الآن ({questionCount} أسئلة)
             </button>
         </div>
     );

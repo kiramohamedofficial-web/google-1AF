@@ -108,9 +108,10 @@ export interface ExamResult {
         studentAnswer: string;
         correctAnswer: string;
         isCorrect: boolean;
-        explanation?: string;
     }[];
     neoMessage: string;
+    performanceAnalysis?: string;
+    improvementTips?: string[];
 }
 
 export interface GalleryImage {
