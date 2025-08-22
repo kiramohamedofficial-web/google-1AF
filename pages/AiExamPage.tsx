@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { MOCK_SUBJECTS } from '../constants.ts';
-import { Question, ExamResult, User } from '../types.ts';
+import { Question, ExamResult, User, SubjectScore } from '../types.ts';
 import { gradeExamWithNeoAI, generateExamQuestions } from '../services/geminiService.ts';
 import Card3D from '../components/common/Card3D.tsx';
 
@@ -150,7 +149,7 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                      <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-6 border border-[hsl(var(--color-border))]">
                         <h3 className="text-2xl font-bold mb-4">تقرير المواد</h3>
                         <div className="space-y-3">
-                            {Object.entries(result.subjectScores).map(([subject, scores]) => (
+                            {Object.entries(result.subjectScores).map(([subject, scores]: [string, SubjectScore]) => (
                                 <div key={subject} className="flex justify-between items-center bg-[hsl(var(--color-background))] p-3 rounded-lg">
                                     <span className="font-bold">{subject}</span>
                                     <div className="flex items-center gap-4">
@@ -212,11 +211,11 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                     </div>
                 </Card3D>
                  <div className="mt-8 flex gap-4 justify-between">
-                    <button onClick={goToPrevious} disabled={currentQuestionIndex === 0} className="bg-[hsl(var(--color-surface))] hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed text-[hsl(var(--color-text-primary))] font-bold py-3 px-8 rounded-lg text-lg transition-all border border-[hsl(var(--color-border))]">
+                    <button onClick={goToPrevious} disabled={currentQuestionIndex === 0} className="bg-[hsl(var(--color-surface))] hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed text-[hsl(var(--color-text-secondary))] font-bold py-3 px-8 rounded-lg transition-all">
                         السابق
                     </button>
-                    <button onClick={goToNext} className="bg-[hsl(var(--color-primary))] hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all shadow-[0_4px_14px_0_hsla(var(--color-primary),0.25)]">
-                        {currentQuestionIndex < questions.length - 1 ? 'التالي' : 'إنهاء الاختبار'}
+                    <button onClick={goToNext} className="bg-[hsl(var(--color-primary))] hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-all shadow-[0_4px_14px_0_hsla(var(--color-primary),0.25)]">
+                        {currentQuestionIndex === questions.length - 1 ? 'إنهاء الاختبار' : 'التالي'}
                     </button>
                 </div>
             </div>
@@ -224,50 +223,57 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
     }
 
     return (
-        <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-8 text-center border border-[hsl(var(--color-border))] animate-fade-in-up">
-            <h1 className="text-3xl font-extrabold mb-4">🤖 نظام Neo للاختبارات</h1>
-            <p className="text-[hsl(var(--color-text-secondary))] mb-8 max-w-lg mx-auto">اختر مدة ومواد الاختبار لمحاكاة تجربة امتحانية حقيقية والحصول على تقرير أداء مفصل.</p>
+        <div className="space-y-8 animate-fade-in-up">
+            <Card3D className="bg-[hsl(var(--color-surface))] p-8 text-center rounded-2xl border border-[hsl(var(--color-border))]">
+                <h1 className="text-4xl font-extrabold text-[hsl(var(--color-text-primary))]">الاختبارات الذكية مع Neo</h1>
+                <p className="text-lg text-[hsl(var(--color-text-secondary))] mt-4 max-w-2xl mx-auto">
+                    مرحباً بك في مركز الاختبارات الذكي! يقوم مساعدنا Neo 🤖 بتوليد اختبارات فريدة لك في المواد التي تختارها لمساعدتك على تقييم مستواك والاستعداد بشكل أفضل.
+                </p>
+            </Card3D>
             
-            <div className="space-y-6">
-                <div>
-                    <h2 className="text-xl font-bold mb-3 text-[hsl(var(--color-text-primary))]">1. اختر مدة الاختبار</h2>
-                    <div className="flex justify-center gap-3 bg-[hsl(var(--color-background))] p-2 rounded-xl">
-                        {[15, 30, 45, 60].map(d => (
-                            <button 
-                                key={d}
-                                onClick={() => setDuration(d)}
-                                className={`w-full px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${duration === d ? 'bg-[hsl(var(--color-primary))] text-white shadow-md scale-105' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
-                            >
-                                {d} دقيقة
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <h2 className="text-xl font-bold mb-3 text-[hsl(var(--color-text-primary))]">2. اختر المواد</h2>
-                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {MOCK_SUBJECTS.map(subject => (
-                            <button 
-                                key={subject} 
-                                onClick={() => toggleSubject(subject)}
-                                className={`p-3 rounded-lg font-semibold transition-all duration-300 border-2 ${selectedSubjects.includes(subject) ? 'bg-[hsl(var(--color-primary))] text-white border-transparent scale-105 shadow-md' : 'bg-[hsl(var(--color-background))] border-transparent hover:border-[hsl(var(--color-primary))]'}`}
-                            >
-                                {subject}
-                            </button>
-                        ))}
+            <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
+                <h2 className="text-2xl font-bold mb-4">1. اختر المواد التي تريد الاختبار فيها</h2>
+                <div className="flex flex-wrap gap-3">
+                    <button 
+                        onClick={selectAllSubjects} 
+                        className={`font-semibold py-2 px-4 rounded-lg transition-colors border-2 ${selectedSubjects.length === MOCK_SUBJECTS.length ? 'bg-[hsl(var(--color-primary))] text-white border-transparent' : 'bg-transparent border-[hsl(var(--color-border))] hover:border-[hsl(var(--color-primary))]'}`}
+                    >
+                        {selectedSubjects.length === MOCK_SUBJECTS.length ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                    </button>
+                    {MOCK_SUBJECTS.map(subject => (
                         <button 
-                            onClick={selectAllSubjects}
-                            className={`p-3 rounded-lg font-semibold transition-all duration-300 border-2 md:col-span-3 ${selectedSubjects.length === MOCK_SUBJECTS.length ? 'bg-[hsl(var(--color-primary))] text-white border-transparent scale-105 shadow-md' : 'bg-[hsl(var(--color-background))] border-transparent hover:border-[hsl(var(--color-primary))]'}`}
+                            key={subject}
+                            onClick={() => toggleSubject(subject)}
+                            className={`font-semibold py-2 px-4 rounded-lg transition-colors border-2 ${selectedSubjects.includes(subject) ? 'bg-[hsl(var(--color-primary))] text-white border-transparent' : 'bg-transparent border-[hsl(var(--color-border))] hover:border-[hsl(var(--color-primary))]'}`}
                         >
-                            اختبار شامل (جميع المواد)
+                            {subject}
                         </button>
-                    </div>
+                    ))}
                 </div>
             </div>
-
-            <button onClick={startExam} disabled={selectedSubjects.length === 0} className="mt-8 w-full bg-[hsl(var(--color-primary))] hover:opacity-90 disabled:bg-gray-400 disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg text-xl transition-all transform hover:scale-105 shadow-[0_4px_14px_0_hsla(var(--color-primary),0.3)]">
-                ابدأ الاختبار ({selectedSubjects.length} {selectedSubjects.length === 1 ? 'مادة' : 'مواد'})
+            
+            <div className="bg-[hsl(var(--color-surface))] p-6 rounded-2xl border border-[hsl(var(--color-border))]">
+                <h2 className="text-2xl font-bold mb-4">2. حدد مدة الاختبار (بالدقائق)</h2>
+                <div className="flex items-center gap-4">
+                     <input 
+                        type="range" 
+                        min="10" 
+                        max="60" 
+                        step="5" 
+                        value={duration} 
+                        onChange={e => setDuration(Number(e.target.value))}
+                        className="w-full h-2 bg-[hsl(var(--color-background))] rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="font-bold text-lg bg-[hsl(var(--color-background))] px-4 py-2 rounded-md w-24 text-center">{duration} دقيقة</span>
+                </div>
+            </div>
+            
+            <button 
+                onClick={startExam}
+                disabled={selectedSubjects.length === 0}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg text-xl transition-all shadow-[0_4px_14px_0_rgba(34,197,94,0.25)]"
+            >
+                🚀 ابدأ الاختبار الآن ({TOTAL_QUESTIONS_IN_EXAM} أسئلة)
             </button>
         </div>
     );

@@ -4,7 +4,18 @@ import { Question, ExamResult, SubjectScore } from '../types.ts';
 import { MOCK_QUESTIONS } from '../constants.ts';
 
 // The API key is handled securely by the environment.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// We will lazily initialize the AI client to prevent app crash on startup
+// if the environment variables are not available.
+let aiClient: GoogleGenAI | null = null;
+
+const getAiClient = (): GoogleGenAI => {
+    if (!aiClient) {
+        // This will only be executed when the AI functionality is triggered.
+        // It still relies on the environment providing process.env.API_KEY.
+        aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return aiClient;
+};
 
 interface Answer {
     questionId: string;
@@ -66,6 +77,7 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
