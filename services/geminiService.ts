@@ -1,4 +1,3 @@
-
 import { Question, ExamResult, SubjectScore } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -119,44 +118,42 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
     const incorrectAnswers = feedback.filter(f => !f.isCorrect);
     let aiGeneratedFeedback = { neoMessage: '', explanations: [] as {question: string, explanation: string}[] };
 
-    if (incorrectAnswers.length > 0 || totalQuestions > 0) {
-        if (incorrectAnswers.length === 0) {
-            aiGeneratedFeedback.neoMessage = "رائع! لقد أجبت على جميع الأسئلة بشكل صحيح. عمل ممتاز!";
-        } else {
-            const promptData = {
-                totalScore,
-                totalQuestions,
-                subjectScores,
-                incorrectAnswers: incorrectAnswers.map(f => ({
-                    question: f.question,
-                    subject: f.subject,
-                    studentAnswer: f.studentAnswer,
-                    correctAnswer: f.correctAnswer
-                }))
-            };
+    if (incorrectAnswers.length === 0 && totalQuestions > 0) {
+        aiGeneratedFeedback.neoMessage = "رائع! لقد أجبت على جميع الأسئلة بشكل صحيح. عمل ممتاز!";
+    } else if (incorrectAnswers.length > 0) {
+        const promptData = {
+            totalScore,
+            totalQuestions,
+            subjectScores,
+            incorrectAnswers: incorrectAnswers.map(f => ({
+                question: f.question,
+                subject: f.subject,
+                studentAnswer: f.studentAnswer,
+                correctAnswer: f.correctAnswer
+            }))
+        };
 
-            const systemInstruction = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.`;
-            const prompt = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}.`;
-            
-            try {
-                console.log("Generating exam feedback with @google/genai...");
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                    config: {
-                        systemInstruction: systemInstruction,
-                        responseMimeType: "application/json",
-                        responseSchema: feedbackSchema,
-                    },
-                });
-                const jsonStr = response.text.trim();
-                aiGeneratedFeedback = JSON.parse(jsonStr);
+        const systemInstruction = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.`;
+        const prompt = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}.`;
+        
+        try {
+            console.log("Generating exam feedback with @google/genai...");
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    systemInstruction: systemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema: feedbackSchema,
+                },
+            });
+            const jsonStr = response.text.trim();
+            aiGeneratedFeedback = JSON.parse(jsonStr);
 
-            } catch(error) {
-                console.error("Error generating exam feedback with Gemini:", error);
-                // Fallback to a simpler message if AI fails
-                aiGeneratedFeedback.neoMessage = "تم تصحيح اختبارك. راجع إجاباتك جيدًا لتحديد نقاط القوة والضعف.";
-            }
+        } catch(error) {
+            console.error("Error generating exam feedback with Gemini:", error);
+            // Fallback to a simpler message if AI fails
+            aiGeneratedFeedback.neoMessage = "تم تصحيح اختبارك. راجع إجاباتك جيدًا لتحديد نقاط القوة والضعف.";
         }
     }
 
