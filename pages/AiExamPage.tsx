@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { MOCK_SUBJECTS } from '../constants';
-import { Question, ExamResult, User } from '../types';
-import { gradeExamWithNeoAI, generateExamQuestions } from '../services/geminiService';
-import Card3D from '../components/common/Card3D';
+import { MOCK_SUBJECTS } from '../constants.ts';
+import { Question, ExamResult, User } from '../types.ts';
+import { gradeExamWithNeoAI, generateExamQuestions } from '../services/geminiService.ts';
+import Card3D from '../components/common/Card3D.tsx';
 
 type ExamStatus = 'not_started' | 'generating_questions' | 'in_progress' | 'loading' | 'finished';
 const TOTAL_QUESTIONS_IN_EXAM = 10;

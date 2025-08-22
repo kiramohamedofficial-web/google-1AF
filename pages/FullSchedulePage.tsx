@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
-import { User, Lesson } from '../types';
-import { getSubjectStyle } from '../constants';
+import { User, Lesson } from '../types.ts';
+import { getSubjectStyle } from '../constants.ts';
 
 interface FullSchedulePageProps {
   user: User;

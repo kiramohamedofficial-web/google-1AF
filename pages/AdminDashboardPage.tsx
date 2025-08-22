@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { MOCK_STUDENTS } from '../constants';
-import { Lesson, Trip, Teacher, Post, User, Booking } from '../types';
+import { MOCK_STUDENTS } from '../constants.ts';
+import { Lesson, Trip, Teacher, Post, User, Booking } from '../types.ts';
 import { 
     UsersIcon, CalendarIcon, AcademicCapIcon, TruckIcon, 
     NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon 
-} from '../components/common/Icons';
+} from '../components/common/Icons.tsx';
 
 type AdminTab = 'stats' | 'lessons' | 'trips' | 'teachers' | 'posts' | 'students' | 'gallery' | 'bookings';
 

@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo } from 'react';
-import { User, Lesson, Trip, Post, Page, Booking } from '../types';
-import { getSubjectStyle } from '../constants';
+import { User, Lesson, Trip, Post, Page, Booking } from '../types.ts';
+import { getSubjectStyle } from '../constants.ts';
 
 const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: (lesson: Lesson) => void; onClose: () => void; }> = ({ lesson, isBooked, onBook, onClose }) => {
     const isFull = lesson.capacity ? lesson.bookedCount! >= lesson.capacity : false;

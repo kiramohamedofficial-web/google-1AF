@@ -1,4 +1,5 @@
-import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking } from './types';
+
+import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking } from './types.ts';
 
 // Centralized subject styles to be used across the application
 export const subjectStyles: Record<string, { icon: string; progressBarClass: string; bgColor: string }> = {

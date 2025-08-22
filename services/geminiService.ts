@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from '@google/genai';
-import { Question, ExamResult, SubjectScore } from '../types';
-import { MOCK_QUESTIONS } from '../constants';
+import { Question, ExamResult, SubjectScore } from '../types.ts';
+import { MOCK_QUESTIONS } from '../constants.ts';
 
 // The API key is handled securely by the environment.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });

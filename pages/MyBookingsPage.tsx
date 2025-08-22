@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { User, Booking, BookingStatus } from '../types';
+import { User, Booking, BookingStatus } from '../types.ts';
 
 interface MyBookingsPageProps {
     user: User;

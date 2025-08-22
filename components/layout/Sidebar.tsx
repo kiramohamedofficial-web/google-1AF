@@ -1,12 +1,13 @@
+
 import React from 'react';
-import { User, Theme, Page } from '../../types';
-import ThemeSwitcher from '../common/ThemeSwitcher';
+import { User, Theme, Page } from '../../types.ts';
+import ThemeSwitcher from '../common/ThemeSwitcher.tsx';
 import { 
     HomeIcon, CalendarIcon, UsersIcon, TruckIcon, BookOpenIcon, 
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
     Cog6ToothIcon, ArrowLeftOnRectangleIcon, PhotoIcon, 
     NewspaperIcon, ClipboardListIcon 
-} from '../common/Icons';
+} from '../common/Icons.tsx';
 
 interface SidebarProps {
     isOpen: boolean;

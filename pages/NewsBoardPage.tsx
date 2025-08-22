@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Post } from '../types';
+import { Post } from '../types.ts';
 
 interface NewsBoardPageProps {
     posts: Post[];

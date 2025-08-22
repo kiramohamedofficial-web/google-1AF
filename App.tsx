@@ -1,22 +1,22 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking } from './types';
-import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS } from './constants';
-import Header from './components/layout/Header';
-import Sidebar from './components/layout/Sidebar';
-import HomePage from './pages/HomePage';
-import FullSchedulePage from './pages/FullSchedulePage';
-import TeachersPage from './pages/TeachersPage';
-import TripsPage from './pages/TripsPage';
-import BooksPage from './pages/BooksPage';
-import AiExamPage from './pages/AiExamPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import ProfilePage from './pages/ProfilePage';
-import AboutPage from './pages/AboutPage';
-import LoginPage from './pages/LoginPage';
-import GalleryPage from './pages/GalleryPage';
-import NewsBoardPage from './pages/NewsBoardPage';
-import MyBookingsPage from './pages/MyBookingsPage';
+import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking } from './types.ts';
+import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS } from './constants.ts';
+import Header from './components/layout/Header.tsx';
+import Sidebar from './components/layout/Sidebar.tsx';
+import HomePage from './pages/HomePage.tsx';
+import FullSchedulePage from './pages/FullSchedulePage.tsx';
+import TeachersPage from './pages/TeachersPage.tsx';
+import TripsPage from './pages/TripsPage.tsx';
+import BooksPage from './pages/BooksPage.tsx';
+import AiExamPage from './pages/AiExamPage.tsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
+import AboutPage from './pages/AboutPage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import GalleryPage from './pages/GalleryPage.tsx';
+import NewsBoardPage from './pages/NewsBoardPage.tsx';
+import MyBookingsPage from './pages/MyBookingsPage.tsx';
 
 const App: React.FC = () => {
     const [theme, setTheme] = useState<Theme>('light');

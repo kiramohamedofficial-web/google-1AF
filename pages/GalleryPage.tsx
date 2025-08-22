@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { MOCK_GALLERY_IMAGES } from '../constants';
-import { GalleryImage } from '../types';
+import { MOCK_GALLERY_IMAGES } from '../constants.ts';
+import { GalleryImage } from '../types.ts';
 
 const GalleryPage: React.FC = () => {
     const albums: GalleryImage['album'][] = ['حصص', 'تكريم', 'أنشطة', 'رحلات'];

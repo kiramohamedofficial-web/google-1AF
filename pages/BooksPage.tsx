@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MOCK_BOOKS } from '../constants';
+import { MOCK_BOOKS } from '../constants.ts';
 
 const BooksPage: React.FC = () => {
     return (

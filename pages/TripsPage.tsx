@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Trip, User, Booking } from '../types';
+import { Trip, User, Booking } from '../types.ts';
 
 interface TripsPageProps {
     trips: Trip[];

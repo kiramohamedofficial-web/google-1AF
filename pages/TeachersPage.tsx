@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Teacher } from '../types';
+import { Teacher } from '../types.ts';
 
 const TeachersPage: React.FC<{ teachers: Teacher[] }> = ({ teachers }) => {
     return (
