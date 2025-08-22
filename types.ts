@@ -87,10 +87,18 @@ export interface Book {
 
 export interface Question {
     id: string;
-    text: string;
+    subject: string;
+    grade: string;
+    cognitive_level: 'Remember' | 'Understand' | 'Apply' | 'Analyze' | 'Evaluate' | 'Create';
+    difficulty: 'M1' | 'M2' | 'M3'; // M1=Easy, M2=Medium, M3=Advanced
+    stem: string; // The question text itself
+    context?: string; // Optional context like a text, graph description, etc.
     options: string[];
     correctOptionIndex: number;
-    subject: string;
+    rationale: string; // Explanation for the correct answer
+    skills?: string[]; // e.g., "Reasoning", "Data Interpretation"
+    tags?: string[];
+    time_suggestion_sec?: number;
 }
 
 export interface SubjectScore {
@@ -98,21 +106,32 @@ export interface SubjectScore {
     total: number;
 }
 
+// Breakdown by different criteria
+export interface PerformanceBreakdown {
+    bySubject: Record<string, SubjectScore>;
+    byCognitiveLevel: Record<string, SubjectScore>;
+    byDifficulty: Record<string, SubjectScore>;
+}
+
+export interface AnswerReview {
+    questionStem: string;
+    subject: string;
+    studentAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+    rationale: string; // The key addition
+}
+
 export interface ExamResult {
     totalScore: number;
     totalQuestions: number;
-    subjectScores: Record<string, SubjectScore>;
-    feedback: {
-        question: string;
-        subject: string;
-        studentAnswer: string;
-        correctAnswer: string;
-        isCorrect: boolean;
-    }[];
+    performanceBreakdown: PerformanceBreakdown;
+    review: AnswerReview[];
     neoMessage: string;
-    performanceAnalysis?: string;
+    performanceAnalysis?: string; // Textual analysis from AI
     improvementTips?: string[];
 }
+
 
 export interface GalleryImage {
     id: string;

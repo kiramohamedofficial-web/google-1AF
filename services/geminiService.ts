@@ -1,206 +1,204 @@
-import { Question, ExamResult, SubjectScore } from '../types.ts';
-import { MOCK_QUESTIONS } from '../constants.ts';
+import { GoogleGenAI, Type } from "@google/genai";
+import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview } from '../types.ts';
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL_NAME = 'moonshotai/kimi-k2:free';
+const MODEL_NAME = 'gemini-2.5-flash';
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const shuffleArray = <T>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+// Schema for generating questions
+const questionSchema = {
+    type: Type.OBJECT,
+    properties: {
+        id: { type: Type.STRING, description: "A unique identifier for the question." },
+        subject: { type: Type.STRING, description: "The subject of the question." },
+        grade: { type: Type.STRING, description: "The grade level for the question." },
+        cognitive_level: { type: Type.STRING, enum: ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'], description: "Bloom's Taxonomy level." },
+        difficulty: { type: Type.STRING, enum: ['M1', 'M2', 'M3'], description: "Difficulty level: M1=Easy, M2=Medium, M3=Advanced." },
+        stem: { type: Type.STRING, description: "The main text of the question." },
+        context: { type: Type.STRING, description: "Optional context (e.g., a paragraph or data) for the question." },
+        options: { type: Type.ARRAY, items: { type: Type.STRING }, description: "An array of 4 possible answers." },
+        correctOptionIndex: { type: Type.INTEGER, description: "The 0-based index of the correct answer in the options array." },
+        rationale: { type: Type.STRING, description: "A brief explanation of why the correct answer is correct." },
+        skills: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Specific skills tested by the question." },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Keywords or tags for categorization." },
+        time_suggestion_sec: { type: Type.INTEGER, description: "Suggested time in seconds to answer the question." },
+    },
+    required: ["id", "subject", "grade", "cognitive_level", "difficulty", "stem", "options", "correctOptionIndex", "rationale"]
 };
 
-const callAiApi = async (prompt: string) => {
-    if (!process.env.API_KEY) {
-        throw new Error("API key is not set in environment variables (API_KEY).");
-    }
-
-    const response = await fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.API_KEY}`,
-        },
-        body: JSON.stringify({
-            model: MODEL_NAME,
-            messages: [{ role: 'user', content: prompt }],
-            response_format: { type: 'json_object' }
-        }),
-    });
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("AI API Error Response:", errorBody);
-        throw new Error(`AI API request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-        console.error("Invalid AI API response structure:", data);
-        throw new Error("Invalid AI API response structure.");
-    }
-    return JSON.parse(data.choices[0].message.content);
+const examQuestionsSchema = {
+    type: Type.ARRAY,
+    items: questionSchema
 };
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
     console.log(`Generating exam questions with ${MODEL_NAME}...`);
     
     const prompt = `
-        أنت خبير في إنشاء الاختبارات التعليمية لمركز تعليمي في مصر.
-        مهمتك هي إنشاء اختبار عالي الجودة وصعب.
+        You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center, following modern pedagogical standards like Bloom's Taxonomy and PISA.
 
-        التعليمات:
-        1. قم بإنشاء ${questionCount} سؤال اختيار من متعدد بالضبط.
-        2. يجب أن تكون الأسئلة مناسبة لطالب في المرحلة الدراسية: "${gradeLevel}".
-        3. يجب توزيع الأسئلة على المواد التالية: ${subjects.join('، ')}.
-        4. كل سؤال يجب أن يحتوي على 4 خيارات بالضبط.
-        5. لغة الأسئلة والإجابات يجب أن تكون العربية.
-        6. يجب أن يكون الرد عبارة عن كائن JSON فقط. يجب أن يحتوي كائن JSON على مفتاح "questions"، وهو عبارة عن مصفوفة من كائنات الأسئلة. يجب أن يحتوي كل كائن سؤال على الخصائص التالية:
-           - "text": string (نص السؤال)
-           - "options": string[] (مصفوفة من 4 خيارات بالضبط)
-           - "correctOptionIndex": number (فهرس الإجابة الصحيحة الذي يبدأ من 0)
-           - "subject": string (المادة الدراسية للسؤال)
+        Your task is to generate a complete exam based on these specifications:
+        - Grade Level: "${gradeLevel}"
+        - Subjects: ${subjects.join(', ')}
+        - Total Number of Questions: ${questionCount}
 
-        مثال على التنسيق:
-        {
-          "questions": [
-            {
-              "text": "ما هي عاصمة مصر؟",
-              "options": ["القاهرة", "الإسكندرية", "الجيزة", "الأقصر"],
-              "correctOptionIndex": 0,
-              "subject": "جغرافيا"
-            }
-          ]
-        }
+        IMPORTANT INSTRUCTIONS:
+        1.  **Unique IDs**: Each question must have a unique ID, like "q_physics_1", "q_chem_1", etc.
+        2.  **Diverse Questions**: Distribute questions across the specified subjects. Ensure a mix of cognitive levels (Remember, Understand, Apply, Analyze) and difficulties (M1, M2, M3).
+        3.  **Four Options**: Every question MUST have exactly four multiple-choice options.
+        4.  **Clear Rationale**: Provide a concise and clear explanation (rationale) for why the correct answer is correct.
+        5.  **Context**: Use the 'context' field for questions that require a preceding text, scenario, or data description. Otherwise, it can be omitted.
+        6.  **Egyptian Context**: Questions should be relevant to the Egyptian curriculum where applicable.
+        7.  **Output Format**: Strictly adhere to the provided JSON schema.
     `;
     
     try {
-        const jsonResponse = await callAiApi(prompt);
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME,
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: examQuestionsSchema,
+            },
+        });
 
-        if (jsonResponse.questions && Array.isArray(jsonResponse.questions) && jsonResponse.questions.length > 0) {
-            return jsonResponse.questions.map((q: any, index: number) => ({ ...q, id: `q${index + 1}` })) as Question[];
-        }
-        
-        throw new Error("AI response did not contain a valid questions array.");
+        const jsonStr = response.text.trim();
+        const questions = JSON.parse(jsonStr) as Question[];
+        return questions;
 
     } catch (error) {
-        console.error(`Error generating questions with ${MODEL_NAME}:`, error);
-        console.log("Falling back to local mock questions.");
-        const relevantQuestions = MOCK_QUESTIONS.filter(q => subjects.includes(q.subject));
-        const shuffledQuestions = shuffleArray(relevantQuestions);
-        const examQuestions = shuffledQuestions.slice(0, questionCount);
-        if (examQuestions.length === 0 && MOCK_QUESTIONS.length > 0) {
-            return shuffleArray(MOCK_QUESTIONS).slice(0, questionCount);
-        }
-        return examQuestions;
+        console.error("Error generating exam questions with Gemini:", error);
+        throw new Error("Failed to generate exam questions. " + (error instanceof Error ? error.message : String(error)));
     }
 };
 
-export const gradeExamAndGetFeedbackAI = async (questions: Question[], answers: Answer[], gradeLevel: string): Promise<ExamResult> => {
-    const feedback = questions.map(q => {
-        const studentAnswerObj = answers.find(a => a.questionId === q.id);
-        const studentAnswerIndex = studentAnswerObj ? studentAnswerObj.answerIndex : -1;
-        const isCorrect = studentAnswerIndex === q.correctOptionIndex;
+
+// Schema for AI-generated feedback
+const aiFeedbackSchema = {
+    type: Type.OBJECT,
+    properties: {
+        neoMessage: { type: Type.STRING, description: "A friendly, encouraging, and personalized message (2-3 sentences) to the student from Neo the AI assistant, in Arabic." },
+        performanceAnalysis: { type: Type.STRING, description: "A detailed textual analysis (2-4 paragraphs) of the student's performance based on the provided data, in Arabic. Highlight strengths and areas for improvement." },
+        improvementTips: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of 3-5 actionable tips for improvement based on the analysis, in Arabic." },
+    },
+    required: ["neoMessage", "performanceAnalysis", "improvementTips"]
+};
+
+export const gradeExamAndGetFeedbackAI = async (
+    questions: Question[],
+    answers: Answer[],
+    gradeLevel: string
+): Promise<ExamResult> => {
+    
+    const locallyCalculateResults = () => {
+        let totalScore = 0;
+        const totalQuestions = questions.length;
+        const review: AnswerReview[] = [];
+
+        const performanceBreakdown: PerformanceBreakdown = {
+            bySubject: {},
+            byCognitiveLevel: {},
+            byDifficulty: {},
+        };
+        
+        const initScore = (obj: Record<string, SubjectScore>, key: string) => {
+            if (!obj[key]) {
+                obj[key] = { score: 0, total: 0 };
+            }
+        };
+
+        questions.forEach(q => {
+            const studentAnswerObj = answers.find(a => a.questionId === q.id);
+            const studentAnswerIndex = studentAnswerObj ? studentAnswerObj.answerIndex : -1;
+            const isCorrect = studentAnswerIndex === q.correctOptionIndex;
+            
+            // Init breakdowns
+            initScore(performanceBreakdown.bySubject, q.subject);
+            initScore(performanceBreakdown.byCognitiveLevel, q.cognitive_level);
+            initScore(performanceBreakdown.byDifficulty, q.difficulty);
+            
+            // Update totals
+            performanceBreakdown.bySubject[q.subject].total++;
+            performanceBreakdown.byCognitiveLevel[q.cognitive_level].total++;
+            performanceBreakdown.byDifficulty[q.difficulty].total++;
+
+            if (isCorrect) {
+                totalScore++;
+                performanceBreakdown.bySubject[q.subject].score++;
+                performanceBreakdown.byCognitiveLevel[q.cognitive_level].score++;
+                performanceBreakdown.byDifficulty[q.difficulty].score++;
+            }
+            
+            review.push({
+                questionStem: q.stem,
+                subject: q.subject,
+                studentAnswer: studentAnswerIndex > -1 ? q.options[studentAnswerIndex] : 'لم تتم الإجابة',
+                correctAnswer: q.options[q.correctOptionIndex],
+                isCorrect,
+                rationale: q.rationale,
+            });
+        });
 
         return {
-            question: q.text,
-            subject: q.subject,
-            studentAnswer: studentAnswerIndex > -1 ? q.options[studentAnswerIndex] : "لم تتم الإجابة",
-            correctAnswer: q.options[q.correctOptionIndex],
-            isCorrect: isCorrect,
+            totalScore,
+            totalQuestions,
+            performanceBreakdown,
+            review,
         };
-    });
-
-    const subjectScores: Record<string, SubjectScore> = {};
-    feedback.forEach(f => {
-        if (!subjectScores[f.subject]) {
-            subjectScores[f.subject] = { score: 0, total: 0 };
-        }
-        subjectScores[f.subject].total++;
-        if (f.isCorrect) {
-            subjectScores[f.subject].score++;
-        }
-    });
-
-    const totalScore = feedback.filter(f => f.isCorrect).length;
-    const totalQuestions = questions.length;
-    
-    const baseResult: ExamResult = {
-        totalScore,
-        totalQuestions,
-        subjectScores,
-        feedback,
-        neoMessage: "تم التصحيح بنجاح!",
     };
 
-    try {
-        const prompt = `
-            أنت مساعد تعليمي ذكي ومشجع اسمه "Neo 🤖".
-            مهمتك هي تحليل نتائج اختبار طالب وتقديم ملاحظات بناءة.
+    const { totalScore, totalQuestions, performanceBreakdown, review } = locallyCalculateResults();
 
-            بيانات الاختبار:
-            - المستوى الدراسي للطالب: ${gradeLevel}
-            - النتيجة: ${totalScore} من ${totalQuestions}
-            - تفاصيل الإجابات: ${JSON.stringify(feedback.map(f => ({ subject: f.subject, correct: f.isCorrect })))}
+    const prompt = `
+        You are an expert AI named "Neo 🤖", acting as an encouraging and insightful AI tutor for a student in an Egyptian educational center.
+        Your task is to analyze the student's exam performance and provide a personalized, helpful, and motivational feedback report in ARABIC.
 
-            التعليمات:
-            1.  اكتب رسالة تشجيعية ("neoMessage") للطالب بناءً على نتيجته. يجب أن تكون الرسالة إيجابية ومحفزة، حتى لو كانت النتيجة منخفضة.
-            2.  قدم تحليلاً للأداء ("performanceAnalysis") يوضح نقاط القوة والضعف. إذا كان الاختبار يحتوي على مواد متعددة، قارن بين الأداء في كل مادة.
-            3.  قدم 3 نصائح قابلة للتنفيذ ("improvementTips") لمساعدة الطالب على التحسن في المرات القادمة. يجب أن تكون النصائح محددة ومركزة على نقاط الضعف التي لاحظتها.
-            4.  يجب أن يكون الرد عبارة عن كائن JSON فقط بالخصائص التالية:
-               - "neoMessage": string (رسالة تشجيعية ومحفزة للطالب)
-               - "performanceAnalysis": string (تحليل أداء الطالب، مع ذكر نقاط القوة والضعف حسب المواد)
-               - "improvementTips": string[] (قائمة من 3 نصائح قابلة للتنفيذ)
+        Here is the student's exam performance data:
+        - Grade Level: "${gradeLevel}"
+        - Total Score: ${totalScore} out of ${totalQuestions}
+        - Performance Breakdown by Subject: ${JSON.stringify(performanceBreakdown.bySubject)}
+        - Performance Breakdown by Cognitive Skill (Bloom's Taxonomy): ${JSON.stringify(performanceBreakdown.byCognitiveLevel)}
+        - Performance Breakdown by Difficulty: ${JSON.stringify(performanceBreakdown.byDifficulty)}
+        - Review of Incorrect Answers: ${JSON.stringify(review.filter(r => !r.isCorrect).map(r => ({ question: r.questionStem, yourAnswer: r.studentAnswer, correctAnswer: r.correctAnswer, subject: r.subject })))}
 
-            مثال على التنسيق:
-            {
-              "neoMessage": "عمل رائع! لقد أبليت بلاءً حسنًا.",
-              "performanceAnalysis": "أظهرت قوة في مادة الفيزياء، ولكن تحتاج إلى بعض التركيز على الكيمياء.",
-              "improvementTips": [
-                "راجع الفصل الثاني في الكيمياء.",
-                "حل المزيد من المسائل على المعادلات الكيميائية.",
-                "شاهد فيديوهات شرح إضافية لموازنة المعادلات."
-              ]
-            }
-        `;
+        Based on this data, generate the following fields in ARABIC:
+        1.  **neoMessage**: A short, friendly, and personalized message to the student. Start by congratulating them on their effort.
+        2.  **performanceAnalysis**: A detailed analysis. Start with their strengths (subjects or skills where they did well). Then, gently point out the areas needing improvement, referencing specific subjects or skills where their score was low. Be constructive.
+        3.  **improvementTips**: A list of 3 to 5 clear, actionable tips. The tips should be directly related to the weaknesses identified in the analysis. For example, if they struggled with 'Analyze' questions, suggest ways to practice that skill.
         
-        const aiFeedback = await callAiApi(prompt);
+        Strictly adhere to the provided JSON schema for your response.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME,
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: aiFeedbackSchema,
+            },
+        });
+        
+        const jsonStr = response.text.trim();
+        const aiFeedback = JSON.parse(jsonStr) as {
+            neoMessage: string;
+            performanceAnalysis: string;
+            improvementTips: string[];
+        };
 
         return {
-            ...baseResult,
-            neoMessage: aiFeedback.neoMessage,
-            performanceAnalysis: aiFeedback.performanceAnalysis,
-            improvementTips: aiFeedback.improvementTips,
+            totalScore,
+            totalQuestions,
+            performanceBreakdown,
+            review,
+            ...aiFeedback
         };
-
     } catch (error) {
-        console.error(`Error getting AI feedback from ${MODEL_NAME}:`, error);
-        const percentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
-        let neoMessage = "أنهيت الاختبار بنجاح! تفقد تقريرك المفصل.";
-        if (totalQuestions > 0) {
-            if (percentage === 100) {
-                neoMessage = "رائع! لقد أجبت على جميع الأسئلة بشكل صحيح. عمل ممتاز واستمر على هذا المنوال!";
-            } else if (percentage >= 80) {
-                neoMessage = "نتيجة ممتازة! أنت تظهر فهمًا قويًا للمادة. استمر في العمل الجيد.";
-            } else if (percentage >= 60) {
-                neoMessage = "نتيجة جيدة. هناك بعض النقاط التي تحتاج إلى مراجعة بسيطة لتحقيق التميز.";
-            } else {
-                neoMessage = "لا بأس، كل اختبار هو فرصة للتعلم. راجع إجاباتك الخاطئة وحاول مرة أخرى. يمكنك تحقيق الأفضل!";
-            }
-        }
-        return { 
-            ...baseResult,
-            neoMessage: neoMessage,
-            performanceAnalysis: "لم نتمكن من إنشاء تحليل مفصل هذه المرة. يرجى مراجعة إجاباتك أدناه.",
-            improvementTips: ["حاول مرة أخرى لاحقًا للحصول على نصائح مخصصة."]
-        };
+        console.error("Error generating exam feedback with Gemini:", error);
+        throw new Error("Failed to get feedback from AI. " + (error instanceof Error ? error.message : String(error)));
     }
 };
