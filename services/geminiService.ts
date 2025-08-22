@@ -1,13 +1,25 @@
 
 import { Question, ExamResult, SubjectScore } from '../types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface Answer {
     questionId: string;
     answerIndex: number;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+const genAI = new GoogleGenerativeAI(process.env.API_KEY as string);
+// Using a model compatible with the older SDK version
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+// Helper function to extract JSON from the model's text response
+const extractJson = (text: string) => {
+    const match = text.match(/```json\n([\s\S]*?)\n```/);
+    if (match && match[1]) {
+        return match[1].trim();
+    }
+    // Fallback for cases where markdown is not used
+    return text.trim();
+};
 
 export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string): Promise<Question[]> => {
     const systemInstruction = `أنت مساعد ذكاء اصطناعي خبير في إنشاء أسئلة امتحانات تعليمية عالية الجودة ومتنوعة باللغة العربية لطلاب المدارس الثانوية.
@@ -16,38 +28,27 @@ export const generateExamQuestions = async (subjects: string[], questionCount: n
     - نوّع الأسئلة لتشمل الفهم والتحليل وحل المشكلات بدلاً من الأسئلة المباشرة.
     - وزّع عدد الأسئلة بالتساوي على المواد المحددة قدر الإمكان.`;
     
-    const prompt = `أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.`;
-
-    const responseSchema = {
-        type: Type.ARRAY,
-        items: {
-            type: Type.OBJECT,
-            properties: {
-                subject: { type: Type.STRING },
-                text: { type: Type.STRING },
-                options: { 
-                    type: Type.ARRAY, 
-                    items: { type: Type.STRING } 
-                },
-                correctOptionIndex: { type: Type.INTEGER },
-            },
-            required: ["subject", "text", "options", "correctOptionIndex"]
+    const prompt = `أنشئ امتحانًا مكونًا من ${questionCount} سؤالًا في المواد التالية: ${subjects.join('، ')}.
+    
+    الرجاء إرجاع الإجابة داخل كتلة JSON markdown. يجب أن يكون كائن JSON عبارة عن مصفوفة من الأسئلة بالصيغة التالية: 
+    \`\`\`json
+    [
+        { 
+            "subject": "string", 
+            "text": "string", 
+            "options": ["string", "string", "string", "string"], 
+            "correctOptionIndex": integer 
         }
-    };
+    ]
+    \`\`\`
+    لا تقم بتضمين أي نص إضافي خارج كتلة JSON.`;
 
     try {
-        console.log("Generating exam questions with @google/genai...");
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                systemInstruction: systemInstruction,
-                responseMimeType: "application/json",
-                responseSchema: responseSchema,
-            },
-        });
-
-        const jsonStr = response.text.trim();
+        console.log("Generating exam questions with @google/generative-ai...");
+        const result = await model.generateContent(systemInstruction + "\n\n" + prompt);
+        const response = await result.response;
+        const rawText = response.text();
+        const jsonStr = extractJson(rawText);
         const generatedQuestions = JSON.parse(jsonStr);
 
         if (!Array.isArray(generatedQuestions)) {
@@ -110,41 +111,28 @@ export const gradeExamWithNeoAI = async (questions: Question[], answers: Answer[
         };
 
         const systemInstruction = `أنت مساعد تعليمي ذكي ومتخصص في تقديم ملاحظات بناءة ومشجعة للطلاب باللغة العربية بعد انتهائهم من الاختبار. اسمك Neo. كن إيجابيًا وداعماً، وركز على الخطوات التالية للتحسين.`;
-        const prompt = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}`;
+        const prompt = `طالب أنهى اختبارًا وهذه هي نتيجته: ${JSON.stringify(promptData, null, 2)}.
         
-        const responseSchema = {
-            type: Type.OBJECT,
-            properties: {
-                neoMessage: { type: Type.STRING, description: "رسالة تشجيعية عامة للطالب بناءً على أدائه." },
-                explanations: {
-                    type: Type.ARRAY,
-                    description: "شروحات للأسئلة الخاطئة.",
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            question: { type: Type.STRING, description: "نص السؤال الخاطئ." },
-                            explanation: { type: Type.STRING, description: "شرح موجز وواضح لماذا كانت الإجابة خاطئة والصواب هو الصحيح." },
-                        },
-                        required: ["question", "explanation"]
-                    }
+        الرجاء إرجاع الإجابة داخل كتلة JSON markdown. يجب أن يكون كائن JSON صالحًا بالصيغة التالية: 
+        \`\`\`json
+        { 
+            "neoMessage": "string (رسالة تشجيعية عامة للطالب بناءً على أدائه)", 
+            "explanations": [
+                { 
+                    "question": "string (نص السؤال الخاطئ)", 
+                    "explanation": "string (شرح موجز وواضح لماذا كانت الإجابة خاطئة والصواب هو الصحيح)" 
                 }
-            },
-            required: ["neoMessage", "explanations"]
-        };
-
+            ]
+        }
+        \`\`\`
+        لا تقم بتضمين أي نص إضافي خارج كتلة JSON.`;
+        
         try {
-            console.log("Generating exam feedback with @google/genai...");
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema,
-                }
-            });
-
-            const jsonStr = response.text.trim();
+            console.log("Generating exam feedback with @google/generative-ai...");
+            const result = await model.generateContent(systemInstruction + "\n\n" + prompt);
+            const response = await result.response;
+            const rawText = response.text();
+            const jsonStr = extractJson(rawText);
             aiGeneratedFeedback = JSON.parse(jsonStr);
 
         } catch(error) {
