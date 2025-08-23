@@ -51,7 +51,7 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-                {daysOfWeek.map(day => {
+                {daysOfWeek.map((day, dayIndex) => {
                     const dayLessons = lessonsByDay[day] || [];
                     return (
                         <div key={day} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg border border-[hsl(var(--color-border))] overflow-hidden flex flex-col">
@@ -60,21 +60,25 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
                             </h2>
                             <div className="p-4 space-y-3 flex-grow">
                                 {dayLessons.length > 0 ? (
-                                    dayLessons.map(lesson => {
+                                    dayLessons.map((lesson, lessonIndex) => {
                                         const style = getSubjectStyle(lesson.subject);
                                         const isMyGrade = lesson.grade === user.grade;
                                         return (
                                             <div 
                                                 key={lesson.id} 
-                                                className={`bg-[hsl(var(--color-background))] p-4 rounded-xl shadow-sm transition-all duration-300 border-l-4 ${isMyGrade ? 'border-[hsl(var(--color-primary))]' : 'border-transparent'}`}
+                                                className={`lesson-card p-4 rounded-xl shadow-sm transition-all duration-300 border-l-4 lesson-card-cocktail lesson-card-ocean ${isMyGrade ? 'border-[hsl(var(--color-primary))]' : 'border-transparent'} ${showMyGradeOnly ? '' : 'bg-[hsl(var(--color-background))]'}`}
+                                                style={{ '--card-index': dayIndex * dayLessons.length + lessonIndex } as React.CSSProperties}
+                                                data-subject={lesson.subject}
                                             >
                                                 <div className="flex justify-between items-start gap-4">
                                                     <div>
                                                         <h3 className="text-xl font-bold text-[hsl(var(--color-text-primary))] flex items-center gap-3">
-                                                            <span className="text-3xl">{style.icon}</span>
-                                                            {lesson.subject}
+                                                            <span className="lesson-card-icon text-3xl">{style.icon}</span>
+                                                            <span className="lesson-card-subject">{lesson.subject}</span>
                                                         </h3>
-                                                        <p className="text-md text-[hsl(var(--color-text-secondary))] mt-1">{lesson.teacher}</p>
+                                                        <div className="lesson-card-details">
+                                                          <p className="text-md text-[hsl(var(--color-text-secondary))] mt-1">{lesson.teacher}</p>
+                                                        </div>
                                                     </div>
                                                     <div className="text-left flex-shrink-0">
                                                         <p className="font-semibold text-lg text-[hsl(var(--color-text-primary))]">{lesson.time}</p>

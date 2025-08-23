@@ -1,6 +1,6 @@
 
 
-export type Theme = 'light' | 'dark' | 'pink';
+export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave';
 
 export type Page = 
     | 'home' 
@@ -127,7 +127,7 @@ export interface ExamResult {
     totalQuestions: number;
     performanceBreakdown: PerformanceBreakdown;
     review: AnswerReview[];
-    neoMessage: string;
+    aiMessage: string;
     performanceAnalysis?: string; // Textual analysis from AI
     improvementTips?: string[];
 }
@@ -157,4 +157,14 @@ export interface Booking {
     status: BookingStatus;
     notes?: string;
     createdAt: number;
+}
+
+export interface Notification {
+  id: string;
+  userId: string; // ID of the user this notification is for
+  title: string;
+  message: string;
+  timestamp: number;
+  read: boolean;
+  link?: Page; // Optional page to navigate to on click
 }

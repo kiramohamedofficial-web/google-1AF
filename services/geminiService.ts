@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview } from '../types.ts';
 
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME_GEMINI = 'gemini-2.5-flash';
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 interface Answer {
@@ -113,288 +113,198 @@ const getSystemSpecificInstructions = (system: ExamSystem): string => {
                 **System Constraint: "لغات" (Language Schools System)**
                 - Questions for scientific subjects (Physics, Chemistry, Biology, Math, etc.) MUST be generated in ENGLISH.
                 - The terminology and context must align with the Egyptian language school curriculum.
-                - For literature/humanities subjects (Arabic, History, etc.), questions should remain in Arabic but might test more advanced language skills or different curriculum points.
+                - For literature/humanities subjects (Arabic, History, etc.), questions must remain in ARABIC.
             `;
         case 'ازهري':
             return `
                 **System Constraint: "ازهري" (Al-Azhar System)**
-                - The exam MUST align with the Al-Azhar curriculum, which differs from the general curriculum.
-                - Incorporate the specific "Al-Azhar" style of questioning, which may be more direct, text-based, or have a different focus.
-                - If religious subjects ("Tafsir", "Hadith", "Fiqh", "Tawhid") are selected, questions must be strictly based on the Azhari syllabus for the specified grade level. The tone must be formal and respectful.
-                - For scientific and literary subjects, adhere to the Azhari curriculum's scope, which might include additional or different topics compared to the general system.
+                - Questions must align with the Al-Azhar curriculum. This may include a stronger emphasis on religious sciences alongside standard subjects.
+                - The phrasing and context should be appropriate for the Al-Azhar educational context.
             `;
         case 'عام':
         default:
             return `
-                **System Constraint: "عام" (General / Thanaweya Amma System)**
-                - This is the standard Egyptian national curriculum. Follow the grade-specific instructions for this system precisely.
+                **System Constraint: "عام" (General System)**
+                - All questions must be in ARABIC, except for foreign language subjects themselves (e.g., English, French).
+                - Adhere to the standard Egyptian national curriculum.
             `;
     }
 };
 
+export const generateExamQuestions = async (
+    subjects: string[],
+    questionCount: number,
+    gradeLevel: string,
+    system: ExamSystem,
+    model: 'A1' | 'A2'
+): Promise<Question[]> => {
+    const persona_prompt = model === 'A1' 
+        ? "You are Neo 🤖, a super-intelligent, slightly quirky AI assistant specializing in the Egyptian curriculum. Your task is to generate creative and high-quality multiple-choice questions (MCQs)."
+        : "You are the 'Smart Assistant', a highly precise and academic expert in pedagogy and exam creation, specializing in the Egyptian curriculum. Your task is to generate rigorous, high-quality multiple-choice questions (MCQs) that strictly adhere to formal standards.";
 
-export const generateExamQuestions = async (subjects: string[], questionCount: number, gradeLevel: string, examSystem: ExamSystem, aiModel: 'A1' | 'A2'): Promise<Question[]> => {
-    console.log(`Generating exam questions using model ${aiModel} for ${gradeLevel} (${examSystem} system)...`);
+    const common_rules = `
+    ALWAYS FOLLOW THESE CORE RULES:
+    1.  **Output Format:** You MUST output a valid JSON. Do not wrap it in markdown backticks or any other text.
+    2.  **Language:** The question language (stem, options, rationale) must be Arabic unless the subject is a foreign language (e.g., English, French) or the system is 'لغات' for scientific subjects.
+    3.  **Question Count:** Generate exactly the number of questions requested by the user.
+    4.  **Schema Adherence:** Each question object must strictly adhere to the provided schema.
     
-    const gradeInstructions = getGradeSpecificInstructions(gradeLevel);
-    const systemInstructions = getSystemSpecificInstructions(examSystem);
+    ${getGradeSpecificInstructions(gradeLevel)}
+    
+    ${getSystemSpecificInstructions(system)}
+    `;
 
-    if (aiModel === 'A1') {
-        const prompt = `
-            You are an expert AI named "Neo 🤖" specializing in creating high-quality educational exams for an Egyptian educational center. Your primary goal is to generate an exam that precisely follows the grade-specific and system-specific instructions provided below.
+    const system_prompt = `${persona_prompt}\n${common_rules}`;
+    const user_prompt = `Please generate exactly ${questionCount} questions for the grade "${gradeLevel}" covering the following subjects: ${subjects.join(', ')}. The exam system is "${system}". Ensure the questions meet all the instructions provided in the system prompt.`;
 
-            **Primary Task: Generate an exam with these core specifications:**
-            - **Grade Level:** "${gradeLevel}"
-            - **Exam System:** "${examSystem}"
-            - **Subjects:** ${subjects.join(', ')}
-            - **Total Number of Questions:** ${questionCount}
+    try {
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME_GEMINI,
+            contents: user_prompt,
+            config: {
+                systemInstruction: system_prompt,
+                responseMimeType: "application/json",
+                responseSchema: examQuestionsSchema,
+            },
+        });
 
-            ${systemInstructions}
-
-            ${gradeInstructions}
-
-            **General Requirements (Must be followed for ALL questions):**
-            1.  **Unique IDs**: Each question must have a unique ID, like "q_physics_1", "q_chem_1", etc.
-            2.  **Subject Distribution**: Distribute questions across the specified subjects as evenly as possible.
-            3.  **Four Options**: Every question MUST have exactly four multiple-choice options.
-            4.  **Clear Rationale**: Provide a concise and clear explanation (rationale) for why the correct answer is correct.
-            5.  **Context Field**: Use the 'context' field for questions that require a preceding text, scenario, or data description. Otherwise, it can be omitted.
-            6.  **Egyptian Curriculum**: Ensure questions are relevant to the specified Egyptian curriculum (General, Languages, or Azhari).
-            7.  **Output Format**: Strictly adhere to the provided JSON schema. Your entire response must be a single valid JSON array of question objects.
-        `;
-        
-        try {
-            const response = await ai.models.generateContent({
-                model: MODEL_NAME,
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: examQuestionsSchema,
-                },
-            });
-
-            const jsonStr = response.text.trim();
-            const questions = JSON.parse(jsonStr) as Question[];
-            return questions;
-
-        } catch (error) {
-            console.error("Error generating exam questions with Gemini (A1):", error);
-            throw new Error("Failed to generate exam questions. " + (error instanceof Error ? error.message : String(error)));
+        const questions = JSON.parse(response.text);
+        if (!Array.isArray(questions)) {
+            console.error(`Gemini (${model}) response is not a valid question array:`, questions);
+            return [];
         }
-    } else { // aiModel === 'A2'
-        const MODEL_A2_API_KEY = "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";
-        const MODEL_A2_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+        return questions;
 
-        const systemPrompt = `You are an expert AI specializing in creating high-quality educational exams for an Egyptian educational center. Your entire response MUST be a single, valid JSON object. This JSON object should contain a single key named "questions", and its value must be an array of question objects. Do not include any other text, explanations, or markdown formatting like \`\`\`json.
-
-        Each question object in the "questions" array must have the following structure (TypeScript interface):
-        {
-            id: string; // A unique identifier for the question (e.g., "q_physics_1").
-            subject: string;
-            grade: string;
-            cognitive_level: 'Remember' | 'Understand' | 'Apply' | 'Analyze' | 'Evaluate' | 'Create'; // Bloom's Taxonomy level.
-            difficulty: 'M1' | 'M2' | 'M3'; // M1=Easy, M2=Medium, M3=Advanced.
-            stem: string; // The main text of the question.
-            context?: string; // Optional context for the question.
-            options: string[]; // An array of EXACTLY 4 possible string answers.
-            correctOptionIndex: number; // The 0-based index of the correct answer.
-            rationale: string; // A brief explanation of why the correct answer is correct.
-            skills?: string[];
-            tags?: string[];
-            time_suggestion_sec?: number;
-        }
-        
-        Strictly adhere to this JSON format.`;
-
-        const userPrompt = `
-            **Primary Task: Generate an exam with these core specifications:**
-            - **Grade Level:** "${gradeLevel}"
-            - **Exam System:** "${examSystem}"
-            - **Subjects:** ${subjects.join(', ')}
-            - **Total Number of Questions:** ${questionCount}
-
-            ${systemInstructions}
-
-            ${gradeInstructions}
-
-            **General Requirements (Must be followed for ALL questions):**
-            1.  **Unique IDs**: Each question must have a unique ID, like "q_physics_1", "q_chem_1", etc.
-            2.  **Subject Distribution**: Distribute questions across the specified subjects as evenly as possible.
-            3.  **Four Options**: Every question MUST have exactly four multiple-choice options.
-            4.  **Clear Rationale**: Provide a concise and clear explanation (rationale).
-            5.  **Egyptian Curriculum**: Ensure questions are relevant to the specified Egyptian curriculum.
-        `;
-
-        try {
-            const response = await fetch(MODEL_A2_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${MODEL_A2_API_KEY}`,
-                    'HTTP-Referer': 'https://google-educational-center.ai',
-                    'X-Title': 'Google Educational Center',
-                },
-                body: JSON.stringify({
-                    model: 'deepseek/deepseek-r1-0528:free',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ],
-                    response_format: { type: 'json_object' }
-                }),
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.text();
-                throw new Error(`Model A2 API error: ${response.status} ${response.statusText} - ${errorBody}`);
-            }
-
-            const data = await response.json();
-            const content = data.choices[0].message.content;
-            const parsedJson = JSON.parse(content);
-
-            if (parsedJson && parsedJson.questions && Array.isArray(parsedJson.questions)) {
-                return parsedJson.questions as Question[];
-            } else if (Array.isArray(parsedJson)) {
-                return parsedJson as Question[];
-            } else {
-                throw new Error("Model A2 API returned an unexpected JSON structure.");
-            }
-        } catch (error) {
-            console.error("Error generating exam questions with Model A2:", error);
-            throw new Error("Failed to generate exam questions from Model A2. " + (error instanceof Error ? error.message : String(error)));
-        }
+    } catch (error) {
+        console.error(`Error generating exam questions with Model ${model} (Gemini):`, error);
+        throw error;
     }
 };
 
 
-// Schema for AI-generated feedback
-const aiFeedbackSchema = {
-    type: Type.OBJECT,
-    properties: {
-        neoMessage: { type: Type.STRING, description: "A friendly, encouraging, and personalized message (2-3 sentences) to the student from the AI assistant, in Arabic." },
-        performanceAnalysis: { type: Type.STRING, description: "A detailed textual analysis (2-4 paragraphs) of the student's performance based on the provided data, in Arabic. Highlight strengths and areas for improvement." },
-        improvementTips: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of 3-5 actionable tips for improvement based on the analysis, in Arabic." },
-    },
-    required: ["neoMessage", "performanceAnalysis", "improvementTips"]
+const calculatePerformance = (questions: Question[], answers: Answer[]): { totalScore: number, performanceBreakdown: PerformanceBreakdown, review: AnswerReview[] } => {
+    let totalScore = 0;
+    const performanceBreakdown: PerformanceBreakdown = { bySubject: {}, byCognitiveLevel: {}, byDifficulty: {} };
+    const review: AnswerReview[] = [];
+
+    const initializeScore = (obj: Record<string, SubjectScore>, key: string) => {
+        if (!obj[key]) {
+            obj[key] = { score: 0, total: 0 };
+        }
+    };
+
+    questions.forEach(q => {
+        const studentAnswer = answers.find(a => a.questionId === q.id);
+        const isCorrect = studentAnswer?.answerIndex === q.correctOptionIndex;
+
+        initializeScore(performanceBreakdown.bySubject, q.subject);
+        initializeScore(performanceBreakdown.byCognitiveLevel, q.cognitive_level);
+        initializeScore(performanceBreakdown.byDifficulty, q.difficulty);
+
+        performanceBreakdown.bySubject[q.subject].total++;
+        performanceBreakdown.byCognitiveLevel[q.cognitive_level].total++;
+        performanceBreakdown.byDifficulty[q.difficulty].total++;
+
+        if (isCorrect) {
+            totalScore++;
+            performanceBreakdown.bySubject[q.subject].score++;
+            performanceBreakdown.byCognitiveLevel[q.cognitive_level].score++;
+            performanceBreakdown.byDifficulty[q.difficulty].score++;
+        }
+
+        review.push({
+            questionStem: q.stem,
+            subject: q.subject,
+            studentAnswer: studentAnswer !== undefined ? q.options[studentAnswer.answerIndex] : 'لم تتم الإجابة',
+            correctAnswer: q.options[q.correctOptionIndex],
+            isCorrect: isCorrect,
+            rationale: q.rationale,
+        });
+    });
+
+    return { totalScore, performanceBreakdown, review };
 };
+
 
 export const gradeExamAndGetFeedbackAI = async (
     questions: Question[],
     answers: Answer[],
     gradeLevel: string,
-    examSystem: ExamSystem,
-    aiModel: 'A1' | 'A2'
+    system: ExamSystem,
+    model: 'A1' | 'A2'
 ): Promise<ExamResult> => {
+    const { totalScore, performanceBreakdown, review } = calculatePerformance(questions, answers);
+    const totalQuestions = questions.length;
     
-    const locallyCalculateResults = () => {
-        let totalScore = 0;
-        const totalQuestions = questions.length;
-        const review: AnswerReview[] = [];
+    const persona = model === 'A1'
+        ? "You are Neo 🤖, a super-intelligent, slightly quirky AI assistant with a knack for playful yet insightful feedback. You love using emojis to make your points. Your goal is to make learning fun and motivating."
+        : "You are a smart, encouraging, and professional educational assistant. Your feedback should be clear, constructive, and motivating. Avoid overly casual language and focus on providing actionable advice.";
 
-        const performanceBreakdown: PerformanceBreakdown = {
-            bySubject: {},
-            byCognitiveLevel: {},
-            byDifficulty: {},
-        };
-        
-        const initScore = (obj: Record<string, SubjectScore>, key: string) => {
-            if (!obj[key]) {
-                obj[key] = { score: 0, total: 0 };
-            }
-        };
+    const system_prompt = `${persona}
+    You are an AI expert in analyzing student exam performance. Your task is to provide a personalized and insightful report based on the JSON data provided by the user.
+    The report MUST be in ARABIC.
+    You MUST output a valid JSON object adhering to the specified schema. Do not add any extra text or markdown formatting.`;
 
-        questions.forEach(q => {
-            const studentAnswerObj = answers.find(a => a.questionId === q.id);
-            const studentAnswerIndex = studentAnswerObj ? studentAnswerObj.answerIndex : -1;
-            const isCorrect = studentAnswerIndex === q.correctOptionIndex;
-            
-            // Init breakdowns
-            initScore(performanceBreakdown.bySubject, q.subject);
-            initScore(performanceBreakdown.byCognitiveLevel, q.cognitive_level);
-            initScore(performanceBreakdown.byDifficulty, q.difficulty);
-            
-            // Update totals
-            performanceBreakdown.bySubject[q.subject].total++;
-            performanceBreakdown.byCognitiveLevel[q.cognitive_level].total++;
-            performanceBreakdown.byDifficulty[q.difficulty].total++;
+    const user_prompt = `
+    Please analyze the following exam results for a student in grade "${gradeLevel}" under the "${system}" system and provide feedback.
 
-            if (isCorrect) {
-                totalScore++;
-                performanceBreakdown.bySubject[q.subject].score++;
-                performanceBreakdown.byCognitiveLevel[q.cognitive_level].score++;
-                performanceBreakdown.byDifficulty[q.difficulty].score++;
-            }
-            
-            review.push({
-                questionStem: q.stem,
-                subject: q.subject,
-                studentAnswer: studentAnswerIndex > -1 ? q.options[studentAnswerIndex] : 'لم تتم الإجابة',
-                correctAnswer: q.options[q.correctOptionIndex],
-                isCorrect,
-                rationale: q.rationale,
-            });
-        });
-
-        return {
-            totalScore,
-            totalQuestions,
-            performanceBreakdown,
-            review,
-        };
-    };
-
-    const { totalScore, totalQuestions, performanceBreakdown, review } = locallyCalculateResults();
-
-    const aiPersona = aiModel === 'A1' ? 'named "Neo 🤖"' : '';
-
-    const prompt = `
-        You are an expert AI ${aiPersona}, acting as an encouraging and insightful AI tutor for a student in an Egyptian educational center.
-        Your task is to analyze the student's exam performance and provide a personalized, helpful, and motivational feedback report in ARABIC.
-
-        Here is the student's exam performance data:
-        - Grade Level: "${gradeLevel}"
-        - Exam System: "${examSystem}"
-        - Total Score: ${totalScore} out of ${totalQuestions}
-        - Performance Breakdown by Subject: ${JSON.stringify(performanceBreakdown.bySubject)}
-        - Performance Breakdown by Cognitive Skill (Bloom's Taxonomy): ${JSON.stringify(performanceBreakdown.byCognitiveLevel)}
-        - Performance Breakdown by Difficulty: ${JSON.stringify(performanceBreakdown.byDifficulty)}
-        - Review of Incorrect Answers: ${JSON.stringify(review.filter(r => !r.isCorrect).map(r => ({ question: r.questionStem, yourAnswer: r.studentAnswer, correctAnswer: r.correctAnswer, subject: r.subject })))}
-
-        Based on this data, generate the following fields in ARABIC:
-        1.  **neoMessage**: A short, friendly, and personalized message to the student. Start by congratulating them on their effort.
-        2.  **performanceAnalysis**: A detailed analysis. Start with their strengths (subjects or skills where they did well). Then, gently point out the areas needing improvement, referencing specific subjects or skills where their score was low. Be constructive.
-        3.  **improvementTips**: A list of 3 to 5 clear, actionable tips. The tips should be directly related to the weaknesses identified in the analysis.
-        
-        Strictly adhere to the provided JSON schema for your response.
+    Exam Data:
+    {
+      "totalScore": ${totalScore},
+      "totalQuestions": ${totalQuestions},
+      "performanceBreakdown": ${JSON.stringify(performanceBreakdown, null, 2)}
+    }
+    
+    Based on this data, please generate a JSON response with three keys:
+    1.  "aiMessage": A personalized, encouraging message for the student (1-2 sentences).
+    2.  "performanceAnalysis": A brief paragraph analyzing their performance, highlighting strengths and weaknesses based on the breakdown data.
+    3.  "improvementTips": An array of 3-5 specific, actionable tips for improvement.
     `;
 
+    const examResultSchema = {
+        type: Type.OBJECT,
+        properties: {
+            aiMessage: { type: Type.STRING, description: "A personalized, encouraging message for the student based on their performance, written in the persona defined in the system prompt." },
+            performanceAnalysis: { type: Type.STRING, description: "A detailed textual analysis of the student's performance, highlighting strengths and areas for improvement based on the breakdown data." },
+            improvementTips: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list of 3-5 specific, actionable tips for the student to improve." }
+        },
+        required: ["aiMessage", "performanceAnalysis", "improvementTips"]
+    };
+
     try {
-        const response = await ai.models.generateContent({
-            model: MODEL_NAME,
-            contents: prompt,
+        const result = await ai.models.generateContent({
+            model: MODEL_NAME_GEMINI,
+            contents: user_prompt,
             config: {
+                systemInstruction: system_prompt,
                 responseMimeType: "application/json",
-                responseSchema: aiFeedbackSchema,
+                responseSchema: examResultSchema,
             },
         });
         
-        const jsonStr = response.text.trim();
-        const aiFeedback = JSON.parse(jsonStr) as {
-            neoMessage: string;
-            performanceAnalysis: string;
-            improvementTips: string[];
-        };
+        const aiResult = JSON.parse(result.text);
 
         return {
             totalScore,
             totalQuestions,
             performanceBreakdown,
             review,
-            ...aiFeedback
+            aiMessage: aiResult.aiMessage,
+            performanceAnalysis: aiResult.performanceAnalysis,
+            improvementTips: aiResult.improvementTips,
         };
+
     } catch (error) {
-        console.error("Error generating exam feedback with Gemini:", error);
-        throw new Error("Failed to get feedback from AI. " + (error instanceof Error ? error.message : String(error)));
+        console.error("Error generating AI feedback:", error);
+        // Fallback in case of AI error
+        return {
+            totalScore,
+            totalQuestions,
+            performanceBreakdown,
+            review,
+            aiMessage: "لقد أكملت الاختبار بنجاح! يتم حاليًا تحليل نتائجك. أحسنت على مجهودك.",
+            performanceAnalysis: "تم حساب درجاتك بنجاح. يرجى مراجعة الإجابات الفردية للحصول على تفاصيل حول أدائك.",
+            improvementTips: ["مراجعة الأسئلة التي أخطأت فيها.", "التركيز على المواد ذات الأداء المنخفض.", "التدرب على المزيد من الأسئلة المماثلة."]
+        };
     }
 };

@@ -12,15 +12,21 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ currentTheme, onChangeThe
         { name: 'light', icon: '☀️', bg: 'bg-yellow-400' },
         { name: 'dark', icon: '🌙', bg: 'bg-indigo-500' },
         { name: 'pink', icon: '🌸', bg: 'bg-pink-400' },
+        { name: 'cocktail', icon: '🍹', bg: 'bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500' },
+        { name: 'ocean', icon: '🌊', bg: 'bg-blue-500' },
+        { name: 'forest', icon: '🌳', bg: 'bg-green-600' },
+        { name: 'sunset', icon: '🌇', bg: 'bg-gradient-to-br from-orange-400 via-red-500 to-purple-600' },
+        { name: 'matrix', icon: '📟', bg: 'bg-black' },
+        { name: 'wave', icon: '🌃', bg: 'bg-gradient-to-br from-pink-500 to-cyan-400' },
     ];
 
     return (
-        <div className="flex items-center justify-around gap-2 p-1.5 mb-2 rounded-xl bg-black/5 dark:bg-white/5">
+        <div className="theme-switcher-container flex items-center justify-start gap-2 p-1.5 mb-2 rounded-xl bg-black/5 dark:bg-white/5 overflow-x-auto">
             {themes.map(theme => (
                 <button
                     key={theme.name}
                     onClick={() => onChangeTheme(theme.name)}
-                    className={`w-full h-10 rounded-lg text-xl flex items-center justify-center transition-all duration-300
+                    className={`flex-shrink-0 w-12 h-10 rounded-lg text-xl flex items-center justify-center transition-all duration-300
                         ${currentTheme === theme.name 
                             ? `${theme.bg} text-white scale-105 shadow-md` 
                             : 'bg-transparent text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'

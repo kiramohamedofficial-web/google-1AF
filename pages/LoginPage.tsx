@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
+import AnimatedCat from '../components/common/AnimatedCat.tsx';
 
 interface LoginPageProps {
     onLogin: (userType: 'student' | 'admin') => void;
@@ -312,8 +314,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a192f] text-slate-200 p-4 overflow-hidden dir-rtl">
+        <div className="min-h-screen flex items-center justify-center bg-[#0a192f] text-slate-200 p-4 overflow-hidden">
             <ParticleNetwork />
+            <AnimatedCat />
             <div className="relative z-10 w-full max-w-md animate-fade-in-up">
                 <div className="text-center mb-8">
                      <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">

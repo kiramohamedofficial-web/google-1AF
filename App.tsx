@@ -1,6 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking } from './types.ts';
-import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS } from './constants.ts';
+import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, Notification } from './types.ts';
+import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS, MOCK_NOTIFICATIONS, MOCK_STUDENTS } from './constants.ts';
 import Header from './components/layout/Header.tsx';
 import Sidebar from './components/layout/Sidebar.tsx';
 import HomePage from './pages/HomePage.tsx';
@@ -18,7 +19,18 @@ import NewsBoardPage from './pages/NewsBoardPage.tsx';
 import MyBookingsPage from './pages/MyBookingsPage.tsx';
 
 const App: React.FC = () => {
-    const [theme, setTheme] = useState<Theme>('light');
+    const [theme, setTheme] = useState<Theme>(() => {
+        try {
+            const savedTheme = localStorage.getItem('theme') as Theme;
+            const validThemes: Theme[] = ['light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave'];
+            if (savedTheme && validThemes.includes(savedTheme)) {
+                return savedTheme;
+            }
+        } catch (error) {
+            console.error("Could not read theme from localStorage", error);
+        }
+        return 'light';
+    });
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -27,11 +39,17 @@ const App: React.FC = () => {
     const [trips, setTrips] = useState<Trip[]>(MOCK_TRIPS);
     const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
     const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+    const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
 
     useEffect(() => {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark', 'pink');
-        root.classList.add(theme);
+        try {
+            const root = window.document.documentElement;
+            root.classList.remove('light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave');
+            root.classList.add(theme);
+            localStorage.setItem('theme', theme);
+        } catch (error) {
+            console.error("Could not save theme to localStorage", error);
+        }
     }, [theme]);
     
     const handleLogin = (userType: 'student' | 'admin') => {
@@ -44,6 +62,20 @@ const App: React.FC = () => {
         setCurrentPage('home');
     }, []);
 
+    // --- Notification Handlers ---
+    const handleMarkNotificationAsRead = useCallback((notificationId: string) => {
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+    }, []);
+
+    const handleMarkAllAsRead = useCallback((userId: string) => {
+        setNotifications(prev => prev.map(n => n.userId === userId ? { ...n, read: true } : n));
+    }, []);
+
+    const handleDismissNotification = useCallback((notificationId: string) => {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    }, []);
+
+    // --- Data Manipulation Handlers ---
     const handleCreateBooking = useCallback((service: Lesson | Trip, type: 'حصة' | 'رحلة') => {
         if (!currentUser) return;
 
@@ -52,6 +84,8 @@ const App: React.FC = () => {
             alert('لقد حجزت هذا الموعد بالفعل!');
             return;
         }
+        
+        const isLesson = 'subject' in service;
 
         const newBooking: Booking = {
             id: `BKG-${Date.now()}`,
@@ -59,30 +93,77 @@ const App: React.FC = () => {
             studentName: currentUser.name,
             serviceType: type,
             serviceId: service.id,
-            serviceName: (service as any).subject || (service as any).title,
-            date: (service as any).day || (service as any).date,
+            serviceName: isLesson ? service.subject : service.title,
+            date: isLesson ? service.day : service.date,
             time: service.time,
-            location: (service as any).hall || (service as any).meetingPoint,
+            location: isLesson ? service.hall : service.meetingPoint,
             status: 'قيد المراجعة',
             createdAt: Date.now(),
         };
         
         setBookings(prev => [newBooking, ...prev]);
         
-        if (type === 'حصة') {
+        if (isLesson) {
             setLessons(prev => prev.map(l => l.id === service.id ? {...l, bookedCount: (l.bookedCount || 0) + 1} : l));
-        } else if (type === 'رحلة') {
+        } else {
             setTrips(prev => prev.map(t => t.id === service.id ? {...t, bookedCount: t.bookedCount + 1} : t));
         }
+
+        // Create notification for admin
+        const adminNotification: Notification = {
+            id: `N-${Date.now()}-admin`,
+            userId: 'admin001',
+            title: 'طلب حجز جديد',
+            message: `قام ${currentUser.name} بطلب حجز ${newBooking.serviceType} "${newBooking.serviceName}".`,
+            timestamp: Date.now(),
+            read: false,
+            link: 'admin-dashboard',
+        };
+        setNotifications(prev => [adminNotification, ...prev]);
 
         alert('تم إرسال طلب الحجز بنجاح! سيتم مراجعته من قبل الإدارة.');
 
     }, [currentUser, bookings]);
 
     const handleUpdateBookingStatus = useCallback((bookingId: string, newStatus: Booking['status']) => {
+        const booking = bookings.find(b => b.id === bookingId);
+        if (booking && (newStatus === 'مؤكد' || newStatus === 'ملغي')) {
+            const studentNotification: Notification = {
+                id: `N-${Date.now()}-${booking.studentId}`,
+                userId: booking.studentId,
+                title: `تحديث حالة الحجز`,
+                message: `تم ${newStatus === 'مؤكد' ? 'تأكيد' : 'إلغاء'} حجزك لـ "${booking.serviceName}".`,
+                timestamp: Date.now(),
+                read: false,
+                link: 'my-bookings'
+            };
+            setNotifications(prev => [studentNotification, ...prev]);
+        }
         setBookings(prev => prev.map(b => b.id === bookingId ? {...b, status: newStatus} : b));
-    }, []);
+    }, [bookings]);
 
+    const handleSavePost = (post: Post, isNew: boolean) => {
+        setPosts(prev => isNew ? [post, ...prev] : prev.map(p => p.id === post.id ? post : p));
+
+        if (isNew && post.status === 'published') {
+            const newNotifications: Notification[] = MOCK_STUDENTS.map(student => ({
+                id: `N-${Date.now()}-${student.id}`,
+                userId: student.id,
+                title: '📢 إعلان جديد!',
+                message: `تم نشر: "${post.title}"`,
+                timestamp: Date.now(),
+                read: false,
+                link: 'news-board'
+            }));
+            setNotifications(prev => [...newNotifications, ...prev]);
+        }
+    };
+
+    const handleDeletePost = (postId: string) => {
+        if (confirm('هل أنت متأكد من حذف هذا المنشور؟')) {
+            setPosts(prev => prev.filter(p => p.id !== postId));
+        }
+    };
 
     const renderPage = () => {
         if (!currentUser) {
@@ -112,7 +193,7 @@ const App: React.FC = () => {
                     teachers={teachers} setTeachers={setTeachers} 
                     lessons={lessons} setLessons={setLessons}
                     trips={trips} setTrips={setTrips}
-                    posts={posts} setPosts={setPosts}
+                    posts={posts} onSavePost={handleSavePost} onDeletePost={handleDeletePost}
                     bookings={bookings} onUpdateBookingStatus={handleUpdateBookingStatus}
                 /> : <HomePage user={currentUser} lessons={lessons} posts={posts} trips={trips} onNavigate={setCurrentPage} bookings={bookings} onCreateBooking={handleCreateBooking} />;
             case 'profile':
@@ -128,7 +209,15 @@ const App: React.FC = () => {
         <div className="min-h-screen">
             {currentUser && (
                 <>
-                    <Header onMenuClick={() => setSidebarOpen(!isSidebarOpen)} />
+                    <Header
+                        user={currentUser}
+                        onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
+                        notifications={notifications}
+                        onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
+                        onMarkAsRead={handleMarkNotificationAsRead}
+                        onMarkAllAsRead={handleMarkAllAsRead}
+                        onDismiss={handleDismissNotification}
+                    />
                     <Sidebar
                         isOpen={isSidebarOpen}
                         user={currentUser}

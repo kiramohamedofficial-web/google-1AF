@@ -1,5 +1,5 @@
 
-import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking } from './types.ts';
+import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking, Notification } from './types.ts';
 
 // Centralized subject styles to be used across the application
 export const subjectStyles: Record<string, { icon: string; progressBarClass: string; bgColor: string }> = {
@@ -247,4 +247,34 @@ export const MOCK_BOOKINGS: Booking[] = [
         status: 'ملغي',
         createdAt: Date.now() - 259200000,
     },
+];
+
+export const MOCK_NOTIFICATIONS: Notification[] = [
+    {
+        id: 'N-1',
+        userId: 'STU-2024-0001',
+        title: '✅ تم تأكيد حجزك',
+        message: 'تم تأكيد حجزك لحصة الفيزياء يوم الأحد.',
+        timestamp: Date.now() - 3600000, // 1 hour ago
+        read: false,
+        link: 'my-bookings'
+    },
+    {
+        id: 'N-2',
+        userId: 'STU-2024-0001',
+        title: '📢 إعلان جديد!',
+        message: 'تم فتح باب الحجز لمجموعات المراجعة النهائية.',
+        timestamp: Date.now() - 86400000, // 1 day ago
+        read: true,
+        link: 'news-board'
+    },
+     {
+        id: 'N-3',
+        userId: 'admin001',
+        title: 'طلب حجز جديد',
+        message: 'قام الطالب علي حسن بطلب حجز حصة رياضيات.',
+        timestamp: Date.now() - 180000, // 3 minutes ago
+        read: false,
+        link: 'admin-dashboard'
+    }
 ];

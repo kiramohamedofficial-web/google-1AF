@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
       :root {
         --font-sans: 'Cairo', sans-serif;
@@ -39,6 +40,233 @@
         --color-text-secondary: 336 40% 45%;
         --color-border: 336 75% 90%;
       }
+      .cocktail {
+        --hue: 320;
+        --color-primary: var(--hue) 75% 65%;
+        --color-background: 230 30% 8%;
+        --color-surface: 230 25% 12%;
+        --color-text-primary: 0 0% 98%;
+        --color-text-secondary: 240 10% 70%;
+        --color-border: hsla(var(--hue), 70%, 55%, 0.5);
+
+        --glow-color-1: hsl(var(--hue), 60%, 50%);
+        --glow-color-2: hsl(calc(var(--hue) + 40), 60%, 50%);
+        --glow-color-3: hsl(calc(var(--hue) + 80), 60%, 50%);
+        --glow-color-4: hsl(calc(var(--hue) + 120), 60%, 50%);
+      }
+      .ocean {
+        --color-primary: 205 85% 55%;
+        --color-background: 210 30% 95%;
+        --color-surface: 205 100% 98%;
+        --color-text-primary: 215 40% 20%;
+        --color-text-secondary: 215 20% 45%;
+        --color-border: 210 30% 88%;
+      }
+      .forest {
+        --color-primary: 130 60% 40%;
+        --color-background: 120 15% 96%;
+        --color-surface: 90 20% 99%;
+        --color-text-primary: 120 25% 20%;
+        --color-text-secondary: 110 10% 40%;
+        --color-border: 120 15% 85%;
+      }
+      .sunset {
+        --color-primary: 25 66% 60%; /* #d37b4a */
+        --color-background: 30 100% 97%; /* #fefaf6 */
+        --color-surface: 36 50% 95%; /* #f9f2e7 */
+        --color-text-primary: 20 60% 25%; /* #66442d */
+        --color-text-secondary: 25 30% 45%; /* #967d6c */
+        --color-border: 25 50% 85%; /* #e9d9d0 */
+      }
+      .matrix {
+        --color-primary: 120 100% 50%;
+        --color-background: 120 5% 5%;
+        --color-surface: 120 10% 8%;
+        --color-text-primary: 120 80% 85%;
+        --color-text-secondary: 120 50% 60%;
+        --color-border: 120 100% 30%;
+      }
+      .wave {
+        --color-primary: 320 100% 60%;
+        --color-background: 240 50% 8%;
+        --color-surface: 240 40% 12%;
+        --color-text-primary: 180 100% 90%;
+        --color-text-secondary: 240 20% 70%;
+        --color-border: 180 100% 50%;
+      }
+
+
+      @keyframes smooth-hue-cycle {
+        0% { --hue: 320; }
+        100% { --hue: -40; } /* Full 360deg cycle (320 -> 0 -> 360 -> -40) */
+      }
+      
+      @keyframes animated-gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      @keyframes bubble-rise {
+        0% {
+          transform: translateY(0);
+          opacity: 0;
+        }
+        10%, 90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-120vh);
+          opacity: 0;
+        }
+      }
+
+      #root {
+        position: relative;
+        z-index: 2;
+      }
+
+      html.cocktail {
+        background-color: hsl(var(--color-background));
+        animation: smooth-hue-cycle 40s linear infinite;
+      }
+
+      html.cocktail body {
+        background: linear-gradient(135deg, var(--glow-color-1), var(--glow-color-2), var(--glow-color-3), var(--glow-color-4));
+        background-size: 400% 400%;
+        animation: animated-gradient 40s ease infinite;
+        position: relative;
+        z-index: 1;
+        overflow-x: hidden;
+      }
+      
+      .bubbles-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+        pointer-events: none;
+        display: none;
+      }
+
+      html.cocktail .bubbles-container {
+        display: block;
+      }
+
+      .bubbles-container span {
+        position: absolute;
+        bottom: -150px;
+        width: 40px;
+        height: 40px;
+        background-color: hsla(var(--hue), 70%, 65%, 0.05);
+        border-radius: 50%;
+        animation: bubble-rise 40s linear infinite;
+        box-shadow: 0 0 4px hsla(var(--hue), 70%, 65%, 0.1),
+                    inset 0 0 8px hsla(var(--hue), 70%, 100%, 0.1);
+        transition: background-color 0.8s ease, box-shadow 0.8s ease;
+      }
+
+      .bubbles-container span:nth-child(1) { left: 10%; animation-duration: 42s; animation-delay: 0s; width: 60px; height: 60px; }
+      .bubbles-container span:nth-child(2) { left: 20%; animation-duration: 35s; animation-delay: 2s; width: 20px; height: 20px; }
+      .bubbles-container span:nth-child(3) { left: 35%; animation-duration: 50s; animation-delay: 5s; width: 80px; height: 80px; }
+      .bubbles-container span:nth-child(4) { left: 50%; animation-duration: 38s; animation-delay: 1s; }
+      .bubbles-container span:nth-child(5) { left: 65%; animation-duration: 48s; animation-delay: 6s; width: 30px; height: 30px; }
+      .bubbles-container span:nth-child(6) { left: 80%; animation-duration: 32s; animation-delay: 3s; width: 50px; height: 50px; }
+      .bubbles-container span:nth-child(7) { left: 90%; animation-duration: 40s; animation-delay: 8s; }
+      .bubbles-container span:nth-child(8) { left: 5%; animation-duration: 37s; animation-delay: 4s; width: 25px; height: 25px; }
+      .bubbles-container span:nth-child(9) { left: 25%; animation-duration: 45s; animation-delay: 10s; width: 45px; height: 45px; }
+      .bubbles-container span:nth-child(10) { left: 75%; animation-duration: 39s; animation-delay: 7s; width: 35px; height: 35px; }
+      .bubbles-container span:nth-child(11) { left: 55%; animation-duration: 34s; animation-delay: 1s; width: 55px; height: 55px; }
+      .bubbles-container span:nth-child(12) { left: 42%; animation-duration: 46s; animation-delay: 3s; width: 15px; height: 15px; }
+
+      html.ocean body {
+        background: linear-gradient(120deg, hsl(210, 30%, 95%), hsl(190, 40%, 92%));
+      }
+      html.forest body {
+        background: linear-gradient(120deg, hsl(120, 15%, 96%), hsl(100, 15%, 94%));
+      }
+
+      html.sunset body {
+        font-family: 'Tajawal', sans-serif;
+        background: linear-gradient(120deg, hsl(25, 100%, 95%), hsl(340, 100%, 96%));
+        background-size: 200% 200%;
+        animation: sunset-bg 20s ease infinite;
+      }
+
+      @keyframes sunset-bg {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      html.wave body {
+        background-color: hsl(var(--color-background));
+        background-image: 
+            linear-gradient(hsl(var(--color-border), 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--color-border), 0.1) 1px, transparent 1px);
+        background-size: 35px 35px;
+        animation: wave-bg 10s linear infinite;
+      }
+      
+      @keyframes wave-bg {
+        from { background-position: 0 0; }
+        to { background-position: 35px 70px; }
+      }
+
+      /* Neon/Shadow effects for specific dark themes */
+      @keyframes neon-flicker {
+        0%, 100% { filter: drop-shadow(0 0 5px hsl(var(--color-primary))); opacity: 0.95; }
+        50% { filter: drop-shadow(0 0 10px hsl(var(--color-primary))); opacity: 1; }
+      }
+      
+      .matrix .bg-\[hsl\(var\(--color-surface\)\)\],
+      .wave .bg-\[hsl\(var\(--color-surface\)\)\] {
+        box-shadow: 0 0 8px hsla(var(--color-primary), 0.5), 
+                    0 0 16px hsla(var(--color-primary), 0.3);
+        border-color: hsla(var(--color-primary), 0.6);
+      }
+      
+      .cocktail .bg-\[hsl\(var\(--color-surface\)\)\] {
+        box-shadow: 0 0 8px hsla(var(--hue), 75%, 65%, 0.2), 
+                    0 0 16px hsla(var(--hue), 75%, 65%, 0.1),
+                    inset 0 0 8px hsla(var(--hue), 75%, 65%, 0.05);
+        border-color: hsla(var(--hue), 70%, 55%, 0.4);
+        transition: border-color 0.8s ease, box-shadow 0.8s ease;
+      }
+
+      .matrix .bg-\[hsl\(var\(--color-primary\)\)\],
+      .wave .bg-\[hsl\(var\(--color-primary\)\)\] {
+        box-shadow: 0 0 5px hsl(var(--color-primary)),
+                    0 0 15px hsl(var(--color-primary)),
+                    0 0 30px hsl(var(--color-primary));
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+      }
+
+      .cocktail .bg-\[hsl\(var\(--color-primary\)\)\] {
+        box-shadow: 0 0 4px hsl(var(--color-primary)),
+                    0 0 10px hsl(var(--color-primary)),
+                    0 0 20px hsl(var(--color-primary));
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+        transition: all 0.8s ease;
+      }
+
+      .cocktail .bg-\[hsl\(var\(--color-primary\)\)\]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 6px hsl(var(--color-primary)),
+                    0 0 18px hsl(var(--color-primary)),
+                    0 0 40px hsl(var(--color-primary));
+      }
+      
+      .matrix .text-\[hsl\(var\(--color-primary\)\)\],
+      .wave .text-\[hsl\(var\(--color-primary\)\)\],
+      .cocktail .text-\[hsl\(var\(--color-primary\)\)\] {
+        filter: drop-shadow(0 0 4px hsl(var(--color-primary)));
+        transition: filter 0.8s ease;
+      }
+      
       body {
         font-family: var(--font-sans);
         background-color: hsl(var(--color-background));
@@ -55,40 +283,300 @@
         animation: fadeIn-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
       }
 
+      @keyframes fadeIn-down {
+        from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      .animate-fade-in-down {
+        animation: fadeIn-down 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      }
+
       .walking-cat-container {
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 40px;
+        height: 80px;
         overflow: hidden;
         pointer-events: none;
         z-index: 100;
       }
 
       .walking-cat {
+        font-size: 50px;
         position: absolute;
-        bottom: -5px;
-        font-size: 32px;
-        animation: walk-across-screen 20s linear infinite;
+        bottom: 10px;
+        right: -60px; /* Start off-screen (RTL) */
+        animation: walk-rtl 15s linear infinite, bob 1s ease-in-out infinite;
       }
 
-      @keyframes walk-across-screen {
+      @keyframes walk-rtl {
         0% {
-          transform: translateX(-50px) scaleX(1);
-        }
-        49% {
-          transform: translateX(calc(100vw - 50px)) scaleX(1);
-        }
-        50% {
-          transform: translateX(calc(100vw - 50px)) scaleX(-1);
-        }
-        99% {
-          transform: translateX(-50px) scaleX(-1);
+          transform: translateX(0) scaleX(-1); /* Flipped for RTL */
         }
         100% {
-          transform: translateX(-50px) scaleX(1);
+          transform: translateX(calc(-100vw - 60px)) scaleX(-1);
         }
+      }
+
+      @keyframes bob {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
+      }
+      
+      /* For ThemeSwitcher scrollbar */
+      .theme-switcher-container::-webkit-scrollbar {
+          height: 4px;
+      }
+      .theme-switcher-container::-webkit-scrollbar-thumb {
+          background-color: hsla(var(--color-text-secondary), 0.3);
+          border-radius: 4px;
+      }
+      .theme-switcher-container {
+          scrollbar-width: thin;  /* Firefox */
+          scrollbar-color: hsla(var(--color-text-secondary), 0.3) transparent;
+      }
+
+      /* Theme-specific Lesson Card Styles */
+
+      /* Cocktail Theme - Multi-color cards */
+      html.cocktail .lesson-card-cocktail {
+        --card-hue: calc(var(--card-index, 0) * 40);
+        background: linear-gradient(135deg, hsl(var(--card-hue), 80%, 75%), hsl(calc(var(--card-hue) + 30), 85%, 80%));
+        border: 1px solid hsla(var(--card-hue), 80%, 80%, 0.5);
+        box-shadow: 0 4px 12px hsla(var(--card-hue), 70%, 50%, 0.2);
+        transition: all 0.3s ease;
+      }
+      /* Ensure text inside is readable and consistent */
+      html.cocktail .lesson-card-cocktail,
+      html.cocktail .lesson-card-cocktail h1,
+      html.cocktail .lesson-card-cocktail h2,
+      html.cocktail .lesson-card-cocktail h3,
+      html.cocktail .lesson-card-cocktail h4,
+      html.cocktail .lesson-card-cocktail p,
+      html.cocktail .lesson-card-cocktail span,
+      html.cocktail .lesson-card-cocktail div {
+        color: hsl(var(--card-hue), 95%, 20%) !important;
+      }
+      html.cocktail .lesson-card-cocktail svg {
+        stroke: hsl(var(--card-hue), 95%, 20%) !important;
+        fill: hsl(var(--card-hue), 95%, 20%) !important;
+      }
+      html.cocktail .lesson-card-cocktail .text-\[hsl\(var\(--color-text-secondary\)\)\] {
+          color: hsl(var(--card-hue), 50%, 30%) !important;
+      }
+
+      /* --- Ocean Theme Styles --- */
+      @keyframes ocean-wave-animate {
+        0% { background-position-x: 0; }
+        100% { background-position-x: 1000px; }
+      }
+
+      /* Common Wave Container styles */
+      .lesson-card-ocean,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\] {
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+      .lesson-card-ocean > *,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\] > * {
+        position: relative;
+        z-index: 2;
+      }
+
+      html.ocean .lesson-card-ocean {
+        background: linear-gradient(to top, hsl(200, 80%, 92%), hsl(210, 80%, 96%));
+      }
+
+      html.ocean .lesson-card-ocean::before,
+      html.ocean .lesson-card-ocean::after,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-repeat: repeat-x;
+        animation: ocean-wave-animate linear infinite;
+        z-index: 1;
+      }
+
+      /* Wave Layer 1 (Back) */
+      html.ocean .lesson-card-ocean::before,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 100' preserveAspectRatio='none'%3e%3cpath fill='hsl(210, 80%25, 90%25)' fill-opacity='0.6' d='M0,60 C250,110 350,10 500,60 C650,110 750,10 1000,60 L1000,100 L0,100 Z'%3e%3c/path%3e%3c/svg%3e");
+        animation-duration: 25s;
+      }
+
+      /* Wave Layer 2 (Front) */
+      html.ocean .lesson-card-ocean::after,
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 100' preserveAspectRatio='none'%3e%3cpath fill='hsl(205, 85%25, 85%25)' fill-opacity='0.7' d='M0,70 C150,20 350,120 500,70 C650,20 850,120 1000,70 L1000,100 L0,100 Z'%3e%3c/path%3e%3c/svg%3e");
+        animation-duration: 18s;
+        animation-direction: reverse;
+      }
+
+      /* Sizing for Lesson Cards */
+      html.ocean .lesson-card-ocean::before {
+        height: 60px;
+        background-size: 1000px 60px;
+      }
+      html.ocean .lesson-card-ocean::after {
+        height: 80px;
+        background-size: 1000px 80px;
+        bottom: -5px;
+      }
+
+      /* Sizing for Header */
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
+        height: 30px;
+        background-size: 1000px 30px;
+      }
+      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+        height: 40px;
+        background-size: 1000px 40px;
+        bottom: -2px;
+      }
+       /* --- Sunset (merged with Serene) Theme Styles --- */
+      html.sunset .lesson-card {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        border-width: 1px;
+        padding: 20px !important;
+        background-image: none !important; /* Reset other theme backgrounds */
+      }
+      html.sunset .lesson-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      /* Base styles for Sunset cards */
+      html.sunset .lesson-card, html.sunset .lesson-card[data-subject] {
+        background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+        border-color: rgba(128, 128, 128, 0.2);
+      }
+      html.sunset .lesson-card .lesson-card-icon {
+        background-color: rgba(128, 128, 128, 0.15);
+        color: #555 !important;
+      }
+      html.sunset .lesson-card .lesson-card-subject, html.sunset .lesson-card .lesson-card-subject * { color: #333 !important; }
+      html.sunset .lesson-card .lesson-card-details, html.sunset .lesson-card .lesson-card-details * { color: #666 !important; }
+
+      /* Chemistry */
+      html.sunset .lesson-card[data-subject*="كيمياء"] {
+        background: linear-gradient(135deg, #e8f5e9 0%, #d6ecd0 100%);
+        border-color: rgba(76, 175, 80, 0.2);
+      }
+      html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-icon { background-color: rgba(76, 175, 80, 0.15); color: #4caf50 !important; }
+      html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-subject * { color: #2e7d32 !important; }
+      
+      /* Physics */
+      html.sunset .lesson-card[data-subject*="فيزياء"] {
+        background: linear-gradient(135deg, #ede7f6 0%, #e4daf0 100%);
+        border-color: rgba(103, 58, 183, 0.2);
+      }
+      html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-icon { background-color: rgba(103, 58, 183, 0.15); color: #673ab7 !important; }
+      html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-subject * { color: #4527a0 !important; }
+
+      /* Arabic */
+      html.sunset .lesson-card[data-subject*="عربية"] {
+        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+        border-color: rgba(229, 57, 53, 0.2);
+      }
+      html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-icon { background-color: rgba(229, 57, 53, 0.15); color: #e53935 !important; }
+      html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-subject * { color: #b71c1c !important; }
+
+      /* Math */
+      html.sunset .lesson-card[data-subject*="رياضيات"] {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-color: rgba(33, 150, 243, 0.2);
+      }
+      html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-icon { background-color: rgba(33, 150, 243, 0.15); color: #1976d2 !important; }
+      html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-subject * { color: #0d47a1 !important; }
+
+      /* Biology */
+       html.sunset .lesson-card[data-subject*="أحياء"] {
+        background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+        border-color: rgba(0, 150, 136, 0.2);
+      }
+      html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-icon { background-color: rgba(0, 150, 136, 0.15); color: #00796b !important; }
+      html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-subject * { color: #004d40 !important; }
+
+      /* Icon & text styling */
+      html.sunset .lesson-card-icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: 24px !important;
+        flex-shrink: 0;
+        margin-left: 10px;
+        background-color: transparent !important; /* Reset inline styles */
+      }
+      html.sunset .lesson-card-subject {
+        font-weight: 700;
+        font-size: 1.2em;
+      }
+      html.sunset .lesson-card-details {
+        font-size: 0.95em;
+        margin-top: 15px; padding-top: 15px;
+        border-top: 1px dashed rgba(0, 0, 0, 0.1);
+      }
+
+      /* Decorative elements */
+      @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-10px) translateX(10px); }
+      }
+      html.sunset .lesson-card::before, html.sunset .lesson-card::after {
+        content: '☀️';
+        position: absolute;
+        opacity: 0.1;
+        z-index: 0;
+        font-size: 80px;
+        color: hsl(var(--color-primary));
+        animation: float 15s ease-in-out infinite;
+      }
+      html.sunset .lesson-card::before { top: -20px; right: -30px; }
+      html.sunset .lesson-card::after { bottom: -15px; left: -25px; font-size: 70px; animation-duration: 12s; animation-direction: reverse; }
+
+      /* Sunset Header Decorations */
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\] {
+        position: relative;
+        overflow: hidden;
+      }
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\] > * {
+        position: relative;
+        z-index: 2; /* Ensure header content is above clouds */
+      }
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before,
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+        content: '☁️';
+        position: absolute;
+        opacity: 0.3;
+        z-index: 1;
+        color: #ffffff;
+        animation: float 15s ease-in-out infinite;
+      }
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
+        font-size: 80px;
+        top: -20px;
+        right: -30px;
+        animation-duration: 15s;
+      }
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+        font-size: 70px;
+        bottom: -15px;
+        left: -25px;
+        animation-duration: 12s;
+        animation-direction: reverse;
       }
     </style>
 <script type="importmap">
@@ -104,6 +592,26 @@
 </head>
 <body>
     <div id="root"></div>
+    <div class="bubbles-container">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <script>
+      // Polyfill process.env for browser environment to prevent crash from missing API key variable.
+      if (typeof window.process === 'undefined') {
+        window.process = { env: { API_KEY: '' } };
+      }
+    </script>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

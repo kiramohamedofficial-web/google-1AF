@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_STUDENTS } from '../constants.ts';
 import { Lesson, Trip, Teacher, Post, User, Booking } from '../types.ts';
@@ -37,7 +38,7 @@ const LessonFormModal: React.FC<LessonFormModalProps> = ({ isOpen, onClose, onSa
     const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave({ id: lessonToEdit ? lessonToEdit.id : `l_${Date.now()}`, ...formData }); onClose(); };
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-2xl border border-[hsl(var(--color-border))] transform transition-all animate-fade-in-up" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">{lessonToEdit ? '✏️ تعديل حصة' : '➕ إضافة حصة'}</h2>
                 <form onSubmit={handleSubmit}>
@@ -90,7 +91,7 @@ const TeacherFormModal: React.FC<TeacherFormModalProps> = ({ isOpen, onClose, on
 
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-2xl border border-[hsl(var(--color-border))] animate-fade-in-up" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">{teacherToEdit ? '✏️ تعديل بيانات مدرس' : '➕ إضافة مدرس جديد'}</h2>
                 <form onSubmit={handleSubmit} >
@@ -148,7 +149,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
 
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-2xl border border-[hsl(var(--color-border))] animate-fade-in-up" onClick={e => e.stopPropagation()}>
                  <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">{tripToEdit ? '✏️ تعديل رحلة' : '➕ إضافة رحلة جديدة'}</h2>
                  <form onSubmit={handleSubmit}>
@@ -208,7 +209,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
     };
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-2xl border border-[hsl(var(--color-border))] animate-fade-in-up" onClick={e => e.stopPropagation()}>
                  <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">{postToEdit ? '✏️ تعديل منشور' : '➕ إنشاء منشور جديد'}</h2>
                  <form onSubmit={handleSubmit}>
@@ -239,16 +240,17 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
     );
 };
 
-interface TripBookingsModalProps { isOpen: boolean; onClose: () => void; trip: Trip | null; students: User[]; }
-const TripBookingsModal: React.FC<TripBookingsModalProps> = ({ isOpen, onClose, trip, students }) => {
+interface TripBookingsModalProps { isOpen: boolean; onClose: () => void; trip: Trip | null; students: User[]; bookings: Booking[]; }
+const TripBookingsModal: React.FC<TripBookingsModalProps> = ({ isOpen, onClose, trip, students, bookings }) => {
     const [searchTerm, setSearchTerm] = useState('');
     
-    // In a real app, you would have a list of actual bookings. Here we simulate it.
     const bookedStudents = useMemo(() => {
-        if (!trip) return [];
-        // Simulate bookings by taking a slice of mock students based on bookedCount
-        return students.slice(0, trip.bookedCount);
-    }, [trip, students]);
+        if (!trip || !bookings) return [];
+        const tripBookings = bookings.filter(b => b.serviceType === 'رحلة' && b.serviceId === trip.id);
+        return tripBookings
+            .map(booking => students.find(s => s.id === booking.studentId))
+            .filter((s): s is User => s !== undefined);
+    }, [trip, students, bookings]);
 
     const filteredStudents = useMemo(() => 
         bookedStudents.filter(s => 
@@ -259,7 +261,7 @@ const TripBookingsModal: React.FC<TripBookingsModalProps> = ({ isOpen, onClose, 
     if (!isOpen || !trip) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-3xl border border-[hsl(var(--color-border))] animate-fade-in-up flex flex-col" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">👥 الطلاب المحجوزين في: {trip.title}</h2>
                 <div className="p-4 border-b border-[hsl(var(--color-border))]">
@@ -313,18 +315,16 @@ const StudentFormModal: React.FC<StudentFormModalProps> = ({ isOpen, onClose, on
     const handleChange = (e: React.ChangeEvent<any>) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
     const handleSubmit = (e: React.FormEvent) => { 
         e.preventDefault(); 
-        const nextStudentIdNumber = MOCK_STUDENTS.length + Date.now(); // Simplified for mock data
-        const newId = `STU-2024-${String(nextStudentIdNumber).slice(-4)}`;
         onSave({
             ...formData, 
-            id: studentToEdit ? studentToEdit.id : newId,
+            id: studentToEdit ? studentToEdit.id : `STU-${Date.now()}`,
             role: 'student',
         }); 
         onClose(); 
     };
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-2xl border border-[hsl(var(--color-border))] animate-fade-in-up" onClick={e => e.stopPropagation()}>
                 <h2 className="text-2xl font-bold p-6 border-b border-[hsl(var(--color-border))]">{studentToEdit ? '✏️ تعديل بيانات طالب' : '➕ إضافة طالب جديد'}</h2>
                 <form onSubmit={handleSubmit}>
@@ -373,12 +373,14 @@ interface AdminDashboardPageProps {
     teachers: Teacher[]; setTeachers: React.Dispatch<React.SetStateAction<Teacher[]>>;
     lessons: Lesson[]; setLessons: React.Dispatch<React.SetStateAction<Lesson[]>>;
     trips: Trip[]; setTrips: React.Dispatch<React.SetStateAction<Trip[]>>;
-    posts: Post[]; setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+    posts: Post[];
+    onSavePost: (post: Post, isNew: boolean) => void;
+    onDeletePost: (postId: string) => void;
     bookings: Booking[];
     onUpdateBookingStatus: (bookingId: string, status: Booking['status']) => void;
 }
 
-const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTeachers, lessons, setLessons, trips, setTrips, posts, setPosts, bookings, onUpdateBookingStatus }) => {
+const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTeachers, lessons, setLessons, trips, setTrips, posts, onSavePost, onDeletePost, bookings, onUpdateBookingStatus }) => {
     const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
     const [activeTab, setActiveTab] = useState<AdminTab>('stats');
     
@@ -416,6 +418,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
             setSearchedStudent(item as unknown as User);
         }
     };
+
     const handleDelete = <T extends {id: string}>(id: string, setFn: React.Dispatch<React.SetStateAction<T[]>>) => {
         if (confirm(`هل أنت متأكد من الحذف؟ لا يمكن التراجع عن هذا الإجراء.`)) {
             setFn(prev => prev.filter(i => i.id !== id));
@@ -424,6 +427,11 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                 setStudentSearchId('');
             }
         }
+    };
+    
+    const handleSavePostModal = (post: Post) => {
+        const isNew = !posts.some(p => p.id === post.id);
+        onSavePost(post, isNew);
     };
 
     const renderContent = () => {
@@ -443,7 +451,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                 return (
                     <div>
                         <h3 className="text-xl font-bold mb-4">🎫 إدارة الحجوزات ({bookings.length})</h3>
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto bg-[hsl(var(--color-background))] p-2 rounded-lg">
                             <table className="w-full text-right whitespace-nowrap">
                                 <thead className="border-b-2 border-[hsl(var(--color-border))]">
                                     <tr>
@@ -485,15 +493,15 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold">📝 إدارة المنشورات ({posts.length})</h3>
-                        <button onClick={() => { setPostToEdit(null); setIsPostModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إنشاء منشور</button>
+                        <button type="button" onClick={() => { setPostToEdit(null); setIsPostModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إنشاء منشور</button>
                     </div>
                     <div className="space-y-2">
                         {posts.map(post => (
                             <div key={post.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center">
                                 <div><p className="font-bold">{post.title} {post.status === 'draft' && <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full ml-2">مسودة</span>}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{post.author} - {post.timestamp}</p></div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => { setPostToEdit(post); setIsPostModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل المنشور"><PencilIcon /></button>
-                                    <button onClick={() => handleDelete(post.id, setPosts)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف المنشور"><TrashIcon /></button>
+                                    <button type="button" onClick={() => { setPostToEdit(post); setIsPostModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل المنشور"><PencilIcon /></button>
+                                    <button type="button" onClick={() => onDeletePost(post.id)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف المنشور"><TrashIcon /></button>
                                 </div>
                             </div>
                         ))}
@@ -504,7 +512,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold">🚌 إدارة الرحلات ({trips.length})</h3>
-                        <button onClick={() => { setTripToEdit(null); setIsTripModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة رحلة</button>
+                        <button type="button" onClick={() => { setTripToEdit(null); setIsTripModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة رحلة</button>
                     </div>
                     <div className="space-y-2">
                         {trips.map(trip => (
@@ -512,9 +520,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                                 <div className="flex-grow"><p className="font-bold">{trip.title}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{trip.date}</p></div>
                                 <div className="text-sm font-semibold">الحجوزات: {trip.bookedCount}/{trip.capacity}</div>
                                 <div className="flex gap-2 ml-4">
-                                    <button onClick={() => setViewingBookingsTrip(trip)} className="p-2 hover:bg-purple-500/10 rounded-md" aria-label="عرض الحجوزات"><UsersIcon className="w-5 h-5 text-purple-500" /></button>
-                                    <button onClick={() => { setTripToEdit(trip); setIsTripModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الرحلة"><PencilIcon /></button>
-                                    <button onClick={() => handleDelete(trip.id, setTrips)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الرحلة"><TrashIcon /></button>
+                                    <button type="button" onClick={() => setViewingBookingsTrip(trip)} className="p-2 hover:bg-purple-500/10 rounded-md" aria-label="عرض الحجوزات"><UsersIcon className="w-5 h-5 text-purple-500" /></button>
+                                    <button type="button" onClick={() => { setTripToEdit(trip); setIsTripModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الرحلة"><PencilIcon /></button>
+                                    <button type="button" onClick={() => handleDelete(trip.id, setTrips)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الرحلة"><TrashIcon /></button>
                                 </div>
                             </div>
                         ))}
@@ -525,10 +533,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold">👨‍🏫 إدارة المدرسين ({teachers.length})</h3>
-                        <button onClick={() => { setTeacherToEdit(null); setIsTeacherModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة مدرس</button>
+                        <button type="button" onClick={() => { setTeacherToEdit(null); setIsTeacherModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة مدرس</button>
                     </div>
                      <div className="space-y-2">
-                        {teachers.map(t => <div key={t.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center"><div><p className="font-bold">{t.name}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{t.subject}</p></div><div className="flex gap-2"><button onClick={() => { setTeacherToEdit(t); setIsTeacherModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل المدرس"><PencilIcon /></button><button onClick={() => handleDelete(t.id, setTeachers)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف المدرس"><TrashIcon /></button></div></div>)}
+                        {teachers.map(t => <div key={t.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center"><div><p className="font-bold">{t.name}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{t.subject}</p></div><div className="flex gap-2"><button type="button" onClick={() => { setTeacherToEdit(t); setIsTeacherModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل المدرس"><PencilIcon /></button><button type="button" onClick={() => handleDelete(t.id, setTeachers)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف المدرس"><TrashIcon /></button></div></div>)}
                     </div>
                 </div>
             );
@@ -536,10 +544,10 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                  <div>
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold">📚 إدارة الحصص ({lessons.length})</h3>
-                        <button onClick={() => { setLessonToEdit(null); setIsLessonModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة حصة</button>
+                        <button type="button" onClick={() => { setLessonToEdit(null); setIsLessonModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة حصة</button>
                     </div>
                      <div className="space-y-2">
-                        {lessons.map(l => <div key={l.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center"><div><p className="font-bold">{l.subject} - {l.grade}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{l.teacher} - {l.day} {l.time}</p></div><div className="flex gap-2"><button onClick={() => { setLessonToEdit(l); setIsLessonModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الحصة"><PencilIcon /></button><button onClick={() => handleDelete(l.id, setLessons)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الحصة"><TrashIcon /></button></div></div>)}
+                        {lessons.map(l => <div key={l.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center"><div><p className="font-bold">{l.subject} - {l.grade}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{l.teacher} - {l.day} {l.time}</p></div><div className="flex gap-2"><button type="button" onClick={() => { setLessonToEdit(l); setIsLessonModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الحصة"><PencilIcon /></button><button type="button" onClick={() => handleDelete(l.id, setLessons)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الحصة"><TrashIcon /></button></div></div>)}
                      </div>
                 </div>
             );
@@ -547,7 +555,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                  <div>
                     <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h3 className="text-xl font-bold">🎓 إدارة الطلاب</h3>
-                        <button onClick={() => { setStudentToEdit(null); setIsStudentModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة طالب جديد</button>
+                        <button type="button" onClick={() => { setStudentToEdit(null); setIsStudentModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة طالب جديد</button>
                     </div>
                     <form onSubmit={handleStudentSearch} className="flex gap-2 mb-6">
                         <input 
@@ -572,8 +580,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                                     <p className="font-mono text-sm text-[hsl(var(--color-text-secondary))] bg-black/5 dark:bg-white/5 px-2 py-1 rounded-md inline-block my-2">{searchedStudent.id}</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => { setStudentToEdit(searchedStudent); setIsStudentModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الطالب"><PencilIcon /></button>
-                                    <button onClick={() => handleDelete(searchedStudent.id, setStudents)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الطالب"><TrashIcon /></button>
+                                    <button type="button" onClick={() => { setStudentToEdit(searchedStudent); setIsStudentModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الطالب"><PencilIcon /></button>
+                                    <button type="button" onClick={() => handleDelete(searchedStudent.id, setStudents)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الطالب"><TrashIcon /></button>
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t border-[hsl(var(--color-border))] grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -611,9 +619,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
             <TeacherFormModal isOpen={isTeacherModalOpen} onClose={() => setIsTeacherModalOpen(false)} onSave={(teacher) => handleSave(teacher, setTeachers, teacherToEdit)} teacherToEdit={teacherToEdit} />
             <LessonFormModal isOpen={isLessonModalOpen} onClose={() => setIsLessonModalOpen(false)} onSave={(lesson) => handleSave(lesson, setLessons, lessonToEdit)} lessonToEdit={lessonToEdit} teachers={teachers} />
             <TripFormModal isOpen={isTripModalOpen} onClose={() => setIsTripModalOpen(false)} onSave={(trip) => handleSave(trip, setTrips, tripToEdit)} tripToEdit={tripToEdit} />
-            <PostFormModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} onSave={(post) => handleSave(post, setPosts, postToEdit)} postToEdit={postToEdit} />
+            <PostFormModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} onSave={handleSavePostModal} postToEdit={postToEdit} />
             <StudentFormModal isOpen={isStudentModalOpen} onClose={() => setIsStudentModalOpen(false)} onSave={(student) => handleSave(student, setStudents, studentToEdit)} studentToEdit={studentToEdit} />
-            <TripBookingsModal isOpen={!!viewingBookingsTrip} onClose={() => setViewingBookingsTrip(null)} trip={viewingBookingsTrip} students={students} />
+            <TripBookingsModal isOpen={!!viewingBookingsTrip} onClose={() => setViewingBookingsTrip(null)} trip={viewingBookingsTrip} students={students} bookings={bookings}/>
         </div>
     );
 };

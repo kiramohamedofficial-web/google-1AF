@@ -8,8 +8,8 @@ const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: 
     const style = getSubjectStyle(lesson.subject);
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-lg relative border border-[hsl(var(--color-border))]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-12 sm:items-center sm:pt-4" onClick={onClose}>
+            <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-2xl w-full max-w-lg relative border border-[hsl(var(--color-border))] animate-fade-in-down" onClick={e => e.stopPropagation()}>
                 <div className={`h-32 rounded-t-2xl flex items-center justify-center text-6xl ${style.bgColor}`}>
                     {style.icon}
                 </div>
@@ -52,13 +52,21 @@ const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: 
 
 const DailyScheduleBar: React.FC<{ lessons: Lesson[], onLessonClick: (lesson: Lesson) => void }> = ({ lessons, onLessonClick }) => (
     <div className="flex space-x-4 space-x-reverse overflow-x-auto pb-4 -mx-4 px-4">
-        {lessons.length > 0 ? lessons.map(lesson => {
+        {lessons.length > 0 ? lessons.map((lesson, index) => {
              const style = getSubjectStyle(lesson.subject);
             return (
-                <button key={lesson.id} onClick={() => onLessonClick(lesson)} className={`flex-shrink-0 w-56 p-4 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-1 text-right ${style.bgColor}`}>
-                    <span className="text-2xl">{style.icon}</span>
-                    <h4 className="font-bold text-[hsl(var(--color-text-primary))] mt-2">{lesson.subject}</h4>
-                    <p className="text-sm text-[hsl(var(--color-text-secondary))]">{lesson.time}</p>
+                <button 
+                    key={lesson.id} 
+                    onClick={() => onLessonClick(lesson)} 
+                    className={`lesson-card flex-shrink-0 w-56 p-4 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-1 text-right ${style.bgColor} lesson-card-cocktail lesson-card-ocean`}
+                    style={{ '--card-index': index } as React.CSSProperties}
+                    data-subject={lesson.subject}
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="lesson-card-icon text-2xl">{style.icon}</span>
+                        <h4 className="lesson-card-subject font-bold text-[hsl(var(--color-text-primary))] mt-2">{lesson.subject}</h4>
+                    </div>
+                    <p className="lesson-card-details text-sm text-[hsl(var(--color-text-secondary))]">{lesson.time}</p>
                 </button>
             )
         }) : <p className="text-center text-[hsl(var(--color-text-secondary))] w-full">لا توجد حصص اليوم. استمتع بيومك!</p>}
@@ -94,15 +102,19 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], onLessonClick: (lesson
                                     <button
                                         key={lesson.id}
                                         onClick={() => onLessonClick(lesson)}
-                                        className={`w-full text-right p-3 rounded-xl transition-all duration-300 border-2 hover:shadow-lg hover:border-[hsl(var(--color-primary))]
+                                        className={`lesson-card w-full text-right p-3 rounded-xl transition-all duration-300 border-2 hover:shadow-lg hover:border-[hsl(var(--color-primary))] lesson-card-cocktail lesson-card-ocean
                                             ${isBooked ? 'bg-yellow-400/10 border-yellow-400' : 'bg-[hsl(var(--color-background))] border-transparent'}`}
-                                        style={{ animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)` }}
+                                        style={{ 
+                                            animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`,
+                                            '--card-index': dayIndex * 5 + lessonIndex
+                                        } as React.CSSProperties}
+                                        data-subject={lesson.subject}
                                     >
                                         <div className="flex items-center gap-3 mb-2.5">
-                                            <span className="text-3xl p-2 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
-                                            <h4 className="text-lg font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
+                                            <span className="lesson-card-icon text-3xl p-2 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
+                                            <h4 className="lesson-card-subject text-lg font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
                                         </div>
-                                        <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-[hsl(var(--color-text-secondary))] items-center">
+                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-[hsl(var(--color-text-secondary))] items-center">
                                             <TeacherIcon />
                                             <span className="truncate">{lesson.teacher}</span>
                                             
@@ -206,7 +218,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
 
             <section>
                 <h2 className="text-3xl font-bold mb-4 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002 2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                     <span>حصص اليوم</span>
                 </h2>
                 <DailyScheduleBar lessons={todayLessons} onLessonClick={handleLessonClick} />
