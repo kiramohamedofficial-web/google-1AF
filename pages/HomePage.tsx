@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { User, Lesson, Trip, Post, Page, Booking } from '../types.ts';
 import { getSubjectStyle } from '../constants.ts';
@@ -6,6 +7,7 @@ import { getSubjectStyle } from '../constants.ts';
 const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: (lesson: Lesson) => void; onClose: () => void; }> = ({ lesson, isBooked, onBook, onClose }) => {
     const isFull = lesson.capacity ? lesson.bookedCount! >= lesson.capacity : false;
     const style = getSubjectStyle(lesson.subject);
+    const bookingNotRequired = lesson.bookingRequired === false;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-12 sm:items-center sm:pt-4" onClick={onClose}>
@@ -25,24 +27,30 @@ const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: 
                         <p><span className="font-semibold">📍 القاعة:</span> {lesson.hall}</p>
                         {lesson.notes && <p><span className="font-semibold">📝 ملاحظات:</span> {lesson.notes}</p>}
                     </div>
-                    <div className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center">
-                        <span className="font-semibold">الحجوزات</span>
-                        <div className="flex items-center gap-2">
-                             <div className="w-24 bg-black/10 dark:bg-white/10 rounded-full h-2.5">
-                                <div className={`${style.progressBarClass} h-2.5 rounded-full`} style={{ width: `${((lesson.bookedCount || 0) / (lesson.capacity || 1)) * 100}%` }}></div>
+                    {!bookingNotRequired && (
+                        <div className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center">
+                            <span className="font-semibold">الحجوزات</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-24 bg-black/10 dark:bg-white/10 rounded-full h-2.5">
+                                    <div className={`${style.progressBarClass} h-2.5 rounded-full`} style={{ width: `${((lesson.bookedCount || 0) / (lesson.capacity || 1)) * 100}%` }}></div>
+                                </div>
+                                <span>{lesson.bookedCount} / {lesson.capacity}</span>
                             </div>
-                            <span>{lesson.bookedCount} / {lesson.capacity}</span>
                         </div>
-                    </div>
+                    )}
                      <button 
-                        onClick={() => onBook(lesson)}
-                        disabled={isBooked || isFull}
+                        onClick={() => !bookingNotRequired && onBook(lesson)}
+                        disabled={isBooked || isFull || bookingNotRequired}
                         className={`mt-4 w-full font-bold py-3 px-4 rounded-lg transition-all duration-300 text-lg
-                            ${isBooked ? 'bg-yellow-500 text-white cursor-default' : 
+                            ${bookingNotRequired ? 'bg-cyan-500 text-white cursor-default' :
+                            isBooked ? 'bg-yellow-500 text-white cursor-default' : 
                             isFull ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 
                             'bg-[hsl(var(--color-primary))] hover:opacity-90 text-white'}`}
                     >
-                        {isBooked ? '⏳ تم إرسال الطلب' : isFull ? '❌ مكتمل العدد' : '📌 إرسال طلب حجز'}
+                        {bookingNotRequired ? 'الحضور مباشر (لا يتطلب حجز)' :
+                         isBooked ? '⏳ تم إرسال الطلب' : 
+                         isFull ? '❌ مكتمل العدد' : 
+                         '📌 إرسال طلب حجز'}
                     </button>
                 </div>
             </div>

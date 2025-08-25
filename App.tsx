@@ -4,6 +4,7 @@ import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, Notification }
 import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS, MOCK_NOTIFICATIONS, MOCK_STUDENTS } from './constants.ts';
 import Header from './components/layout/Header.tsx';
 import Sidebar from './components/layout/Sidebar.tsx';
+import Footer from './components/layout/Footer.tsx';
 import HomePage from './pages/HomePage.tsx';
 import FullSchedulePage from './pages/FullSchedulePage.tsx';
 import TeachersPage from './pages/TeachersPage.tsx';
@@ -17,12 +18,17 @@ import LoginPage from './pages/LoginPage.tsx';
 import GalleryPage from './pages/GalleryPage.tsx';
 import NewsBoardPage from './pages/NewsBoardPage.tsx';
 import MyBookingsPage from './pages/MyBookingsPage.tsx';
+import SmartSchedulePage from './pages/SmartSchedulePage.tsx';
+import FeedbackPage from './pages/FeedbackPage.tsx';
+import InstructionsPage from './pages/InstructionsPage.tsx';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage.tsx';
+import TermsOfServicePage from './pages/TermsOfServicePage.tsx';
 
 const App: React.FC = () => {
     const [theme, setTheme] = useState<Theme>(() => {
         try {
             const savedTheme = localStorage.getItem('theme') as Theme;
-            const validThemes: Theme[] = ['light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave'];
+            const validThemes: Theme[] = ['light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave', 'royal', 'paper'];
             if (savedTheme && validThemes.includes(savedTheme)) {
                 return savedTheme;
             }
@@ -44,7 +50,7 @@ const App: React.FC = () => {
     useEffect(() => {
         try {
             const root = window.document.documentElement;
-            root.classList.remove('light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave');
+            root.classList.remove('light', 'dark', 'pink', 'cocktail', 'ocean', 'forest', 'sunset', 'matrix', 'wave', 'royal', 'paper');
             root.classList.add(theme);
             localStorage.setItem('theme', theme);
         } catch (error) {
@@ -165,15 +171,45 @@ const App: React.FC = () => {
         }
     };
 
-    const renderPage = () => {
-        if (!currentUser) {
-            return <LoginPage onLogin={handleLogin} />;
+    // --- RENDER LOGIC ---
+
+    if (!currentUser) {
+        // --- Logged-out views ---
+        switch (currentPage) {
+            case 'privacy-policy':
+                return (
+                    <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
+                        <main className="flex-grow p-4 md:p-6">
+                            <PrivacyPolicyPage onNavigate={setCurrentPage} isInsideApp={false} />
+                        </main>
+                        <Footer onNavigate={setCurrentPage} insideApp={false} />
+                    </div>
+                );
+            case 'terms-of-service':
+                 return (
+                    <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
+                        <main className="flex-grow p-4 md:p-6">
+                            <TermsOfServicePage onNavigate={setCurrentPage} isInsideApp={false} />
+                        </main>
+                        <Footer onNavigate={setCurrentPage} insideApp={false} />
+                    </div>
+                );
+            default:
+                // For 'home' or any other page, show the login page.
+                // LoginPage is a full-page component with its own footer.
+                return <LoginPage onLogin={handleLogin} onNavigate={setCurrentPage} />;
         }
+    }
+
+    // --- Logged-in view ---
+    const renderPageContent = () => {
         switch (currentPage) {
             case 'home':
                 return <HomePage user={currentUser} lessons={lessons} posts={posts} trips={trips} onNavigate={setCurrentPage} bookings={bookings} onCreateBooking={handleCreateBooking} />;
             case 'full-schedule':
                 return <FullSchedulePage user={currentUser} lessons={lessons}/>;
+            case 'smart-schedule':
+                return <SmartSchedulePage user={currentUser} onUserUpdate={setCurrentUser} lessons={lessons} />;
             case 'teachers':
                 return <TeachersPage teachers={teachers} />;
             case 'news-board':
@@ -200,41 +236,48 @@ const App: React.FC = () => {
                 return <ProfilePage user={currentUser} onUserUpdate={setCurrentUser} />;
             case 'about':
                 return <AboutPage />;
+            case 'feedback':
+                return <FeedbackPage />;
+            case 'instructions':
+                return <InstructionsPage />;
+            case 'privacy-policy':
+                return <PrivacyPolicyPage onNavigate={setCurrentPage} isInsideApp={true} />;
+            case 'terms-of-service':
+                return <TermsOfServicePage onNavigate={setCurrentPage} isInsideApp={true} />;
             default:
                 return <HomePage user={currentUser} lessons={lessons} posts={posts} trips={trips} onNavigate={setCurrentPage} bookings={bookings} onCreateBooking={handleCreateBooking} />;
         }
     };
 
     return (
-        <div className="min-h-screen">
-            {currentUser && (
-                <>
-                    <Header
-                        user={currentUser}
-                        onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
-                        notifications={notifications}
-                        onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
-                        onMarkAsRead={handleMarkNotificationAsRead}
-                        onMarkAllAsRead={handleMarkAllAsRead}
-                        onDismiss={handleDismissNotification}
-                    />
-                    <Sidebar
-                        isOpen={isSidebarOpen}
-                        user={currentUser}
-                        currentPage={currentPage}
-                        onClose={() => setSidebarOpen(false)}
-                        onNavigate={setCurrentPage}
-                        onLogout={handleLogout}
-                        theme={theme}
-                        setTheme={setTheme}
-                    />
-                </>
-            )}
-            <main className={`${currentUser ? 'pt-20 lg:pr-72' : ''} transition-all duration-300`}>
-                <div className={!currentUser ? '' : 'p-6'}>
-                    {renderPage()}
-                </div>
-            </main>
+        <div className="min-h-screen bg-[hsl(var(--color-background))]">
+            <Header
+                user={currentUser}
+                onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
+                notifications={notifications}
+                onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
+                onMarkAsRead={handleMarkNotificationAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDismiss={handleDismissNotification}
+            />
+            <Sidebar
+                isOpen={isSidebarOpen}
+                user={currentUser}
+                currentPage={currentPage}
+                onClose={() => setSidebarOpen(false)}
+                onNavigate={setCurrentPage}
+                onLogout={handleLogout}
+                theme={theme}
+                setTheme={setTheme}
+            />
+            <div className={`flex flex-col lg:pr-64`} style={{ minHeight: '100vh' }}>
+                <main className={`flex-grow pt-20`}>
+                    <div className='p-4 md:p-6'>
+                        {renderPageContent()}
+                    </div>
+                </main>
+                <Footer onNavigate={setCurrentPage} insideApp={true} />
+            </div>
         </div>
     );
 };

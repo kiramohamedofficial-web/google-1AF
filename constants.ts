@@ -1,5 +1,6 @@
 
-import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking, Notification } from './types.ts';
+
+import { User, Lesson, Trip, Teacher, Post, Book, Question, GalleryImage, Booking, Notification } from './types';
 
 // Centralized subject styles to be used across the application
 export const subjectStyles: Record<string, { icon: string; progressBarClass: string; bgColor: string }> = {
@@ -36,6 +37,7 @@ export const MOCK_USER_STUDENT: User = {
     profilePicture: 'https://picsum.photos/seed/student/200/200',
     dob: '2006-05-15',
     section: 'علمي علوم',
+    lastScheduleEdit: new Date('2024-01-01').getTime(),
 };
 
 export const MOCK_USER_ADMIN: User = {
@@ -64,6 +66,7 @@ export const MOCK_STUDENTS: User[] = [
         profilePicture: 'https://picsum.photos/seed/student2/200/200',
         dob: '2006-08-22',
         section: 'أدبي',
+        lastScheduleEdit: new Date('2024-01-01').getTime(),
     },
     {
         id: 'STU-2025-0003',
@@ -77,6 +80,7 @@ export const MOCK_STUDENTS: User[] = [
         profilePicture: 'https://picsum.photos/seed/student3/200/200',
         dob: '2008-01-10',
         section: 'عام',
+        lastScheduleEdit: new Date('2024-01-01').getTime(),
     },
      {
         id: 'STU-2026-0004',
@@ -90,53 +94,54 @@ export const MOCK_STUDENTS: User[] = [
         profilePicture: 'https://picsum.photos/seed/student4/200/200',
         dob: '2009-11-30',
         section: 'عام',
+        lastScheduleEdit: new Date('2024-01-01').getTime(),
     }
 ];
 
 export const MOCK_LESSONS: Lesson[] = [
     // --- الأحد ---
-    { id: 'l1', day: 'الأحد', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '4:00 م - 6:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', notes: 'مراجعة على الفصل الأول وامتحان سريع.', capacity: 50, bookedCount: 45 },
-    { id: 'l2', day: 'الأحد', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'شرح درس جديد: الكيمياء العضوية.', capacity: 50, bookedCount: 50 },
-    { id: 'l9', day: 'الأحد', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثاني الثانوي', capacity: 40, bookedCount: 38 },
-    { id: 'l10', day: 'الأحد', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '3:00 م - 5:00 م', hall: 'قاعة 4', grade: 'الصف الأول الثانوي', capacity: 60, bookedCount: 55 },
-    { id: 'l11', day: 'الأحد', subject: 'أحياء', teacher: 'أ. داروين', time: '7:00 م - 9:00 م', hall: 'قاعة 1', grade: 'الصف الأول الثانوي', capacity: 50, bookedCount: 25 },
+    { id: 'l1', day: 'الأحد', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '4:00 م - 6:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', notes: 'مراجعة على الفصل الأول وامتحان سريع.', capacity: 50, bookedCount: 45, bookingRequired: true },
+    { id: 'l2', day: 'الأحد', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'شرح درس جديد: الكيمياء العضوية.', capacity: 50, bookedCount: 50, bookingRequired: true },
+    { id: 'l9', day: 'الأحد', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثاني الثانوي', capacity: 40, bookedCount: 38, bookingRequired: true },
+    { id: 'l10', day: 'الأحد', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '3:00 م - 5:00 م', hall: 'قاعة 4', grade: 'الصف الأول الثانوي', capacity: 60, bookedCount: 55, bookingRequired: true },
+    { id: 'l11', day: 'الأحد', subject: 'أحياء', teacher: 'أ. داروين', time: '7:00 م - 9:00 م', hall: 'قاعة 1', grade: 'الصف الأول الثانوي', capacity: 50, bookedCount: 25, bookingRequired: true },
 
     // --- الاثنين ---
-    { id: 'l3', day: 'الاثنين', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', notes: 'حل تدريبات على البلاغة.', capacity: 40, bookedCount: 22 },
-    { id: 'l4', day: 'الاثنين', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الإعدادي', notes: 'هندسة فراغية.', capacity: 60, bookedCount: 30 },
-    { id: 'l12', day: 'الاثنين', subject: 'لغة إنجليزية', teacher: 'أ. شكسبير', time: '6:00 م - 8:00 م', hall: 'قاعة 2', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 40 },
-    { id: 'l13', day: 'الاثنين', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 45, bookedCount: 15 },
-    { id: 'l14', day: 'الاثنين', subject: 'تاريخ', teacher: 'أ. هيرودوت', time: '7:00 م - 9:00 م', hall: 'قاعة VIP', grade: 'الصف الثالث الثانوي', capacity: 25, bookedCount: 25 },
+    { id: 'l3', day: 'الاثنين', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', notes: 'حل تدريبات على البلاغة.', capacity: 40, bookedCount: 22, bookingRequired: true },
+    { id: 'l4', day: 'الاثنين', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الإعدادي', notes: 'هندسة فراغية.', capacity: 60, bookedCount: 30, bookingRequired: true },
+    { id: 'l12', day: 'الاثنين', subject: 'لغة إنجليزية', teacher: 'أ. شكسبير', time: '6:00 م - 8:00 م', hall: 'قاعة 2', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 40, bookingRequired: true },
+    { id: 'l13', day: 'الاثنين', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 45, bookedCount: 15, bookingRequired: true },
+    { id: 'l14', day: 'الاثنين', subject: 'تاريخ', teacher: 'أ. هيرودوت', time: '7:00 م - 9:00 م', hall: 'قاعة VIP', grade: 'الصف الثالث الثانوي', capacity: 25, bookedCount: 25, bookingRequired: true },
 
     // --- الثلاثاء ---
-    { id: 'l5', day: 'الثلاثاء', subject: 'أحياء', teacher: 'أ. داروين', time: '4:00 م - 6:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'مراجعة عامة على المنهج.', capacity: 50, bookedCount: 15 },
-    { id: 'l15', day: 'الثلاثاء', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 1', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 49 },
-    { id: 'l16', day: 'الثلاثاء', subject: 'فلسفة وعلم نفس', teacher: 'أ. أرسطو', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 40, bookedCount: 20 },
-    { id: 'l17', day: 'الثلاثاء', subject: 'لغة فرنسية', teacher: 'أ. موليير', time: '7:00 م - 9:00 م', hall: 'قاعة 4', grade: 'الصف الأول الثانوي', capacity: 30, bookedCount: 18 },
+    { id: 'l5', day: 'الثلاثاء', subject: 'أحياء', teacher: 'أ. داروين', time: '4:00 م - 6:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'مراجعة عامة على المنهج.', capacity: 50, bookedCount: 15, bookingRequired: true },
+    { id: 'l15', day: 'الثلاثاء', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 1', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 49, bookingRequired: true },
+    { id: 'l16', day: 'الثلاثاء', subject: 'فلسفة وعلم نفس', teacher: 'أ. أرسطو', time: '5:00 م - 7:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 40, bookedCount: 20, bookingRequired: true },
+    { id: 'l17', day: 'الثلاثاء', subject: 'لغة فرنسية', teacher: 'أ. موليير', time: '7:00 م - 9:00 م', hall: 'قاعة 4', grade: 'الصف الأول الثانوي', capacity: 30, bookedCount: 18, bookingRequired: true },
 
     // --- الأربعاء ---
-    { id: 'l6', day: 'الأربعاء', subject: 'جيولوجيا', teacher: 'أ. جيمس هوتون', time: '5:00 م - 7:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', capacity: 30, bookedCount: 30 },
-    { id: 'l18', day: 'الأربعاء', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'تفاضل وتكامل.', capacity: 60, bookedCount: 58 },
-    { id: 'l19', day: 'الأربعاء', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الأول الثانوي', capacity: 55, bookedCount: 43 },
-    { id: 'l20', day: 'الأربعاء', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 33 },
+    { id: 'l6', day: 'الأربعاء', subject: 'جيولوجيا', teacher: 'أ. جيمس هوتون', time: '5:00 م - 7:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', capacity: 30, bookedCount: 30, bookingRequired: true },
+    { id: 'l18', day: 'الأربعاء', subject: 'رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', notes: 'تفاضل وتكامل.', capacity: 60, bookedCount: 58, bookingRequired: true },
+    { id: 'l19', day: 'الأربعاء', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الأول الثانوي', capacity: 55, bookedCount: 43, bookingRequired: true },
+    { id: 'l20', day: 'الأربعاء', subject: 'لغة عربية', teacher: 'أ. سيبويه', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 33, bookingRequired: true },
 
     // --- الخميس ---
-    { id: 'l7', day: 'الخميس', subject: 'لغة إنجليزية', teacher: 'أ. شكسبير', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', notes: 'تدريب على سؤال الترجمة.', capacity: 50, bookedCount: 48 },
-    { id: 'l21', day: 'الخميس', subject: 'كيمياء', teacher: 'أ. مندليف', time: '4:00 م - 6:00 م', hall: 'قاعة 1', grade: 'الصف الأول الثانوي', capacity: 60, bookedCount: 50 },
-    { id: 'l22', day: 'الخميس', subject: 'أحياء', teacher: 'أ. داروين', time: '5:00 م - 7:00 م', hall: 'قاعة 2', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 30 },
-    { id: 'l23', day: 'الخميس', subject: 'جغرافيا', teacher: 'أ. بطليموس', time: '7:00 م - 9:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 40, bookedCount: 11 },
+    { id: 'l7', day: 'الخميس', subject: 'لغة إنجليزية', teacher: 'أ. شكسبير', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', notes: 'تدريب على سؤال الترجمة.', capacity: 50, bookedCount: 48, bookingRequired: true },
+    { id: 'l21', day: 'الخميس', subject: 'كيمياء', teacher: 'أ. مندليف', time: '4:00 م - 6:00 م', hall: 'قاعة 1', grade: 'الصف الأول الثانوي', capacity: 60, bookedCount: 50, bookingRequired: true },
+    { id: 'l22', day: 'الخميس', subject: 'أحياء', teacher: 'أ. داروين', time: '5:00 م - 7:00 م', hall: 'قاعة 2', grade: 'الصف الثاني الثانوي', capacity: 50, bookedCount: 30, bookingRequired: true },
+    { id: 'l23', day: 'الخميس', subject: 'جغرافيا', teacher: 'أ. بطليموس', time: '7:00 م - 9:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 40, bookedCount: 11, bookingRequired: true },
 
     // --- الجمعة ---
-    { id: 'l24', day: 'الجمعة', subject: 'مراجعة فيزياء', teacher: 'أ. نيوتن', time: '1:00 م - 3:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', notes: 'حل إمتحان شامل.', capacity: 70, bookedCount: 65 },
-    { id: 'l25', day: 'الجمعة', subject: 'مراجعة رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', capacity: 70, bookedCount: 70 },
-    { id: 'l26', day: 'الجمعة', subject: 'مراجعة لغة عربية', teacher: 'أ. سيبويه', time: '10:00 ص - 12:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 60, bookedCount: 45 },
+    { id: 'l24', day: 'الجمعة', subject: 'مراجعة فيزياء', teacher: 'أ. نيوتن', time: '1:00 م - 3:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', notes: 'حل إمتحان شامل.', capacity: 70, bookedCount: 65, bookingRequired: false },
+    { id: 'l25', day: 'الجمعة', subject: 'مراجعة رياضيات', teacher: 'أ. فيثاغورس', time: '3:00 م - 5:00 م', hall: 'قاعة 2', grade: 'الصف الثالث الثانوي', capacity: 70, bookedCount: 70, bookingRequired: true },
+    { id: 'l26', day: 'الجمعة', subject: 'مراجعة لغة عربية', teacher: 'أ. سيبويه', time: '10:00 ص - 12:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 60, bookedCount: 45, bookingRequired: true },
 
     // --- السبت ---
-    { id: 'l8', day: 'السبت', subject: 'تاريخ', teacher: 'أ. هيرودوت', time: '2:00 م - 4:00 م', hall: 'قاعة 2', grade: 'الصف الأول الثانوي', capacity: 40, bookedCount: 10 },
-    { id: 'l27', day: 'السبت', subject: 'لغة إيطالية', teacher: 'أ. دافنشي', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 25, bookedCount: 12 },
-    { id: 'l28', day: 'السبت', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '12:00 م - 2:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', capacity: 50, bookedCount: 50 },
-    { id: 'l29', day: 'السبت', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 50, bookedCount: 41 },
-    { id: 'l30', day: 'السبت', subject: 'دين', teacher: 'الشيخ الشعراوي', time: '8:00 م - 9:00 م', hall: 'قاعة VIP', grade: 'جميع الصفوف', capacity: 100, bookedCount: 95 },
+    { id: 'l8', day: 'السبت', subject: 'تاريخ', teacher: 'أ. هيرودوت', time: '2:00 م - 4:00 م', hall: 'قاعة 2', grade: 'الصف الأول الثانوي', capacity: 40, bookedCount: 10, bookingRequired: true },
+    { id: 'l27', day: 'السبت', subject: 'لغة إيطالية', teacher: 'أ. دافنشي', time: '4:00 م - 6:00 م', hall: 'قاعة 4', grade: 'الصف الثاني الثانوي', capacity: 25, bookedCount: 12, bookingRequired: true },
+    { id: 'l28', day: 'السبت', subject: 'فيزياء', teacher: 'أ. نيوتن', time: '12:00 م - 2:00 م', hall: 'قاعة 1', grade: 'الصف الثالث الثانوي', capacity: 50, bookedCount: 50, bookingRequired: true },
+    { id: 'l29', day: 'السبت', subject: 'كيمياء', teacher: 'أ. مندليف', time: '6:00 م - 8:00 م', hall: 'قاعة 3', grade: 'الصف الثالث الثانوي', capacity: 50, bookedCount: 41, bookingRequired: true },
+    { id: 'l30', day: 'السبت', subject: 'دين', teacher: 'الشيخ الشعراوي', time: '8:00 م - 9:00 م', hall: 'قاعة VIP', grade: 'جميع الصفوف', capacity: 100, bookedCount: 95, bookingRequired: false },
 ];
 
 export const MOCK_TRIPS: Trip[] = [

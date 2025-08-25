@@ -1,9 +1,12 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import AnimatedCat from '../components/common/AnimatedCat.tsx';
+import Footer from '../components/layout/Footer.tsx';
+import { Page } from '../types.ts';
+
 
 interface LoginPageProps {
     onLogin: (userType: 'student' | 'admin') => void;
+    onNavigate: (page: Page) => void;
 }
 
 // --- Icon Components ---
@@ -296,7 +299,7 @@ const ParticleNetwork: React.FC = () => {
 };
 
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -314,64 +317,69 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a192f] text-slate-200 p-4 overflow-hidden">
+        <div className="min-h-screen flex flex-col bg-[#0a192f] text-slate-200 overflow-hidden">
             <ParticleNetwork />
             <AnimatedCat />
-            <div className="relative z-10 w-full max-w-md animate-fade-in-up">
-                <div className="text-center mb-8">
-                     <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#38bdf8" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
-                    </div>
-                    <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
-                    <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
-                </div>
-                
-                <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/20 border border-slate-700 overflow-hidden">
-                    <div className="flex">
-                        <button onClick={() => setActiveTab('login')} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
-                        <button onClick={() => setActiveTab('signup')} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
+            <div className="flex-grow flex justify-center p-4 py-12 sm:py-16">
+                <div className="relative z-10 w-full max-w-md animate-fade-in-up">
+                    <div className="text-center mb-8">
+                        <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#38bdf8" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
+                        </div>
+                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
+                        <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     
-                    <div className="p-8">
-                        {activeTab === 'login' ? (
-                            <form onSubmit={handleLoginSubmit} className="space-y-6">
-                                <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
-                                <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
-                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
-                                    دخول
-                                </button>
-                            </form>
-                        ) : (
-                            <form onSubmit={handleSignupSubmit} className="space-y-6">
-                                <InputField label="الاسم الكامل" type="text" value={name} onChange={e => setName(e.target.value)} icon={<UserIcon />}/>
-                                <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
-                                <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
-                                <InputField label="تأكيد كلمة المرور" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} icon={<LockIcon />}/>
-                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
-                                    إنشاء حساب جديد
-                                </button>
-                            </form>
-                        )}
-                        
-                        <div className="flex items-center my-6">
-                            <hr className="flex-grow border-slate-700" />
-                            <span className="mx-4 text-slate-500 text-sm font-medium">أو</span>
-                            <hr className="flex-grow border-slate-700" />
+                    <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/20 border border-slate-700 overflow-hidden">
+                        <div className="flex">
+                            <button onClick={() => setActiveTab('login')} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
+                            <button onClick={() => setActiveTab('signup')} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
                         </div>
+                        
+                        <div className="p-8">
+                            {activeTab === 'login' ? (
+                                <form onSubmit={handleLoginSubmit} className="space-y-6">
+                                    <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
+                                    <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
+                                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
+                                        دخول
+                                    </button>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleSignupSubmit} className="space-y-6">
+                                    <InputField label="الاسم الكامل" type="text" value={name} onChange={e => setName(e.target.value)} icon={<UserIcon />}/>
+                                    <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
+                                    <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
+                                    <InputField label="تأكيد كلمة المرور" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} icon={<LockIcon />}/>
+                                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
+                                        إنشاء حساب جديد
+                                    </button>
+                                </form>
+                            )}
+                            
+                            <div className="flex items-center my-6">
+                                <hr className="flex-grow border-slate-700" />
+                                <span className="mx-4 text-slate-500 text-sm font-medium">أو</span>
+                                <hr className="flex-grow border-slate-700" />
+                            </div>
 
-                        <div className="text-center">
-                            <p className="text-sm text-slate-400 mb-4 font-medium">قم بتجربة المنصة كـ</p>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <button onClick={() => onLogin('student')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                                    <StudentIcon /> طالب
-                                </button>
-                                <button onClick={() => onLogin('admin')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                                    <AdminIcon /> مدير
-                                </button>
+                            <div className="text-center">
+                                <p className="text-sm text-slate-400 mb-4 font-medium">قم بتجربة المنصة كـ</p>
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <button onClick={() => onLogin('student')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
+                                        <StudentIcon /> طالب
+                                    </button>
+                                    <button onClick={() => onLogin('admin')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
+                                        <AdminIcon /> مدير
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div className="relative z-10">
+                 <Footer onNavigate={onNavigate} insideApp={false} />
             </div>
         </div>
     );

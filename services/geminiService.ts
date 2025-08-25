@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview } from '../types.ts';
+import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview, ScheduleItem, Lesson, User } from '../types.ts';
 
 const MODEL_NAME_GEMINI = 'gemini-2.5-flash';
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -113,7 +113,7 @@ const getSystemSpecificInstructions = (system: ExamSystem): string => {
                 **System Constraint: "لغات" (Language Schools System)**
                 - Questions for scientific subjects (Physics, Chemistry, Biology, Math, etc.) MUST be generated in ENGLISH.
                 - The terminology and context must align with the Egyptian language school curriculum.
-                - For literature/humanities subjects (Arabic, History, etc.), questions must remain in ARABIC.
+                - For literature/humanities subjects (Arabic, History, etc.), questions must remain in ARBIC.
             `;
         case 'ازهري':
             return `
@@ -306,5 +306,126 @@ export const gradeExamAndGetFeedbackAI = async (
             performanceAnalysis: "تم حساب درجاتك بنجاح. يرجى مراجعة الإجابات الفردية للحصول على تفاصيل حول أدائك.",
             improvementTips: ["مراجعة الأسئلة التي أخطأت فيها.", "التركيز على المواد ذات الأداء المنخفض.", "التدرب على المزيد من الأسئلة المماثلة."]
         };
+    }
+};
+
+// --- Smart Schedule Generation ---
+
+// Mock schedule based on the user-provided image
+const MOCK_SCHEDULE: ScheduleItem[] = [
+    { id: 'mock-1', start: '07:00', end: '07:30', title: 'استيقاظ وصلاة الفجر', type: 'personal', isCompleted: true },
+    { id: 'mock-2', start: '07:30', end: '08:00', title: 'إفطار', type: 'personal', isCompleted: true },
+    { id: 'mock-3', start: '08:00', end: '09:30', title: 'دراسة', type: 'study', subject: 'كيمياء', isCompleted: true },
+    { id: 'mock-4', start: '09:30', end: '09:45', title: 'استراحة قصيرة', type: 'break', isCompleted: false },
+    { id: 'mock-5', start: '09:45', end: '11:15', title: 'دراسة', type: 'study', subject: 'أحياء', isCompleted: false },
+    { id: 'mock-6', start: '11:15', end: '11:30', title: 'استراحة قصيرة', type: 'break', isCompleted: false },
+    { id: 'mock-7', start: '11:30', end: '12:30', title: 'وقت شخصي', type: 'personal', isCompleted: false },
+    { id: 'mock-8', start: '12:30', end: '13:00', title: 'صلاة الظهر', type: 'personal', isCompleted: false },
+    { id: 'mock-9', start: '13:00', end: '14:00', title: 'غداء', type: 'personal', isCompleted: false },
+    { id: 'mock-10', start: '14:00', end: '15:00', title: 'وقت شخصي / استرخاء', type: 'personal', isCompleted: false },
+    { id: 'mock-11', start: '15:00', end: '16:00', title: 'تحضير للدروس المسائية', type: 'personal', isCompleted: false },
+    { id: 'mock-12', start: '16:00', end: '18:00', title: 'درس فيزياء', type: 'lesson', subject: 'فيزياء', isLocked: true, isCompleted: false },
+    { id: 'mock-13', start: '18:00', end: '19:00', title: 'عشاء', type: 'personal', isCompleted: false },
+    { id: 'mock-14', start: '19:00', end: '20:30', title: 'مراجعة واجب الفيزياء', type: 'study', subject: 'فيزياء', isCompleted: false },
+    { id: 'mock-15', start: '20:30', end: '22:00', title: 'وقت عائلي/ترفيه', type: 'personal', isCompleted: false },
+    { id: 'mock-16', start: '22:00', end: '07:00', title: 'نوم', type: 'sleep', isCompleted: false },
+];
+
+const timeTo24Hour = (timeStr: string): string => {
+    if (!timeStr || !timeStr.includes(':')) return "00:00";
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    let hoursNum = parseInt(hours, 10);
+
+    if (modifier === 'م') { // PM
+        if (hoursNum !== 12) {
+            hoursNum += 12;
+        }
+    } else { // AM (ص)
+        if (hoursNum === 12) { // Midnight case
+            hoursNum = 0;
+        }
+    }
+    return `${String(hoursNum).padStart(2, '0')}:${minutes}`;
+};
+
+export const generateSmartSchedule = async (
+    user: User,
+    lessonsForToday: Lesson[],
+    studySubjects: string[],
+    preferences: { sleepTime: string; wakeTime: string; studyHours: number; }
+): Promise<ScheduleItem[]> => {
+
+    const scheduleItemSchema = {
+        type: Type.OBJECT,
+        properties: {
+            id: { type: Type.STRING, description: "Unique ID for the schedule item (e.g., 'item-1')." },
+            start: { type: Type.STRING, description: "Start time in HH:mm format (24-hour)." },
+            end: { type: Type.STRING, description: "End time in HH:mm format (24-hour)." },
+            title: { type: Type.STRING, description: "A brief, clear title for the activity in Arabic." },
+            type: { type: Type.STRING, enum: ['study', 'break', 'lesson', 'sleep', 'personal'] },
+            subject: { type: Type.STRING, description: "The subject name in Arabic, if the type is 'study' or 'lesson'." },
+            isLocked: { type: Type.BOOLEAN, description: "Set to true only for pre-scheduled lessons." }
+        },
+        required: ["id", "start", "end", "title", "type"]
+    };
+    
+    const scheduleSchema = {
+        type: Type.ARRAY,
+        items: scheduleItemSchema
+    };
+    
+    const lockedLessonsPrompt = lessonsForToday.map(l => {
+        const [startTime, endTime] = l.time.split(' - ');
+        return `- ${l.subject} class from ${timeTo24Hour(startTime)} to ${timeTo24Hour(endTime)}. This is a fixed event.`;
+    }).join('\n');
+
+    const system_prompt = `You are an AI expert in creating optimal daily schedules for Egyptian high school students. Your task is to generate a full day's schedule as a JSON array based on the user's requirements.
+    
+    CRITICAL RULES:
+    1.  **Output Format:** You MUST output a valid JSON array of schedule items. Do not wrap it in markdown or any other text.
+    2.  **Continuity**: The schedule must be continuous without any gaps. The 'end' time of one item must be the 'start' time of the next. The entire day should be filled.
+    3.  **Full Day**: The schedule must cover the entire 24-hour period, starting from the user's wake-up time and ending with the 'sleep' activity that continues until the next day's wake-up time.
+    4.  **Language**: All textual content in the output ('title', 'subject') must be in ARABIC.
+    5.  **Smart Breaks**: After each study session (which should last 60-120 minutes), schedule a short 'break' of 10-20 minutes. Also include a longer break of about 60-90 minutes for lunch and prayer around midday (e.g., between 13:00-15:00).
+    6.  **Priority Management**: The student's mind is sharpest in the morning. Schedule the most mentally demanding subjects (e.g., Physics, Chemistry, Math) during morning or early afternoon slots. Schedule subjects that rely more on memorization or are less demanding (e.g., History, languages, Geology) for later in the afternoon or evening.
+    7.  **IDs**: Generate unique string IDs for each item (e.g., "item-1", "item-2").
+    `;
+
+    const user_prompt = `
+        Please generate a daily schedule for a student with the following details:
+        - Grade: ${user.grade}
+        - Desired wake-up time: ${preferences.wakeTime}
+        - Desired sleep time: ${preferences.sleepTime}
+        - Total study hours needed: ${preferences.studyHours} hours
+        - Subjects to study today: ${studySubjects.join(', ')}
+
+        Fixed appointments for today (must be included exactly as specified with 'isLocked' set to true):
+        ${lockedLessonsPrompt.length > 0 ? lockedLessonsPrompt : "None"}
+
+        Also, include reasonably timed 'personal' activities for meals (breakfast, lunch, dinner), prayer, and relaxation.
+    `;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: MODEL_NAME_GEMINI,
+            contents: user_prompt,
+            config: {
+                systemInstruction: system_prompt,
+                responseMimeType: "application/json",
+                responseSchema: scheduleSchema,
+            },
+        });
+
+        const schedule = JSON.parse(response.text);
+        if (!Array.isArray(schedule)) {
+             console.error("Gemini response is not a valid schedule array:", schedule);
+             return MOCK_SCHEDULE;
+        }
+        return schedule;
+    } catch (error) {
+        console.error("Error generating schedule with Gemini:", error);
+        alert("فشل توليد الجدول. سنستخدم جدولًا افتراضيًا.");
+        return MOCK_SCHEDULE;
     }
 };

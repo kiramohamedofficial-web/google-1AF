@@ -94,6 +94,23 @@
         --color-text-secondary: 240 20% 70%;
         --color-border: 180 100% 50%;
       }
+      .royal {
+        --color-primary: 45 88% 53%; /* gold */
+        --color-background: 233 27% 14%; /* dark blue */
+        --color-surface: 221 44% 16%; /* slightly lighter dark blue */
+        --color-text-primary: 0 0% 95%; /* off-white */
+        --color-text-secondary: 0 0% 70%; /* light grey */
+        --color-border: hsla(45, 88%, 53%, 0.3); /* translucent gold */
+      }
+      .paper {
+        --font-sans: 'Tajawal', serif; /* add serif fallback */
+        --color-primary: 0 100% 30%; /* maroon */
+        --color-background: 43 56% 95%; /* parchment */
+        --color-surface: 43 100% 98%; /* lighter parchment */
+        --color-text-primary: 10 33% 23%; /* dark brown */
+        --color-text-secondary: 10 18% 41%; /* lighter brown */
+        --color-border: 25 33% 80%; /* light brown */
+      }
 
 
       @keyframes smooth-hue-cycle {
@@ -215,6 +232,17 @@
         from { background-position: 0 0; }
         to { background-position: 35px 70px; }
       }
+      
+      html.royal body {
+        background-image:
+          radial-gradient(circle at top right, hsla(var(--color-primary), 0.15) 0%, transparent 30%),
+          radial-gradient(circle at bottom left, hsla(var(--color-primary), 0.1) 0%, transparent 35%);
+      }
+
+      html.paper body {
+        background-color: hsl(var(--color-background));
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%239C92AC' fill-opacity='0.03' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+      }
 
       /* Neon/Shadow effects for specific dark themes */
       @keyframes neon-flicker {
@@ -223,7 +251,8 @@
       }
       
       .matrix .bg-\[hsl\(var\(--color-surface\)\)\],
-      .wave .bg-\[hsl\(var\(--color-surface\)\)\] {
+      .wave .bg-\[hsl\(var\(--color-surface\)\)\],
+      .royal .bg-\[hsl\(var\(--color-surface\)\)\] {
         box-shadow: 0 0 8px hsla(var(--color-primary), 0.5), 
                     0 0 16px hsla(var(--color-primary), 0.3);
         border-color: hsla(var(--color-primary), 0.6);
@@ -238,7 +267,8 @@
       }
 
       .matrix .bg-\[hsl\(var\(--color-primary\)\)\],
-      .wave .bg-\[hsl\(var\(--color-primary\)\)\] {
+      .wave .bg-\[hsl\(var\(--color-primary\)\)\],
+      .royal .bg-\[hsl\(var\(--color-primary\)\)\] {
         box-shadow: 0 0 5px hsl(var(--color-primary)),
                     0 0 15px hsl(var(--color-primary)),
                     0 0 30px hsl(var(--color-primary));
@@ -262,7 +292,8 @@
       
       .matrix .text-\[hsl\(var\(--color-primary\)\)\],
       .wave .text-\[hsl\(var\(--color-primary\)\)\],
-      .cocktail .text-\[hsl\(var\(--color-primary\)\)\] {
+      .cocktail .text-\[hsl\(var\(--color-primary\)\)\],
+      .royal .text-\[hsl\(var\(--color-primary\)\)\] {
         filter: drop-shadow(0 0 4px hsl(var(--color-primary)));
         transition: filter 0.8s ease;
       }
@@ -548,7 +579,8 @@
       html.sunset .lesson-card::after { bottom: -15px; left: -25px; font-size: 70px; animation-duration: 12s; animation-direction: reverse; }
 
       /* Sunset Header Decorations */
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\] {
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\],
+      html.sunset header .container {
         position: relative;
         overflow: hidden;
       }
@@ -556,27 +588,55 @@
         position: relative;
         z-index: 2; /* Ensure header content is above clouds */
       }
+      
+      /* Common cloud styles for all 4 pseudo-elements */
       html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before,
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
+      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after,
+      html.sunset header .container::before,
+      html.sunset header .container::after {
         content: '☁️';
         position: absolute;
         opacity: 0.3;
         z-index: 1;
         color: #ffffff;
-        animation: float 15s ease-in-out infinite;
+        animation: float 20s ease-in-out infinite;
+        pointer-events: none; /* Make sure they don't block clicks */
       }
+
+      /* Cloud 1 (original) */
       html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
         font-size: 80px;
         top: -20px;
         right: -30px;
-        animation-duration: 15s;
+        animation-duration: 25s;
       }
+
+      /* Cloud 2 (original) */
       html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
         font-size: 70px;
         bottom: -15px;
         left: -25px;
-        animation-duration: 12s;
+        animation-duration: 20s;
         animation-direction: reverse;
+      }
+
+      /* Cloud 3 (New) */
+      html.sunset header .container::before {
+        font-size: 50px;
+        top: 5px;
+        left: 30%;
+        animation-duration: 18s;
+        opacity: 0.2;
+      }
+
+      /* Cloud 4 (New) */
+      html.sunset header .container::after {
+        font-size: 65px;
+        bottom: -10px;
+        right: 25%;
+        animation-duration: 22s;
+        animation-direction: reverse;
+        opacity: 0.25;
       }
     </style>
 <script type="importmap">

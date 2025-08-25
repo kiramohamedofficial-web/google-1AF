@@ -18,18 +18,20 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ currentTheme, onChangeThe
         { name: 'sunset', icon: '🌇', bg: 'bg-gradient-to-br from-orange-400 via-red-500 to-purple-600' },
         { name: 'matrix', icon: '📟', bg: 'bg-black' },
         { name: 'wave', icon: '🌃', bg: 'bg-gradient-to-br from-pink-500 to-cyan-400' },
+        { name: 'royal', icon: '👑', bg: 'bg-gradient-to-br from-yellow-400 to-amber-600' },
+        { name: 'paper', icon: '📜', bg: 'bg-[#f5eeda]' },
     ];
 
     return (
-        <div className="theme-switcher-container flex items-center justify-start gap-2 p-1.5 mb-2 rounded-xl bg-black/5 dark:bg-white/5 overflow-x-auto">
+        <div className="theme-switcher-container flex items-center justify-start gap-1.5 overflow-x-auto">
             {themes.map(theme => (
                 <button
                     key={theme.name}
                     onClick={() => onChangeTheme(theme.name)}
-                    className={`flex-shrink-0 w-12 h-10 rounded-lg text-xl flex items-center justify-center transition-all duration-300
+                    className={`flex-shrink-0 w-9 h-9 rounded-md text-lg flex items-center justify-center transition-all duration-300
                         ${currentTheme === theme.name 
-                            ? `${theme.bg} text-white scale-105 shadow-md` 
-                            : 'bg-transparent text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
+                            ? `${theme.bg} ${theme.name === 'paper' ? 'text-stone-800' : 'text-white'} scale-110 shadow-md` 
+                            : 'bg-black/5 dark:bg-white/10 text-[hsl(var(--color-text-secondary))] hover:bg-black/10 dark:hover:bg-white/20'
                         }`}
                     aria-label={`Switch to ${theme.name} theme`}
                 >

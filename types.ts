@@ -1,6 +1,7 @@
 
 
-export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave';
+
+export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave' | 'royal' | 'paper';
 
 export type Page = 
     | 'home' 
@@ -15,7 +16,12 @@ export type Page =
     | 'admin-dashboard' 
     | 'profile' 
     | 'about'
-    | 'my-bookings';
+    | 'my-bookings'
+    | 'smart-schedule'
+    | 'feedback'
+    | 'instructions'
+    | 'privacy-policy'
+    | 'terms-of-service';
 
 export interface User {
     id: string;
@@ -29,6 +35,7 @@ export interface User {
     profilePicture?: string;
     dob?: string;
     section?: 'علمي علوم' | 'علمي رياضة' | 'أدبي' | 'عام';
+    lastScheduleEdit?: number;
 }
 
 export interface Lesson {
@@ -42,6 +49,7 @@ export interface Lesson {
     notes?: string;
     capacity?: number;
     bookedCount?: number;
+    bookingRequired?: boolean;
 }
 
 export interface Trip {
@@ -167,4 +175,15 @@ export interface Notification {
   timestamp: number;
   read: boolean;
   link?: Page; // Optional page to navigate to on click
+}
+
+export interface ScheduleItem {
+    id: string;
+    start: string; // "HH:mm" e.g., "09:00"
+    end: string;   // "HH:mm" e.g., "10:30"
+    title: string;
+    type: 'study' | 'break' | 'lesson' | 'sleep' | 'personal';
+    subject?: string;
+    isLocked?: boolean; // For pre-set lessons
+    isCompleted?: boolean;
 }

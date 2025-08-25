@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { MOCK_STUDENTS } from '../constants.ts';
 import { Lesson, Trip, Teacher, Post, User, Booking } from '../types.ts';
@@ -30,7 +31,7 @@ const InputField: React.FC<{ label: string, name: string, value: string | number
 // --- MODALS (Lesson, Teacher, Trip, Post, TripBookings) ---
 
 interface LessonFormModalProps { isOpen: boolean; onClose: () => void; onSave: (lesson: Lesson) => void; lessonToEdit: Lesson | null; teachers: Teacher[]; }
-const emptyLesson: Omit<Lesson, 'id'> = { day: 'الأحد', subject: '', teacher: '', time: '', hall: '', grade: '', notes: '', capacity: 50, bookedCount: 0 };
+const emptyLesson: Omit<Lesson, 'id'> = { day: 'الأحد', subject: '', teacher: '', time: '', hall: '', grade: '', notes: '', capacity: 50, bookedCount: 0, bookingRequired: true };
 const LessonFormModal: React.FC<LessonFormModalProps> = ({ isOpen, onClose, onSave, lessonToEdit, teachers }) => {
     const [formData, setFormData] = useState(emptyLesson);
     useEffect(() => { if (isOpen) setFormData(lessonToEdit ? { ...emptyLesson, ...lessonToEdit } : emptyLesson); }, [lessonToEdit, isOpen]);
@@ -49,6 +50,7 @@ const LessonFormModal: React.FC<LessonFormModalProps> = ({ isOpen, onClose, onSa
                         <InputField label="الوقت" name="time" value={formData.time} onChange={handleChange} required placeholder="4:00 م - 6:00 م"/>
                         <InputField as="select" label="المدرس" name="teacher" value={formData.teacher} onChange={handleChange} required options={teachers.map(t => ({value: t.name, label: t.name}))} placeholder="اختر المدرس" />
                         <InputField label="القاعة" name="hall" value={formData.hall} onChange={handleChange} required />
+                        <InputField as="select" label="نظام الحجز" name="bookingRequired" value={formData.bookingRequired === false ? 'false' : 'true'} onChange={(e) => setFormData(p => ({ ...p, bookingRequired: e.target.value === 'true' }))} options={[{value: 'true', label: 'بحجز مسبق'}, {value: 'false', label: 'بدون حجز (حضور مباشر)'}]} />
                         <InputField type="number" label="السعة" name="capacity" value={formData.capacity || 50} onChange={handleChange} />
                         <div className="md:col-span-2"><InputField as="textarea" label="ملاحظات" name="notes" value={formData.notes || ''} onChange={handleChange} /></div>
                     </div>
@@ -547,7 +549,25 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                         <button type="button" onClick={() => { setLessonToEdit(null); setIsLessonModalOpen(true); }} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"><PlusIcon /> إضافة حصة</button>
                     </div>
                      <div className="space-y-2">
-                        {lessons.map(l => <div key={l.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center"><div><p className="font-bold">{l.subject} - {l.grade}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{l.teacher} - {l.day} {l.time}</p></div><div className="flex gap-2"><button type="button" onClick={() => { setLessonToEdit(l); setIsLessonModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الحصة"><PencilIcon /></button><button type="button" onClick={() => handleDelete(l.id, setLessons)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الحصة"><TrashIcon /></button></div></div>)}
+                        {lessons.map(l => (
+                            <div key={l.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p className="font-bold">{l.subject} - {l.grade}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-sm text-[hsl(var(--color-text-secondary))]">{l.teacher} - {l.day} {l.time}</p>
+                                        {l.bookingRequired === false ? (
+                                            <span className="text-xs font-semibold bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 px-2 py-0.5 rounded-full">بدون حجز</span>
+                                        ) : (
+                                            <span className="text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-0.5 rounded-full">بحجز</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => { setLessonToEdit(l); setIsLessonModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل الحصة"><PencilIcon /></button>
+                                    <button type="button" onClick={() => handleDelete(l.id, setLessons)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف الحصة"><TrashIcon /></button>
+                                </div>
+                            </div>
+                        ))}
                      </div>
                 </div>
             );
