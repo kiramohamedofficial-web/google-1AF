@@ -38,6 +38,7 @@ export const MOCK_USER_STUDENT: User = {
     dob: '2006-05-15',
     section: 'علمي علوم',
     lastScheduleEdit: new Date('2024-01-01').getTime(),
+    xpPoints: 125,
 };
 
 export const MOCK_USER_ADMIN: User = {
@@ -50,6 +51,7 @@ export const MOCK_USER_ADMIN: User = {
     school: 'إدارة',
     grade: 'إدارة',
     profilePicture: 'https://picsum.photos/seed/admin/200/200',
+    xpPoints: 0,
 };
 
 export const MOCK_STUDENTS: User[] = [
@@ -67,6 +69,7 @@ export const MOCK_STUDENTS: User[] = [
         dob: '2006-08-22',
         section: 'أدبي',
         lastScheduleEdit: new Date('2024-01-01').getTime(),
+        xpPoints: 210,
     },
     {
         id: 'STU-2025-0003',
@@ -81,6 +84,7 @@ export const MOCK_STUDENTS: User[] = [
         dob: '2008-01-10',
         section: 'عام',
         lastScheduleEdit: new Date('2024-01-01').getTime(),
+        xpPoints: 75,
     },
      {
         id: 'STU-2026-0004',
@@ -95,6 +99,7 @@ export const MOCK_STUDENTS: User[] = [
         dob: '2009-11-30',
         section: 'عام',
         lastScheduleEdit: new Date('2024-01-01').getTime(),
+        xpPoints: 30,
     }
 ];
 
@@ -159,10 +164,10 @@ export const MOCK_TEACHERS: Teacher[] = [
 ];
 
 export const MOCK_POSTS: Post[] = [
-    { id: 'p1', title: '🏆 تهنئة لأوائل الشهر', author: 'إدارة السنتر', content: 'تهانينا القلبية للطلاب الأوائل في امتحان الشهر الماضي! نتمنى لكم دوام التفوق والنجاح. سيتم تكريمكم يوم الخميس القادم في حفل خاص وتوزيع جوائز قيمة.', imageUrls: ['https://picsum.photos/seed/award/600/300'], timestamp: 'منذ 2 ساعة', status: 'published' },
-    { id: 'p3', title: 'فتح باب الحجز لمجموعات المراجعة النهائية', author: 'إدارة السنتر', content: 'تم فتح باب الحجز لمجموعات المراجعة النهائية لجميع المواد. الأماكن محدودة، سارع بحجز مكانك الآن من خلال التطبيق أو السكرتارية.\n\nتشمل المراجعات:\n- حل امتحانات شاملة.\n- شرح لأهم النقاط الصعبة.\n- ملازم مراجعة حصرية.', imageUrls: ['https://picsum.photos/seed/revision/600/300', 'https://picsum.photos/seed/revision2/600/300', 'https://picsum.photos/seed/revision3/600/300'], timestamp: 'منذ 3 أيام', status: 'published'},
-    { id: 'p2', title: '📢 تذكير هام بامتحان الفيزياء', author: 'إدارة السنتر', content: 'تذكير هام لطلاب الصف الثالث الثانوي: سيتم عقد امتحان الفيزياء الشامل يوم الأحد القادم. الامتحان يغطي الفصول الثلاثة الأولى. استعدوا جيدًا!', timestamp: 'منذ يوم واحد', status: 'published', imageUrls: [] },
-    { id: 'p4', title: 'خطة تطوير السنتر (مسودة)', author: 'إدارة السنتر', content: 'يتم حاليًا دراسة إضافة قاعات جديدة وتطوير المنصة الإلكترونية لتوفير تجربة أفضل للطلاب. نرحب بمقترحاتكم.', timestamp: 'منذ أسبوع', status: 'draft' },
+    { id: 'p1', title: '🏆 تهنئة لأوائل الشهر', author: 'إدارة السنتر', content: 'تهانينا القلبية للطلاب الأوائل في امتحان الشهر الماضي! نتمنى لكم دوام التفوق والنجاح. سيتم تكريمكم يوم الخميس القادم في حفل خاص وتوزيع جوائز قيمة.', imageUrls: ['https://picsum.photos/seed/award/600/300'], timestamp: 'منذ 2 ساعة', status: 'published', isPinned: true },
+    { id: 'p3', title: 'فتح باب الحجز لمجموعات المراجعة النهائية', author: 'إدارة السنتر', content: 'تم فتح باب الحجز لمجموعات المراجعة النهائية لجميع المواد. الأماكن محدودة، سارع بحجز مكانك الآن من خلال التطبيق أو السكرتارية.\n\nتشمل المراجعات:\n- حل امتحانات شاملة.\n- شرح لأهم النقاط الصعبة.\n- ملازم مراجعة حصرية.', imageUrls: ['https://picsum.photos/seed/revision/600/300', 'https://picsum.photos/seed/revision2/600/300', 'https://picsum.photos/seed/revision3/600/300'], timestamp: 'منذ 3 أيام', status: 'published', isPinned: false},
+    { id: 'p2', title: '📢 تذكير هام بامتحان الفيزياء', author: 'إدارة السنتر', content: 'تذكير هام لطلاب الصف الثالث الثانوي: سيتم عقد امتحان الفيزياء الشامل يوم الأحد القادم. الامتحان يغطي الفصول الثلاثة الأولى. استعدوا جيدًا!', timestamp: 'منذ يوم واحد', status: 'published', imageUrls: [], isPinned: false },
+    { id: 'p4', title: 'خطة تطوير السنتر (مسودة)', author: 'إدارة السنتر', content: 'يتم حاليًا دراسة إضافة قاعات جديدة وتطوير المنصة الإلكترونية لتوفير تجربة أفضل للطلاب. نرحب بمقترحاتكم.', timestamp: 'منذ أسبوع', status: 'draft', isPinned: false },
 ];
 
 
@@ -180,7 +185,7 @@ export const MOCK_GALLERY_IMAGES: GalleryImage[] = [
     { id: 'g6', imageUrl: 'https://picsum.photos/seed/gallery6/600/400', title: 'رحلة إلى المتحف', album: 'رحلات' },
 ];
 
-export const MOCK_SUBJECTS = ['الفيزياء', 'الكيمياء', 'الأحياء', 'لغة عربية', 'رياضيات', 'تاريخ', 'جغرافيا', 'لغة فرنسية', 'لغة إيطالية', 'دين', 'فلسفة وعلم نفس'];
+export const MOCK_SUBJECTS = ['الفيزياء', 'الكيمياء', 'الأحياء', 'لغة عربية', 'لغة إنجليزية', 'رياضيات', 'تاريخ', 'جغرافيا', 'لغة فرنسية', 'لغة إيطالية', 'دين', 'فلسفة وعلم نفس'];
 
 export const MOCK_QUESTIONS: Question[] = [
     { id: 'q1', subject: 'لغة عربية', stem: 'ما هي عاصمة مصر؟', options: ['القاهرة', 'الإسكندرية', 'الجيزة', 'الأقصر'], correctOptionIndex: 0, grade: 'الصف الأول الإعدادي', cognitive_level: 'Remember', difficulty: 'M1', rationale: 'القاهرة هي عاصمة جمهورية مصر العربية.' },
@@ -210,6 +215,10 @@ export const MOCK_QUESTIONS: Question[] = [
     { id: 'q25', subject: 'دين', stem: 'ما هي أول سورة في القرآن الكريم؟', options: ['البقرة', 'الفاتحة', 'الإخلاص', 'الناس'], correctOptionIndex: 1, grade: 'جميع الصفوف', cognitive_level: 'Remember', difficulty: 'M1', rationale: 'سورة الفاتحة هي أول سورة في ترتيب المصحف الشريف.' },
     { id: 'q26', subject: 'فلسفة وعلم نفس', stem: 'من هو الفيلسوف اليوناني الذي قال "اعرف نفسك"؟', options: ['أفلاطون', 'أرسطو', 'سقراط', 'فيثاغورس'], correctOptionIndex: 2, grade: 'الصف الأول الثانوي', cognitive_level: 'Remember', difficulty: 'M2', rationale: 'نسبت هذه المقولة الشهيرة إلى سقراط.' },
     { id: 'q27', subject: 'فلسفة وعلم نفس', stem: 'ما هو الفرع من علم النفس الذي يدرس سلوك الفرد في الجماعة؟', options: ['علم النفس الإكلينيكي', 'علم النفس الاجتماعي', 'علم النفس التربوي', 'علم النفس المعرفي'], correctOptionIndex: 1, grade: 'الصف الأول الثانوي', cognitive_level: 'Understand', difficulty: 'M2', rationale: 'علم النفس الاجتماعي هو الذي يركز على دراسة سلوك الأفراد ضمن المجموعات والمجتمع.' },
+    { id: 'q28', subject: 'لغة إنجليزية', stem: 'Which of the following is a synonym for "happy"?', options: ['Sad', 'Joyful', 'Angry', 'Tired'], correctOptionIndex: 1, grade: 'الصف الأول الإعدادي', cognitive_level: 'Remember', difficulty: 'M1', rationale: '"Joyful" is a word that has a similar meaning to "happy".' },
+    { id: 'q29', subject: 'لغة إنجليزية', stem: 'What is the capital of the United Kingdom?', options: ['Paris', 'Berlin', 'Madrid', 'London'], correctOptionIndex: 3, grade: 'الصف الأول الإعدادي', cognitive_level: 'Remember', difficulty: 'M1', rationale: 'London is the capital city of the United Kingdom.' },
+    { id: 'q30', subject: 'لغة إنجليزية', stem: 'Choose the correct verb to complete the sentence: "She ___ to school every day."', options: ['go', 'goes', 'went', 'gone'], correctOptionIndex: 1, grade: 'الصف الثاني الإعدادي', cognitive_level: 'Apply', difficulty: 'M1', rationale: 'For a third-person singular subject in the present simple tense, the verb form is "goes".' },
+    { id: 'q31', subject: 'لغة إنجليزية', stem: 'Which word is an adjective? "The quick brown fox jumps over the lazy dog."', options: ['jumps', 'fox', 'over', 'lazy'], correctOptionIndex: 3, grade: 'الصف الثالث الإعدادي', cognitive_level: 'Understand', difficulty: 'M2', rationale: '"Lazy" is an adjective because it describes a noun (the dog).' },
 ];
 
 export const MOCK_BOOKINGS: Booking[] = [

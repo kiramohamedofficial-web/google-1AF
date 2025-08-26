@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, Notification } from './types.ts';
 import { MOCK_USER_STUDENT, MOCK_USER_ADMIN, MOCK_TEACHERS, MOCK_LESSONS, MOCK_TRIPS, MOCK_POSTS, MOCK_BOOKINGS, MOCK_NOTIFICATIONS, MOCK_STUDENTS } from './constants.ts';
@@ -149,6 +150,10 @@ const App: React.FC = () => {
     }, [bookings]);
 
     const handleSavePost = (post: Post, isNew: boolean) => {
+        if (isNew && posts.length >= 20) {
+            alert('لا يمكن إضافة المزيد من المنشورات. لقد وصلت إلى الحد الأقصى (20 منشور).');
+            return;
+        }
         setPosts(prev => isNew ? [post, ...prev] : prev.map(p => p.id === post.id ? post : p));
 
         if (isNew && post.status === 'published') {
@@ -170,6 +175,24 @@ const App: React.FC = () => {
             setPosts(prev => prev.filter(p => p.id !== postId));
         }
     };
+
+    const handleTogglePinPost = useCallback((postId: string) => {
+        setPosts(prev => {
+            const postToPin = prev.find(p => p.id === postId);
+            if (!postToPin) return prev;
+
+            // If the post is already pinned, unpin it.
+            if (postToPin.isPinned) {
+                return prev.map(p => p.id === postId ? { ...p, isPinned: false } : p);
+            }
+
+            // Otherwise, pin this post and unpin all others.
+            return prev.map(p => ({
+                ...p,
+                isPinned: p.id === postId
+            }));
+        });
+    }, []);
 
     // --- RENDER LOGIC ---
 
@@ -229,7 +252,7 @@ const App: React.FC = () => {
                     teachers={teachers} setTeachers={setTeachers} 
                     lessons={lessons} setLessons={setLessons}
                     trips={trips} setTrips={setTrips}
-                    posts={posts} onSavePost={handleSavePost} onDeletePost={handleDeletePost}
+                    posts={posts} onSavePost={handleSavePost} onDeletePost={handleDeletePost} onTogglePinPost={handleTogglePinPost}
                     bookings={bookings} onUpdateBookingStatus={handleUpdateBookingStatus}
                 /> : <HomePage user={currentUser} lessons={lessons} posts={posts} trips={trips} onNavigate={setCurrentPage} bookings={bookings} onCreateBooking={handleCreateBooking} />;
             case 'profile':

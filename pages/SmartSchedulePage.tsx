@@ -5,7 +5,6 @@ import { generateSmartSchedule } from '../services/geminiService.ts';
 
 const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-// New item styles inspired by the user's image
 const itemStyles: Record<ScheduleItem['type'], { bg: string; text: string; icon: string; border: string; checkbox: string; dot: string; }> = {
     study:    { bg: 'bg-[#E3F2FD]', border: 'border-[#42A5F5]', text: 'text-[#0D47A1]', icon: '📚', checkbox: 'bg-[#90CAF9] border-[#42A5F5]', dot: 'bg-blue-400' },
     break:    { bg: 'bg-[#E8F5E9]', border: 'border-[#66BB6A]', text: 'text-[#1B5E20]', icon: '☕', checkbox: 'bg-[#A5D6A7] border-[#66BB6A]', dot: 'bg-green-400' },
@@ -28,25 +27,31 @@ const timeToMinutes = (time: string): number => {
     return hours * 60 + minutes;
 };
 
-const GamificationStats: React.FC<{ schedule: ScheduleItem[] }> = ({ schedule }) => {
-    const { completedStudyMinutes, totalStudyMinutes, points, level, studyProgress } = useMemo(() => {
+const GamificationStats: React.FC<{ schedule: ScheduleItem[], user: User }> = ({ schedule, user }) => {
+    const { completedStudyMinutes, totalStudyMinutes, studyProgress } = useMemo(() => {
         const completedMins = schedule
             .filter(item => item.type === 'study' && item.isCompleted)
             .reduce((total, item) => total + (timeToMinutes(item.end) - timeToMinutes(item.start)), 0);
         const totalMins = schedule
             .filter(item => item.type === 'study')
             .reduce((total, item) => total + (timeToMinutes(item.end) - timeToMinutes(item.start)), 0);
-            
-        const pts = Math.floor(completedMins / 6); // 10 points per hour
+        
+        const prog = totalMins > 0 ? (completedMins / totalMins) * 100 : 0;
+
+        return { completedStudyMinutes: completedMins, totalStudyMinutes: totalMins, studyProgress: prog };
+    }, [schedule]);
+
+    const { points, level } = useMemo(() => {
+        const pts = user.xpPoints || 0;
         let lvl = { name: 'مبتدئ 🌱', current: 0, next: 50, progress: pts / 50 };
         if (pts >= 50) lvl = { name: 'مجتهد 🧠', current: 50, next: 150, progress: (pts - 50) / 100 };
         if (pts >= 150) lvl = { name: 'محترف 🚀', current: 150, next: 300, progress: (pts - 150) / 150 };
         if (pts >= 300) lvl = { name: 'أسطورة 👑', current: 300, next: Infinity, progress: 1 };
         
-        const prog = totalMins > 0 ? (completedMins / totalMins) * 100 : 0;
+        lvl.progress = Math.min(1, lvl.progress);
 
-        return { completedStudyMinutes: completedMins, totalStudyMinutes: totalMins, points: pts, level: lvl, studyProgress: prog };
-    }, [schedule]);
+        return { points: pts, level: lvl };
+    }, [user.xpPoints]);
 
     return (
         <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl shadow-lg border border-[hsl(var(--color-border))]">
@@ -57,9 +62,9 @@ const GamificationStats: React.FC<{ schedule: ScheduleItem[] }> = ({ schedule })
                     <p className="text-xs text-[hsl(var(--color-text-secondary))]">{Math.round(completedStudyMinutes)}/{totalStudyMinutes} دقيقة مذاكرة</p>
                 </div>
                 <div>
-                    <p className="font-bold text-lg">🏆 نقاطك</p>
+                    <p className="font-bold text-lg">🏆 نقاط الخبرة</p>
                     <p className="text-2xl font-bold text-[hsl(var(--color-primary))]">{points}</p>
-                    <p className="text-xs text-[hsl(var(--color-text-secondary))]">نقطة خبرة</p>
+                    <p className="text-xs text-[hsl(var(--color-text-secondary))]">مجموع نقاطك</p>
                 </div>
                 <div>
                     <p className="font-bold text-lg">✨ مستواك</p>
@@ -80,10 +85,67 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
     const [prefs, setPrefs] = useState({ studyHours: 4, wakeTime: '07:00', sleepTime: '23:00' });
     
     const todayName = dayNames[new Date().getDay()];
-    
+
+    const storageKey = useMemo(() => `smartSchedule_${user.id}`, [user.id]);
+
+    useEffect(() => {
+        try {
+            const storedData = localStorage.getItem(storageKey);
+            if (storedData) {
+                const { scheduleData, savedDate } = JSON.parse(storedData);
+                const today = new Date().toISOString().split('T')[0];
+
+                if (savedDate === today) {
+                    setSchedule(scheduleData);
+                } else {
+                    const resetSchedule = scheduleData.map((item: ScheduleItem) => ({
+                        ...item,
+                        isCompleted: false,
+                    }));
+                    setSchedule(resetSchedule);
+                }
+                setShowPrefs(false);
+            } else {
+                 setShowPrefs(true);
+            }
+        } catch (error) {
+            console.error("Failed to load schedule from localStorage", error);
+            localStorage.removeItem(storageKey);
+        }
+    }, [storageKey]);
+
+    useEffect(() => {
+        if (schedule.length > 0) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const dataToStore = { scheduleData: schedule, savedDate: today };
+                localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+            } catch (error) {
+                console.error("Failed to save schedule to localStorage", error);
+            }
+        }
+    }, [schedule, storageKey]);
+
     const handleToggleComplete = useCallback((itemId: string) => {
-        setSchedule(prev => prev.map(item => item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item));
-    }, []);
+        let xpChange = 0;
+        const newSchedule = schedule.map(item => {
+            if (item.id === itemId) {
+                const updatedItem = { ...item, isCompleted: !item.isCompleted };
+                if (updatedItem.type === 'study') {
+                    const duration = timeToMinutes(updatedItem.end) - timeToMinutes(updatedItem.start);
+                    const points = Math.round(duration / 6);
+                    xpChange = updatedItem.isCompleted ? points : -points;
+                }
+                return updatedItem;
+            }
+            return item;
+        });
+        setSchedule(newSchedule);
+
+        if (xpChange !== 0) {
+            onUserUpdate({ ...user, xpPoints: Math.max(0, (user.xpPoints || 0) + xpChange) });
+        }
+    }, [schedule, user, onUserUpdate]);
 
     const handleGenerate = async () => {
         if (studySubjects.length === 0) {
@@ -91,11 +153,21 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
             return;
         }
         setIsLoading(true);
-        setShowPrefs(false);
         const lessonsForToday = lessons.filter(l => l.day === todayName && l.grade === user.grade);
         const generatedSchedule = await generateSmartSchedule(user, lessonsForToday, studySubjects, prefs);
-        setSchedule(generatedSchedule.map(item => ({...item, ...item, isCompleted: item.isCompleted || false})));
+        
+        setSchedule(generatedSchedule.map(item => ({ ...item, isCompleted: false })));
+        onUserUpdate({ ...user, lastScheduleEdit: Date.now() });
+        setShowPrefs(false);
         setIsLoading(false);
+    };
+
+    const handleResetSchedule = () => {
+        if (confirm('سيتم حذف جدولك الحالي لتتمكن من إنشاء جدول جديد. هل أنت متأكد؟')) {
+            setSchedule([]);
+            localStorage.removeItem(storageKey);
+            setShowPrefs(true);
+        }
     };
     
     const randomTip = useMemo(() => motivationalTips[Math.floor(Math.random() * motivationalTips.length)], []);
@@ -107,8 +179,8 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
                     <h1 className="text-3xl font-bold text-[hsl(var(--color-text-primary))]">🗓️ الجدول الذكي</h1>
                     <p className="text-lg text-[hsl(var(--color-text-secondary))]">مرحباً {user.name.split(' ')[0]}، إليك خطة يوم {todayName}.</p>
                 </div>
-                <button onClick={() => setShowPrefs(p => !p)} className="bg-[hsl(var(--color-surface))] hover:bg-black/5 dark:hover:bg-white/5 font-bold py-2 px-4 rounded-lg flex items-center gap-2 border border-[hsl(var(--color-border))]">
-                    {showPrefs ? 'إخفاء الإعدادات' : '⚙️ إظهار الإعدادات'}
+                <button onClick={showPrefs ? () => setShowPrefs(false) : handleResetSchedule} className="bg-[hsl(var(--color-surface))] hover:bg-black/5 dark:hover:bg-white/5 font-bold py-2 px-4 rounded-lg flex items-center gap-2 border border-[hsl(var(--color-border))]">
+                   {schedule.length > 0 && !showPrefs ? '⚙️ تعديل الجدول' : 'إخفاء الإعدادات'}
                 </button>
             </div>
 
@@ -145,20 +217,17 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
 
             {!isLoading && schedule.length > 0 && (
                  <div className="space-y-6">
-                    <GamificationStats schedule={schedule} />
+                    <GamificationStats schedule={schedule} user={user} />
                     
                     <div className="max-w-2xl mx-auto">
                         <div className="relative pr-16 py-4">
                             <div className="absolute top-0 bottom-0 right-8 w-1 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
                             
-                            {schedule.map((item, index) => {
+                            {schedule.map((item) => {
                                 const style = itemStyles[item.type];
                                 return (
                                 <div key={item.id} className="flex items-start gap-4 mb-2">
-                                    {/* Timeline Dot */}
                                     <div className={`mt-1.5 w-5 h-5 rounded-full z-10 flex-shrink-0 border-4 border-[hsl(var(--color-surface))] ${style.dot}`}></div>
-                                    
-                                    {/* Card Content */}
                                     <div className="flex-grow">
                                         <div className={`relative flex items-center gap-4 rounded-2xl p-4 shadow-sm transition-opacity duration-500 ${style.bg} border-r-4 ${style.border} ${item.isCompleted ? 'opacity-50' : ''}`}>
                                             <span className="text-2xl">{style.icon}</span>

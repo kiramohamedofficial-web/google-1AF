@@ -42,38 +42,44 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
         onClose();
     };
 
-    const mainLinks = [
+    // --- Reordered Links for Better UX ---
+
+    // Core, high-frequency actions
+    const coreLinks = [
         { page: 'home', label: 'الرئيسية', icon: <HomeIcon /> },
-        { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon /> },
+        { page: 'profile', label: 'الملف الشخصي', icon: <UserCircleIcon /> },
         { page: 'smart-schedule', label: 'الجدول الذكي', icon: <SmartScheduleIcon /> },
+        { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon /> },
         { page: 'my-bookings', label: 'حجوزاتي', icon: <ClipboardListIcon /> },
-        { page: 'teachers', label: 'المدرسين', icon: <UsersIcon /> },
+        { page: 'ai-exam', label: 'الاختبارات الذكية', icon: <AcademicCapIcon /> },
+    ];
+    
+    // Content and community sections
+    const contentLinks = [
         { page: 'news-board', label: 'لوحة الأخبار', icon: <NewspaperIcon /> },
+        { page: 'teachers', label: 'المدرسين', icon: <UsersIcon /> },
         { page: 'trips', label: 'الرحلات', icon: <TruckIcon /> },
         { page: 'books', label: 'الكتب', icon: <BookOpenIcon /> },
         { page: 'gallery', label: 'معرض الصور', icon: <PhotoIcon /> },
-        { page: 'ai-exam', label: 'الاختبارات الذكية', icon: <AcademicCapIcon /> },
     ];
 
-    const userLinks = [
-        { page: 'profile', label: 'الملف الشخصي', icon: <UserCircleIcon /> },
-        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
-    ];
-    
-    const infoLinks = [
+    // Personal, settings, and help sections
+    const helpLinks = [
         { page: 'feedback', label: 'التعليقات', icon: <FeedbackIcon /> },
         { page: 'instructions', label: 'تعليمات الاستخدام', icon: <InstructionsIcon /> },
+        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
         { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon /> },
         { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon /> },
     ];
 
-    const studentLinks = [...mainLinks, ...userLinks, ...infoLinks];
+    const studentLinks = [...coreLinks, ...contentLinks, ...helpLinks];
     
+    // For admin, add dashboard after core features for high visibility.
     const adminLinks = [
-        ...mainLinks,
+        ...coreLinks,
         { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> },
-        ...userLinks,
-        ...infoLinks
+        ...contentLinks,
+        ...helpLinks
     ];
 
     const links = user.role === 'admin' ? adminLinks : studentLinks;

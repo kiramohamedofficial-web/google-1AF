@@ -36,6 +36,7 @@ export interface User {
     dob?: string;
     section?: 'علمي علوم' | 'علمي رياضة' | 'أدبي' | 'عام';
     lastScheduleEdit?: number;
+    xpPoints?: number;
 }
 
 export interface Lesson {
@@ -73,6 +74,7 @@ export interface Post {
     imageUrls?: string[];
     timestamp: string;
     status: 'published' | 'draft';
+    isPinned?: boolean;
 }
 
 export interface Teacher {

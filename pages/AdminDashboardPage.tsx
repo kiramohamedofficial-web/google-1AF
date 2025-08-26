@@ -5,7 +5,7 @@ import { MOCK_STUDENTS } from '../constants.ts';
 import { Lesson, Trip, Teacher, Post, User, Booking } from '../types.ts';
 import { 
     UsersIcon, CalendarIcon, AcademicCapIcon, TruckIcon, 
-    NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon 
+    NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon, StarIcon 
 } from '../components/common/Icons.tsx';
 
 type AdminTab = 'stats' | 'lessons' | 'trips' | 'teachers' | 'posts' | 'students' | 'gallery' | 'bookings';
@@ -187,7 +187,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
 };
 
 interface PostFormModalProps { isOpen: boolean; onClose: () => void; onSave: (post: Post) => void; postToEdit: Post | null; }
-const emptyPost: Omit<Post, 'id' | 'timestamp'> = { title: '', content: '', author: 'إدارة السنتر', status: 'published', imageUrls: [] };
+const emptyPost: Omit<Post, 'id' | 'timestamp'> = { title: '', content: '', author: 'إدارة السنتر', status: 'published', imageUrls: [], isPinned: false };
 const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, postToEdit }) => {
     const [formData, setFormData] = useState(emptyPost);
     const [selectedImageFiles, setSelectedImageFiles] = useState<FileList | null>(null);
@@ -378,11 +378,12 @@ interface AdminDashboardPageProps {
     posts: Post[];
     onSavePost: (post: Post, isNew: boolean) => void;
     onDeletePost: (postId: string) => void;
+    onTogglePinPost: (postId: string) => void;
     bookings: Booking[];
     onUpdateBookingStatus: (bookingId: string, status: Booking['status']) => void;
 }
 
-const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTeachers, lessons, setLessons, trips, setTrips, posts, onSavePost, onDeletePost, bookings, onUpdateBookingStatus }) => {
+const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTeachers, lessons, setLessons, trips, setTrips, posts, onSavePost, onDeletePost, onTogglePinPost, bookings, onUpdateBookingStatus }) => {
     const [students, setStudents] = useState<User[]>(MOCK_STUDENTS);
     const [activeTab, setActiveTab] = useState<AdminTab>('stats');
     
@@ -499,9 +500,16 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ teachers, setTe
                     </div>
                     <div className="space-y-2">
                         {posts.map(post => (
-                            <div key={post.id} className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center">
-                                <div><p className="font-bold">{post.title} {post.status === 'draft' && <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full ml-2">مسودة</span>}</p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{post.author} - {post.timestamp}</p></div>
+                            <div key={post.id} className={`bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center ${post.isPinned ? 'ring-2 ring-yellow-400' : ''}`}>
+                                <div><p className="font-bold flex items-center gap-2">
+                                     {post.isPinned && <StarIcon className="w-5 h-5 text-yellow-400" solid />}
+                                     {post.title}
+                                     {post.status === 'draft' && <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full ml-2">مسودة</span>}
+                                </p><p className="text-sm text-[hsl(var(--color-text-secondary))]">{post.author} - {post.timestamp}</p></div>
                                 <div className="flex gap-2">
+                                    <button type="button" onClick={() => onTogglePinPost(post.id)} className="p-2 hover:bg-yellow-500/10 rounded-md" aria-label={post.isPinned ? "إلغاء تثبيت المنشور" : "تثبيت المنشور"}>
+                                        <StarIcon className={`w-5 h-5 ${post.isPinned ? 'text-yellow-400' : 'text-gray-400'}`} solid={post.isPinned} />
+                                    </button>
                                     <button type="button" onClick={() => { setPostToEdit(post); setIsPostModalOpen(true); }} className="p-2 hover:bg-blue-500/10 rounded-md" aria-label="تعديل المنشور"><PencilIcon /></button>
                                     <button type="button" onClick={() => onDeletePost(post.id)} className="p-2 hover:bg-red-500/10 rounded-md" aria-label="حذف المنشور"><TrashIcon /></button>
                                 </div>

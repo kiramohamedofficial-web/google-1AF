@@ -146,7 +146,7 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], onLessonClick: (lesson
 
 const Announcements: React.FC<{ posts: Post[], onNavigate: (page: Page) => void; }> = ({ posts, onNavigate }) => (
     <div className="space-y-6">
-        {posts.filter(p => p.status === 'published').slice(0, 2).map(post => (
+        {posts.slice(0, 2).map(post => (
             <div key={post.id} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden border border-[hsl(var(--color-border))]">
                 {post.imageUrls && post.imageUrls.length > 0 && <img src={post.imageUrls[0]} alt="Announcement" className="w-full h-48 object-cover" />}
                 <div className="p-5">
@@ -181,6 +181,22 @@ const TripsSection: React.FC<{ trips: Trip[], onNavigate: (page: Page) => void; 
     </div>
 );
 
+const PinnedPost: React.FC<{ post: Post }> = ({ post }) => (
+    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-800 dark:to-indigo-900 rounded-2xl shadow-2xl p-6 text-white border border-blue-400 relative overflow-hidden">
+        <div className="absolute -top-4 -right-4 text-5xl opacity-20 transform rotate-12">📌</div>
+        <h3 className="text-2xl font-bold flex items-center gap-3 mb-2">
+            <span>📌</span>
+            <span>منشور مثبت: {post.title}</span>
+        </h3>
+        {post.imageUrls && post.imageUrls.length > 0 && (
+            <img src={post.imageUrls[0]} alt="Pinned Post" className="w-full h-48 object-cover rounded-lg my-4 shadow-lg"/>
+        )}
+        <p className="text-lg opacity-90">{post.content}</p>
+        <p className="text-sm opacity-70 mt-3">{post.author} - {post.timestamp}</p>
+    </div>
+);
+
+
 interface HomePageProps {
     user: User;
     lessons: Lesson[];
@@ -199,6 +215,9 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
         [bookings, user.id]
     );
     
+    const pinnedPost = useMemo(() => posts.find(p => p.isPinned && p.status === 'published'), [posts]);
+    const regularPosts = useMemo(() => posts.filter(p => !p.isPinned && p.status === 'published'), [posts]);
+
     const userLessons = lessons.filter(l => l.grade === user.grade);
     const today = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayLessons = userLessons.filter(l => l.day === today);
@@ -232,6 +251,12 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
                 <DailyScheduleBar lessons={todayLessons} onLessonClick={handleLessonClick} />
             </section>
             
+            {pinnedPost && (
+                <section className="animate-fade-in-down">
+                    <PinnedPost post={pinnedPost} />
+                </section>
+            )}
+
             <section>
                 <h2 className="text-3xl font-bold mb-4 flex items-center gap-3">
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -246,7 +271,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-2.236 9.168-5.584C18.354 5.286 18 6.633 18 8a6 6 0 01-6 6h-1.932a4.001 4.001 0 00-2.632 1.158z" /></svg>
                         <span>آخر الإعلانات</span>
                     </h2>
-                    <Announcements posts={posts} onNavigate={onNavigate} />
+                    <Announcements posts={regularPosts} onNavigate={onNavigate} />
                 </div>
                 <div>
                      <h2 className="text-3xl font-bold mb-4 flex items-center gap-3">
