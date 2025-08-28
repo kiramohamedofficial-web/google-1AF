@@ -16,7 +16,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true
-    }
+    },
+    // Add this to potentially resolve fetch issues in some environments
+    global: {
+        // FIX: Explicitly define fetch arguments to resolve spread operator type error.
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
+    },
 });
 
 // Helper function to get the public URL for a storage item

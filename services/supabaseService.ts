@@ -114,8 +114,7 @@ export const getSiteSettings = async (): Promise<SiteSettings | null> => {
         return null;
 
     } catch (error) {
-        const typedError = error as { message?: string };
-        console.error('Error fetching site settings:', typedError.message || error);
+        console.error('Error fetching site settings:', getSupabaseErrorMessage(error));
         return null;
     }
 };
@@ -156,7 +155,7 @@ export const getProfile = async (userId: string): Promise<User | null> => {
         if (error) throw error;
         return data ? { ...data, profile_picture_url: getPublicUrl('avatars', data.profile_picture_url) } : null;
     } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching profile:', getSupabaseErrorMessage(error));
         return null;
     }
 };
@@ -181,7 +180,7 @@ export const getStudents = async (): Promise<User[]> => {
         if (!data) return [];
         return data.map(s => ({ ...s, profile_picture_url: getPublicUrl('avatars', s.profile_picture_url) }));
     } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching students:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -216,7 +215,7 @@ export const signUpUser = async (details: any): Promise<{ user: User | null, err
 
 export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error);
+    if (error) console.error('Error signing out:', getSupabaseErrorMessage(error));
 };
 
 // --- Data Fetching Functions (Read operations can return empty on error to prevent UI crash) ---
@@ -227,7 +226,7 @@ export const getLessons = async (): Promise<Lesson[]> => {
         if (error) throw error;
         return data || [];
     } catch (error) {
-        console.error('Error fetching lessons:', error);
+        console.error('Error fetching lessons:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -241,7 +240,7 @@ export const getTrips = async (): Promise<Trip[]> => {
             image_urls: (trip.image_urls || []).map((path: string) => isFullUrl(path) ? path : getPublicUrl('trip_images', path))
         }));
     } catch (error) {
-        console.error('Error fetching trips:', error);
+        console.error('Error fetching trips:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -255,7 +254,7 @@ export const getPosts = async (): Promise<Post[]> => {
             image_urls: (post.image_urls || []).map((path: string) => isFullUrl(path) ? path : getPublicUrl('post_images', path))
         }));
     } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error('Error fetching posts:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -269,7 +268,7 @@ export const getTeachers = async (): Promise<Teacher[]> => {
             image_url: isFullUrl(t.image_url) ? t.image_url : getPublicUrl('teacher_images', t.image_url) 
         }));
     } catch (error) {
-        console.error('Error fetching teachers:', error);
+        console.error('Error fetching teachers:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -282,7 +281,7 @@ export const getBookings = async (userId: string): Promise<Booking[]> => {
         if (error) throw error;
         return data || [];
     } catch (error) {
-        console.error('Error fetching user bookings:', error);
+        console.error('Error fetching user bookings:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -293,7 +292,7 @@ export const getAllBookings = async (): Promise<Booking[]> => {
         if (error) throw error;
         return data || [];
     } catch (error) {
-        console.error('Error fetching all bookings:', error);
+        console.error('Error fetching all bookings:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -346,7 +345,7 @@ export const getNotifications = async (userId: string): Promise<Notification[]> 
         if (error) throw error;
         return data || [];
     } catch (error) {
-        console.error('Error fetching notifications:', error);
+        console.error('Error fetching notifications:', getSupabaseErrorMessage(error));
         return [];
     }
 };
@@ -530,7 +529,8 @@ export const getCourses = async (): Promise<Course[]> => {
 
         // Step 4: Join the data
         return coursesData.map(course => {
-            const teacher = teacherMap.get(course.teacher_id);
+            // FIX: Cast the result of map.get from 'any' to a specific type to allow property access.
+            const teacher = teacherMap.get(course.teacher_id) as { name: string; image_url: string } | undefined;
             return {
                 ...course,
                 teacher_name: teacher?.name || 'غير محدد',

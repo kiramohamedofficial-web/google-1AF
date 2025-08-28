@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 // FIX: Import Session from @supabase/gotrue-js to solve export issue.
 import type { Session } from '@supabase/gotrue-js';
@@ -156,7 +157,7 @@ const App: React.FC = () => {
                 setLoading(false);
             }
         } catch (error) {
-            console.error("A critical error occurred in the auth state change handler:", error);
+            console.error("A critical error occurred in the auth state change handler:", supabaseService.getSupabaseErrorMessage(error));
             setCurrentUser(null);
             setLoading(false);
         }
