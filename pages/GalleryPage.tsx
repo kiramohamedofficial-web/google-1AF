@@ -36,8 +36,8 @@ const GalleryPage: React.FC = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredImages.map((image) => (
-                    <div key={image.id} className="group relative cursor-pointer" onClick={() => setSelectedImage(image.imageUrl)}>
-                        <img src={image.imageUrl} alt={image.title} className="w-full h-48 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" />
+                    <div key={image.id} className="group relative cursor-pointer" onClick={() => setSelectedImage(image.image_url)}>
+                        <img src={image.image_url} alt={image.title} className="w-full h-48 object-cover rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
                             <p className="text-white font-bold">{image.title}</p>
                         </div>

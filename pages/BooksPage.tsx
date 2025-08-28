@@ -17,7 +17,7 @@ const BooksPage: React.FC = () => {
                             </div>
                         </div>
                         <a 
-                            href={book.pdfUrl} 
+                            href={book.pdf_url} 
                             download
                             className="bg-[hsl(var(--color-primary))] hover:opacity-90 text-white font-bold py-2 px-5 rounded-lg transition-colors"
                         >

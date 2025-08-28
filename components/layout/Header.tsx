@@ -1,6 +1,6 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { User, Notification, Page } from '../../types.ts';
+import { SparklesIcon } from '../common/Icons.tsx';
 
 const timeAgo = (timestamp: number): string => {
     const now = Date.now();
@@ -60,7 +60,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
                                     <button onClick={() => handleNotificationClick(n)} className="text-right w-full">
                                         <p className={`font-bold text-base ${!n.read ? 'text-[hsl(var(--color-text-primary))]' : 'text-[hsl(var(--color-text-secondary))]'}`}>{n.title}</p>
                                         <p className="text-base text-[hsl(var(--color-text-secondary))] mt-1">{n.message}</p>
-                                        <p className="text-sm text-[hsl(var(--color-primary))] mt-2">{timeAgo(n.timestamp)}</p>
+                                        <p className="text-sm text-[hsl(var(--color-primary))] mt-2">{timeAgo(new Date(n.created_at).getTime())}</p>
                                     </button>
                                 </div>
                                 <button onClick={() => onDismiss(n.id)} className="p-1 rounded-full opacity-0 group-hover:opacity-100 text-[hsl(var(--color-text-secondary))] hover:bg-black/10 dark:hover:bg-white/10" aria-label="Dismiss notification">
@@ -82,15 +82,17 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, on
 
 interface HeaderProps {
     user: User;
+    title: string;
     onMenuClick: () => void;
     notifications: Notification[];
     onNavigate: (page: Page) => void;
     onMarkAsRead: (id: string) => void;
     onMarkAllAsRead: (userId: string) => void;
     onDismiss: (id: string) => void;
+    onAiChatClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onMenuClick, notifications, onNavigate, onMarkAsRead, onMarkAllAsRead, onDismiss }) => {
+const Header: React.FC<HeaderProps> = ({ user, title, onMenuClick, notifications, onNavigate, onMarkAsRead, onMarkAllAsRead, onDismiss, onAiChatClick }) => {
     const [isPanelOpen, setPanelOpen] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ user, onMenuClick, notifications, onNav
     }, [isPanelOpen]);
 
     const userNotifications = useMemo(() =>
-        notifications.filter(n => n.userId === user.id).sort((a, b) => b.timestamp - a.timestamp),
+        notifications.filter(n => n.user_id === user.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
         [notifications, user.id]
     );
 
@@ -121,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ user, onMenuClick, notifications, onNav
     );
 
     return (
-        <header className="fixed top-0 right-0 left-0 z-40 h-20 lg:pr-64 transition-all duration-300">
+        <header className="absolute top-0 right-0 left-0 z-40 h-20 transition-all duration-300">
             <div className="container mx-auto px-4 sm:px-6 h-full flex items-center">
                 <div className="w-full flex items-center justify-between bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-2 border border-[hsl(var(--color-border))]">
                     <button
@@ -131,36 +133,43 @@ const Header: React.FC<HeaderProps> = ({ user, onMenuClick, notifications, onNav
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <h1 className="text-xl font-bold text-center text-[hsl(var(--color-text-primary))]">
-                        Google Center
-                    </h1>
-                    <div ref={panelRef} className="relative">
+                    <h1 className="text-xl font-bold text-[hsl(var(--color-text-primary))]">{title}</h1>
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setPanelOpen(prev => !prev)}
-                            className="p-3 rounded-full bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative"
-                            aria-label="Notifications"
+                            onClick={onAiChatClick}
+                            className="p-3 rounded-full bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                            aria-label="Open AI Chat"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                            {unreadCount > 0 && (
-                                <span className="absolute top-0 right-0 block h-5 w-5 transform -translate-y-1/4 translate-x-1/4">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex items-center justify-center rounded-full h-5 w-5 bg-red-500 text-xs font-bold text-white">{unreadCount}</span>
-                                </span>
-                            )}
+                            <SparklesIcon className="w-6 h-6 text-[hsl(var(--color-primary))]" />
                         </button>
-                        {isPanelOpen && (
-                            <NotificationPanel
-                                notifications={userNotifications}
-                                onNavigate={onNavigate}
-                                onMarkAsRead={onMarkAsRead}
-                                onMarkAllAsRead={() => onMarkAllAsRead(user.id)}
-                                onDismiss={onDismiss}
-                                onClose={() => setPanelOpen(false)}
-                            />
-                        )}
+                        <div ref={panelRef} className="relative">
+                            <button
+                                onClick={() => setPanelOpen(prev => !prev)}
+                                className="p-3 rounded-full bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 transition-colors relative"
+                                aria-label="Notifications"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0 right-0 block h-5 w-5 transform -translate-y-1/4 translate-x-1/4">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex items-center justify-center rounded-full h-5 w-5 bg-red-500 text-xs font-bold text-white">{unreadCount}</span>
+                                    </span>
+                                )}
+                            </button>
+                            {isPanelOpen && (
+                                <NotificationPanel
+                                    notifications={userNotifications}
+                                    onNavigate={onNavigate}
+                                    onMarkAsRead={onMarkAsRead}
+                                    onMarkAllAsRead={() => onMarkAllAsRead(user.id)}
+                                    onDismiss={onDismiss}
+                                    onClose={() => setPanelOpen(false)}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

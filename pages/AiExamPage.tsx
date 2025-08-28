@@ -370,14 +370,36 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
 
     if (status === 'in_progress' && questions.length > 0) {
         const currentQuestion = questions[currentQuestionIndex];
-        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
         const optionPrefixes = ['أ', 'ب', 'ج', 'د'];
+
+        const timerProgress = (timeLeft / (duration * 60)) * 100;
+        let timerColorClass = 'bg-green-500';
+        if (timerProgress < 50) timerColorClass = 'bg-yellow-500';
+        if (timerProgress < 25) timerColorClass = 'bg-red-500';
+
         return (
              <div className="lg:grid lg:grid-cols-3 lg:gap-8 animate-fade-in-up">
                 {/* Main Content Column */}
                 <div className="lg:col-span-2">
                     <Card3D className="bg-[hsl(var(--color-surface))] p-6 md:p-8 rounded-2xl border border-[hsl(var(--color-border))]">
                         <div className="mb-6">
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-[hsl(var(--color-border))]">
+                                <h3 className="text-xl font-bold text-[hsl(var(--color-text-primary))]">
+                                    السؤال {currentQuestionIndex + 1} من {questions.length}
+                                </h3>
+                                <button 
+                                    onClick={() => handleMarkForReview(currentQuestion.id)}
+                                    className={`inline-flex items-center gap-2 font-semibold py-1 px-3 rounded-lg transition-colors border-2 ${
+                                        markedQuestions.includes(currentQuestion.id)
+                                        ? 'bg-yellow-400/10 border-yellow-500 text-yellow-600 dark:text-yellow-400'
+                                        : 'bg-transparent border-transparent text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
+                                    }`}
+                                >
+                                    <FlagIcon />
+                                    {markedQuestions.includes(currentQuestion.id) ? 'إلغاء التأشير' : 'تأشير للمراجعة'}
+                                </button>
+                            </div>
                             <div className="flex flex-wrap gap-2 mb-4 text-sm font-semibold">
                                 <span className="bg-blue-500/10 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">{currentQuestion.subject}</span>
                                 <span className="bg-purple-500/10 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full">{cognitiveLevelMap[currentQuestion.cognitive_level] || currentQuestion.cognitive_level}</span>
@@ -413,29 +435,19 @@ const AiExamPage: React.FC<AiExamPageProps> = ({ user }) => {
                  <div className="lg:col-span-1 mt-8 lg:mt-0">
                      <div className="sticky top-24 space-y-6">
                          <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl border border-[hsl(var(--color-border))]">
-                            <div className="flex justify-between items-center mb-2 font-semibold text-lg">
+                            <div className="flex justify-between items-center mb-1 font-semibold text-lg">
                                 <span>الوقت المتبقي</span>
                                 <div className="font-mono bg-[hsl(var(--color-background))] px-3 py-1 rounded-md">{formatTime(timeLeft)}</div>
                             </div>
-                            <div className="flex justify-between items-center mb-2 font-semibold">
+                            <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-1.5 mb-3">
+                                <div className={`${timerColorClass} h-1.5 rounded-full transition-[width] duration-1000 linear`} style={{width: `${timerProgress}%`}}></div>
+                            </div>
+
+                            <div className="flex justify-between items-center mb-1 font-semibold">
                                 <span>التقدم</span>
                                 <span>{currentQuestionIndex + 1} / {questions.length}</span>
                             </div>
                             <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2.5"><div className="bg-[hsl(var(--color-primary))] h-2.5 rounded-full transition-all duration-300" style={{width: `${progress}%`}}></div></div>
-                         </div>
-                        
-                         <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl border border-[hsl(var(--color-border))] text-center">
-                            <button 
-                                onClick={() => handleMarkForReview(currentQuestion.id)}
-                                className={`inline-flex items-center gap-2 font-semibold py-2 px-4 rounded-lg transition-colors border-2 w-full justify-center ${
-                                    markedQuestions.includes(currentQuestion.id)
-                                    ? 'bg-yellow-400/10 border-yellow-500 text-yellow-600 dark:text-yellow-400'
-                                    : 'bg-transparent border-transparent text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5'
-                                }`}
-                            >
-                                <FlagIcon />
-                                {markedQuestions.includes(currentQuestion.id) ? 'إلغاء التأشير' : 'تأشير للمراجعة'}
-                            </button>
                          </div>
                         
                          <QuestionNavigator 

@@ -1,5 +1,5 @@
 {
-  "name": "google-educational-center",
+  "name": "copy-of-google-educational-centera2",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,10 @@
   "dependencies": {
     "react-dom": "^18.2.0",
     "react": "^18.2.0",
-    "@google/genai": "latest"
+    "@google/genai": "latest",
+    "@supabase/supabase-js": "2",
+    "uuid": "latest",
+    "@supabase/gotrue-js": "^2.71.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

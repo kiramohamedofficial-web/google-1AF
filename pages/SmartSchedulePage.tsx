@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User, Lesson, ScheduleItem } from '../types.ts';
 import { MOCK_SUBJECTS } from '../constants.ts';
@@ -30,7 +31,7 @@ const timeToMinutes = (time: string): number => {
 const GamificationStats: React.FC<{ schedule: ScheduleItem[], user: User }> = ({ schedule, user }) => {
     const { completedStudyMinutes, totalStudyMinutes, studyProgress } = useMemo(() => {
         const completedMins = schedule
-            .filter(item => item.type === 'study' && item.isCompleted)
+            .filter(item => item.type === 'study' && item.is_completed)
             .reduce((total, item) => total + (timeToMinutes(item.end) - timeToMinutes(item.start)), 0);
         const totalMins = schedule
             .filter(item => item.type === 'study')
@@ -42,7 +43,7 @@ const GamificationStats: React.FC<{ schedule: ScheduleItem[], user: User }> = ({
     }, [schedule]);
 
     const { points, level } = useMemo(() => {
-        const pts = user.xpPoints || 0;
+        const pts = user.xp_points || 0;
         let lvl = { name: 'مبتدئ 🌱', current: 0, next: 50, progress: pts / 50 };
         if (pts >= 50) lvl = { name: 'مجتهد 🧠', current: 50, next: 150, progress: (pts - 50) / 100 };
         if (pts >= 150) lvl = { name: 'محترف 🚀', current: 150, next: 300, progress: (pts - 150) / 150 };
@@ -51,7 +52,7 @@ const GamificationStats: React.FC<{ schedule: ScheduleItem[], user: User }> = ({
         lvl.progress = Math.min(1, lvl.progress);
 
         return { points: pts, level: lvl };
-    }, [user.xpPoints]);
+    }, [user.xp_points]);
 
     return (
         <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl shadow-lg border border-[hsl(var(--color-border))]">
@@ -100,7 +101,7 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
                 } else {
                     const resetSchedule = scheduleData.map((item: ScheduleItem) => ({
                         ...item,
-                        isCompleted: false,
+                        is_completed: false,
                     }));
                     setSchedule(resetSchedule);
                 }
@@ -130,11 +131,11 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
         let xpChange = 0;
         const newSchedule = schedule.map(item => {
             if (item.id === itemId) {
-                const updatedItem = { ...item, isCompleted: !item.isCompleted };
+                const updatedItem = { ...item, is_completed: !item.is_completed };
                 if (updatedItem.type === 'study') {
                     const duration = timeToMinutes(updatedItem.end) - timeToMinutes(updatedItem.start);
                     const points = Math.round(duration / 6);
-                    xpChange = updatedItem.isCompleted ? points : -points;
+                    xpChange = updatedItem.is_completed ? points : -points;
                 }
                 return updatedItem;
             }
@@ -143,7 +144,7 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
         setSchedule(newSchedule);
 
         if (xpChange !== 0) {
-            onUserUpdate({ ...user, xpPoints: Math.max(0, (user.xpPoints || 0) + xpChange) });
+            onUserUpdate({ ...user, xp_points: Math.max(0, (user.xp_points || 0) + xpChange) });
         }
     }, [schedule, user, onUserUpdate]);
 
@@ -156,8 +157,8 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
         const lessonsForToday = lessons.filter(l => l.day === todayName && l.grade === user.grade);
         const generatedSchedule = await generateSmartSchedule(user, lessonsForToday, studySubjects, prefs);
         
-        setSchedule(generatedSchedule.map(item => ({ ...item, isCompleted: false })));
-        onUserUpdate({ ...user, lastScheduleEdit: Date.now() });
+        setSchedule(generatedSchedule.map(item => ({ ...item, is_completed: false })));
+        onUserUpdate({ ...user, last_schedule_edit: Date.now() });
         setShowPrefs(false);
         setIsLoading(false);
     };
@@ -229,19 +230,19 @@ const SmartSchedulePage: React.FC<{ user: User, onUserUpdate: (user: User) => vo
                                 <div key={item.id} className="flex items-start gap-4 mb-2">
                                     <div className={`mt-1.5 w-5 h-5 rounded-full z-10 flex-shrink-0 border-4 border-[hsl(var(--color-surface))] ${style.dot}`}></div>
                                     <div className="flex-grow">
-                                        <div className={`relative flex items-center gap-4 rounded-2xl p-4 shadow-sm transition-opacity duration-500 ${style.bg} border-r-4 ${style.border} ${item.isCompleted ? 'opacity-50' : ''}`}>
+                                        <div className={`relative flex items-center gap-4 rounded-2xl p-4 shadow-sm transition-opacity duration-500 ${style.bg} border-r-4 ${style.border} ${item.is_completed ? 'opacity-50' : ''}`}>
                                             <span className="text-2xl">{style.icon}</span>
                                             <div className="flex-grow">
-                                                <p className={`font-bold ${style.text} ${item.isCompleted ? 'line-through' : ''}`}>{item.title}</p>
+                                                <p className={`font-bold ${style.text} ${item.is_completed ? 'line-through' : ''}`}>{item.title}</p>
                                                 <p className={`text-sm ${style.text}/80`}>{item.start} - {item.end}</p>
                                             </div>
                                              <button 
                                                 onClick={() => handleToggleComplete(item.id)}
                                                 className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0
-                                                    ${item.isCompleted ? `${style.checkbox} text-white` : 'bg-transparent border-gray-400'}`}
-                                                aria-label={`Mark ${item.title} as ${item.isCompleted ? 'incomplete' : 'complete'}`}
+                                                    ${item.is_completed ? `${style.checkbox} text-white` : 'bg-transparent border-gray-400'}`}
+                                                aria-label={`Mark ${item.title} as ${item.is_completed ? 'incomplete' : 'complete'}`}
                                             >
-                                                {item.isCompleted && <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                                {item.is_completed && <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                                             </button>
                                         </div>
                                     </div>

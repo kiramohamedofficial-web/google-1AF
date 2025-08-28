@@ -1,4 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
+
+import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/genai";
 import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview, ScheduleItem, Lesson, User } from '../types.ts';
 
 const MODEL_NAME_GEMINI = 'gemini-2.5-flash';
@@ -10,6 +11,29 @@ interface Answer {
 }
 
 type ExamSystem = 'عام' | 'لغات' | 'ازهري';
+
+// --- AI Chat Service ---
+
+const NEO_SYSTEM_PROMPT = `You are Neo 🤖, the friendly and knowledgeable AI assistant for the 'Google Educational Center' platform.
+- Your Persona: You are quirky, encouraging, and use emojis to make interactions fun. You are an expert on everything related to the center.
+- Your Knowledge Base: You know about the center's schedule, all teachers and their subjects, available trips, platform features (like the Smart Schedule and AI Exams), and the subscription system.
+- Your Goal: Help students find information, understand features, and answer their questions about the platform. You can also answer general knowledge questions, but always maintain your persona.
+- Interaction Style: Keep answers concise and helpful. Start your first message with a friendly welcome.
+- IMPORTANT: All your responses must be in ARABIC.`;
+
+export const getNeoChatResponseStream = async (history: Content[]) => {
+    const responseStream = await ai.models.generateContentStream({
+        model: MODEL_NAME_GEMINI,
+        contents: history,
+        config: {
+            systemInstruction: NEO_SYSTEM_PROMPT,
+        },
+    });
+    return responseStream;
+};
+
+
+// --- AI Exam Service ---
 
 // Schema for generating questions
 const questionSchema = {
@@ -38,6 +62,24 @@ const examQuestionsSchema = {
 };
 
 const getGradeSpecificInstructions = (gradeLevel: string): string => {
+    if (gradeLevel.includes('الإعدادي')) {
+        return `
+            **CRITICAL INSTRUCTIONS FOR: "المرحلة الإعدادية" (Preparatory Stage)**
+            - **Overall Goal:** Design a foundational exam that solidifies concepts learned and prepares students for the secondary level.
+            - **Difficulty Distribution:**
+                - 50% Easy (M1)
+                - 40% Medium (M2)
+                - 10% Hard (M3)
+            - **Bloom's Taxonomy Distribution:**
+                - 40% Remember
+                - 30% Understand
+                - 20% Apply
+                - 10% Analyze
+            - **Question Style:**
+                - Focus on direct questions, definitions, and simple problem-solving.
+                - Questions should be clear and based on core curriculum concepts.
+        `;
+    }
     switch (gradeLevel) {
         case 'الصف الأول الثانوي':
             return `
@@ -195,7 +237,7 @@ const calculatePerformance = (questions: Question[], answers: Answer[]): { total
 
     questions.forEach(q => {
         const studentAnswer = answers.find(a => a.questionId === q.id);
-        const isCorrect = studentAnswer?.answerIndex === q.correctOptionIndex;
+        const isCorrect = studentAnswer?.answerIndex === q.correct_option_index;
 
         initializeScore(performanceBreakdown.bySubject, q.subject);
         initializeScore(performanceBreakdown.byCognitiveLevel, q.cognitive_level);
@@ -216,7 +258,7 @@ const calculatePerformance = (questions: Question[], answers: Answer[]): { total
             questionStem: q.stem,
             subject: q.subject,
             studentAnswer: studentAnswer !== undefined ? q.options[studentAnswer.answerIndex] : 'لم تتم الإجابة',
-            correctAnswer: q.options[q.correctOptionIndex],
+            correctAnswer: q.options[q.correct_option_index],
             isCorrect: isCorrect,
             rationale: q.rationale,
         });
@@ -313,40 +355,71 @@ export const gradeExamAndGetFeedbackAI = async (
 
 // Mock schedule based on the user-provided image
 const MOCK_SCHEDULE: ScheduleItem[] = [
-    { id: 'mock-1', start: '07:00', end: '07:30', title: 'استيقاظ وصلاة الفجر', type: 'personal', isCompleted: true },
-    { id: 'mock-2', start: '07:30', end: '08:00', title: 'إفطار', type: 'personal', isCompleted: true },
-    { id: 'mock-3', start: '08:00', end: '09:30', title: 'دراسة', type: 'study', subject: 'كيمياء', isCompleted: true },
-    { id: 'mock-4', start: '09:30', end: '09:45', title: 'استراحة قصيرة', type: 'break', isCompleted: false },
-    { id: 'mock-5', start: '09:45', end: '11:15', title: 'دراسة', type: 'study', subject: 'أحياء', isCompleted: false },
-    { id: 'mock-6', start: '11:15', end: '11:30', title: 'استراحة قصيرة', type: 'break', isCompleted: false },
-    { id: 'mock-7', start: '11:30', end: '12:30', title: 'وقت شخصي', type: 'personal', isCompleted: false },
-    { id: 'mock-8', start: '12:30', end: '13:00', title: 'صلاة الظهر', type: 'personal', isCompleted: false },
-    { id: 'mock-9', start: '13:00', end: '14:00', title: 'غداء', type: 'personal', isCompleted: false },
-    { id: 'mock-10', start: '14:00', end: '15:00', title: 'وقت شخصي / استرخاء', type: 'personal', isCompleted: false },
-    { id: 'mock-11', start: '15:00', end: '16:00', title: 'تحضير للدروس المسائية', type: 'personal', isCompleted: false },
-    { id: 'mock-12', start: '16:00', end: '18:00', title: 'درس فيزياء', type: 'lesson', subject: 'فيزياء', isLocked: true, isCompleted: false },
-    { id: 'mock-13', start: '18:00', end: '19:00', title: 'عشاء', type: 'personal', isCompleted: false },
-    { id: 'mock-14', start: '19:00', end: '20:30', title: 'مراجعة واجب الفيزياء', type: 'study', subject: 'فيزياء', isCompleted: false },
-    { id: 'mock-15', start: '20:30', end: '22:00', title: 'وقت عائلي/ترفيه', type: 'personal', isCompleted: false },
-    { id: 'mock-16', start: '22:00', end: '07:00', title: 'نوم', type: 'sleep', isCompleted: false },
+    { id: 'mock-1', start: '07:00', end: '07:30', title: 'استيقاظ وصلاة الفجر', type: 'personal', is_completed: true },
+    { id: 'mock-2', start: '07:30', end: '08:00', title: 'إفطار', type: 'personal', is_completed: true },
+    { id: 'mock-3', start: '08:00', end: '09:30', title: 'دراسة', type: 'study', subject: 'كيمياء', is_completed: true },
+    { id: 'mock-4', start: '09:30', end: '09:45', title: 'استراحة قصيرة', type: 'break', is_completed: false },
+    { id: 'mock-5', start: '09:45', end: '11:15', title: 'دراسة', type: 'study', subject: 'أحياء', is_completed: false },
+    { id: 'mock-6', start: '11:15', end: '11:30', title: 'استراحة قصيرة', type: 'break', is_completed: false },
+    { id: 'mock-7', start: '11:30', end: '12:30', title: 'وقت شخصي', type: 'personal', is_completed: false },
+    { id: 'mock-8', start: '12:30', end: '13:00', title: 'صلاة الظهر', type: 'personal', is_completed: false },
+    { id: 'mock-9', start: '13:00', end: '14:00', title: 'غداء', type: 'personal', is_completed: false },
+    { id: 'mock-10', start: '14:00', end: '15:00', title: 'وقت شخصي / استرخاء', type: 'personal', is_completed: false },
+    { id: 'mock-11', start: '15:00', end: '16:00', title: 'تحضير للدروس المسائية', type: 'personal', is_completed: false },
+    { id: 'mock-12', start: '16:00', end: '18:00', title: 'درس فيزياء', type: 'lesson', subject: 'فيزياء', is_locked: true, is_completed: false },
+    { id: 'mock-13', start: '18:00', end: '19:00', title: 'عشاء', type: 'personal', is_completed: false },
+    { id: 'mock-14', start: '19:00', end: '20:30', title: 'مراجعة واجب الفيزياء', type: 'study', subject: 'فيزياء', is_completed: false },
+    { id: 'mock-15', start: '20:30', end: '22:00', title: 'وقت عائلي/ترفيه', type: 'personal', is_completed: false },
+    { id: 'mock-16', start: '22:00', end: '07:00', title: 'نوم', type: 'sleep', is_completed: false },
 ];
 
-const timeTo24Hour = (timeStr: string): string => {
-    if (!timeStr || !timeStr.includes(':')) return "00:00";
-    const [time, modifier] = timeStr.split(' ');
-    let [hours, minutes] = time.split(':');
-    let hoursNum = parseInt(hours, 10);
-
-    if (modifier === 'م') { // PM
-        if (hoursNum !== 12) {
-            hoursNum += 12;
-        }
-    } else { // AM (ص)
-        if (hoursNum === 12) { // Midnight case
-            hoursNum = 0;
-        }
+const timeTo24Hour = (timeStr: string | undefined | null): string => {
+    if (!timeStr) {
+        return "00:00";
     }
-    return `${String(hoursNum).padStart(2, '0')}:${minutes}`;
+
+    // Normalize the string: remove spaces, use standard markers for AM/PM in Arabic
+    const normalizedTime = timeStr.trim().toLowerCase()
+        .replace(/\s/g, '')
+        .replace('ص', 'am')
+        .replace('م', 'pm');
+
+    // Regex to capture hours, optional minutes, and optional am/pm modifier
+    const match = normalizedTime.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)?$/);
+
+    if (!match) {
+        // Fallback for just a number, assuming it's an hour (e.g., "4pm", "7am")
+        const simpleHourMatch = normalizedTime.match(/^(\d{1,2})(am|pm)?$/);
+        if(simpleHourMatch) {
+            let hours = parseInt(simpleHourMatch[1], 10);
+            const modifier = simpleHourMatch[2];
+            if (!isNaN(hours)) {
+                 if (modifier === 'pm' && hours < 12) hours += 12;
+                 if (modifier === 'am' && hours === 12) hours = 0; // Midnight case
+                 return `${String(hours).padStart(2, '0')}:00`;
+            }
+        }
+        console.warn(`Could not parse time: "${timeStr}"`);
+        return "00:00";
+    }
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10) || 0;
+    const modifier = match[3];
+
+    if (isNaN(hours) || isNaN(minutes)) {
+         console.warn(`Invalid number parsing for time: "${timeStr}"`);
+         return "00:00";
+    }
+
+    if (modifier === 'pm' && hours < 12) {
+        hours += 12;
+    }
+    if (modifier === 'am' && hours === 12) { // Handle 12 AM (midnight)
+        hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
 export const generateSmartSchedule = async (
@@ -365,7 +438,7 @@ export const generateSmartSchedule = async (
             title: { type: Type.STRING, description: "A brief, clear title for the activity in Arabic." },
             type: { type: Type.STRING, enum: ['study', 'break', 'lesson', 'sleep', 'personal'] },
             subject: { type: Type.STRING, description: "The subject name in Arabic, if the type is 'study' or 'lesson'." },
-            isLocked: { type: Type.BOOLEAN, description: "Set to true only for pre-scheduled lessons." }
+            is_locked: { type: Type.BOOLEAN, description: "Set to true only for pre-scheduled lessons." }
         },
         required: ["id", "start", "end", "title", "type"]
     };
@@ -375,10 +448,23 @@ export const generateSmartSchedule = async (
         items: scheduleItemSchema
     };
     
-    const lockedLessonsPrompt = lessonsForToday.map(l => {
-        const [startTime, endTime] = l.time.split(' - ');
-        return `- ${l.subject} class from ${timeTo24Hour(startTime)} to ${timeTo24Hour(endTime)}. This is a fixed event.`;
-    }).join('\n');
+    const lockedLessonsPrompt = lessonsForToday
+        .map(l => {
+            if (typeof l.time !== 'string' || !l.time.includes(' - ')) {
+                return null;
+            }
+            const parts = l.time.split(' - ');
+            if (parts.length !== 2) {
+                return null;
+            }
+            const [startTime, endTime] = parts;
+            if (!startTime || !endTime) {
+                return null;
+            }
+            return `- ${l.subject} class from ${timeTo24Hour(startTime)} to ${timeTo24Hour(endTime)}. This is a fixed event.`;
+        })
+        .filter(Boolean)
+        .join('\n');
 
     const system_prompt = `You are an AI expert in creating optimal daily schedules for Egyptian high school students. Your task is to generate a full day's schedule as a JSON array based on the user's requirements.
     
@@ -400,7 +486,7 @@ export const generateSmartSchedule = async (
         - Total study hours needed: ${preferences.studyHours} hours
         - Subjects to study today: ${studySubjects.join(', ')}
 
-        Fixed appointments for today (must be included exactly as specified with 'isLocked' set to true):
+        Fixed appointments for today (must be included exactly as specified with 'is_locked' set to true):
         ${lockedLessonsPrompt.length > 0 ? lockedLessonsPrompt : "None"}
 
         Also, include reasonably timed 'personal' activities for meals (breakfast, lunch, dinner), prayer, and relaxation.

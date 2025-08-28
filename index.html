@@ -62,14 +62,6 @@
         --color-text-secondary: 215 20% 45%;
         --color-border: 210 30% 88%;
       }
-      .forest {
-        --color-primary: 130 60% 40%;
-        --color-background: 120 15% 96%;
-        --color-surface: 90 20% 99%;
-        --color-text-primary: 120 25% 20%;
-        --color-text-secondary: 110 10% 40%;
-        --color-border: 120 15% 85%;
-      }
       .sunset {
         --color-primary: 25 66% 60%; /* #d37b4a */
         --color-background: 30 100% 97%; /* #fefaf6 */
@@ -93,23 +85,6 @@
         --color-text-primary: 180 100% 90%;
         --color-text-secondary: 240 20% 70%;
         --color-border: 180 100% 50%;
-      }
-      .royal {
-        --color-primary: 45 88% 53%; /* gold */
-        --color-background: 233 27% 14%; /* dark blue */
-        --color-surface: 221 44% 16%; /* slightly lighter dark blue */
-        --color-text-primary: 0 0% 95%; /* off-white */
-        --color-text-secondary: 0 0% 70%; /* light grey */
-        --color-border: hsla(45, 88%, 53%, 0.3); /* translucent gold */
-      }
-      .paper {
-        --font-sans: 'Tajawal', serif; /* add serif fallback */
-        --color-primary: 0 100% 30%; /* maroon */
-        --color-background: 43 56% 95%; /* parchment */
-        --color-surface: 43 100% 98%; /* lighter parchment */
-        --color-text-primary: 10 33% 23%; /* dark brown */
-        --color-text-secondary: 10 18% 41%; /* lighter brown */
-        --color-border: 25 33% 80%; /* light brown */
       }
 
 
@@ -202,9 +177,6 @@
       html.ocean body {
         background: linear-gradient(120deg, hsl(210, 30%, 95%), hsl(190, 40%, 92%));
       }
-      html.forest body {
-        background: linear-gradient(120deg, hsl(120, 15%, 96%), hsl(100, 15%, 94%));
-      }
 
       html.sunset body {
         font-family: 'Tajawal', sans-serif;
@@ -233,17 +205,6 @@
         to { background-position: 35px 70px; }
       }
       
-      html.royal body {
-        background-image:
-          radial-gradient(circle at top right, hsla(var(--color-primary), 0.15) 0%, transparent 30%),
-          radial-gradient(circle at bottom left, hsla(var(--color-primary), 0.1) 0%, transparent 35%);
-      }
-
-      html.paper body {
-        background-color: hsl(var(--color-background));
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%239C92AC' fill-opacity='0.03' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
-      }
-
       /* Neon/Shadow effects for specific dark themes */
       @keyframes neon-flicker {
         0%, 100% { filter: drop-shadow(0 0 5px hsl(var(--color-primary))); opacity: 0.95; }
@@ -251,8 +212,7 @@
       }
       
       .matrix .bg-\[hsl\(var\(--color-surface\)\)\],
-      .wave .bg-\[hsl\(var\(--color-surface\)\)\],
-      .royal .bg-\[hsl\(var\(--color-surface\)\)\] {
+      .wave .bg-\[hsl\(var\(--color-surface\)\)\] {
         box-shadow: 0 0 8px hsla(var(--color-primary), 0.5), 
                     0 0 16px hsla(var(--color-primary), 0.3);
         border-color: hsla(var(--color-primary), 0.6);
@@ -267,8 +227,7 @@
       }
 
       .matrix .bg-\[hsl\(var\(--color-primary\)\)\],
-      .wave .bg-\[hsl\(var\(--color-primary\)\)\],
-      .royal .bg-\[hsl\(var\(--color-primary\)\)\] {
+      .wave .bg-\[hsl\(var\(--color-primary\)\)\] {
         box-shadow: 0 0 5px hsl(var(--color-primary)),
                     0 0 15px hsl(var(--color-primary)),
                     0 0 30px hsl(var(--color-primary));
@@ -292,8 +251,7 @@
       
       .matrix .text-\[hsl\(var\(--color-primary\)\)\],
       .wave .text-\[hsl\(var\(--color-primary\)\)\],
-      .cocktail .text-\[hsl\(var\(--color-primary\)\)\],
-      .royal .text-\[hsl\(var\(--color-primary\)\)\] {
+      .cocktail .text-\[hsl\(var\(--color-primary\)\)\] {
         filter: drop-shadow(0 0 4px hsl(var(--color-primary)));
         transition: filter 0.8s ease;
       }
@@ -372,6 +330,35 @@
           scrollbar-width: thin;  /* Firefox */
           scrollbar-color: hsla(var(--color-text-secondary), 0.3) transparent;
       }
+
+      /* Animated Neon Border for Sidebar Link */
+      @keyframes animated-gradient-border {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      .nav-link-neon-border {
+        position: relative;
+      }
+
+      .nav-link-neon-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 0.5rem; /* Match button's rounded-lg */
+        padding: 1px; /* Border thickness */
+        background: linear-gradient(120deg, hsla(var(--color-primary), 0.7), hsl(var(--color-primary)), hsla(var(--color-primary), 0.7));
+        background-size: 200% 200%;
+        -webkit-mask:
+           linear-gradient(#fff 0 0) content-box, 
+           linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+                mask-composite: exclude;
+        animation: animated-gradient-border 4s ease infinite;
+        pointer-events: none;
+      }
+
 
       /* Theme-specific Lesson Card Styles */
 
@@ -638,6 +625,37 @@
         animation-direction: reverse;
         opacity: 0.25;
       }
+
+      /* Toast Notification Animations */
+      @keyframes toast-in {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+      }
+
+      @keyframes toast-out {
+          from {
+              transform: translateX(0);
+              opacity: 1;
+          }
+          to {
+              transform: translateX(100%);
+              opacity: 0;
+          }
+      }
+
+      .animate-toast-in {
+          animation: toast-in 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      }
+
+      .animate-toast-out {
+          animation: toast-out 0.3s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+      }
     </style>
 <script type="importmap">
 {
@@ -645,7 +663,10 @@
     "react-dom/": "https://esm.sh/react-dom@^18.2.0/",
     "react/": "https://esm.sh/react@^18.2.0/",
     "react": "https://esm.sh/react@^18.2.0",
-    "@google/genai": "https://esm.sh/@google/genai"
+    "@google/genai": "https://esm.sh/@google/genai",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2",
+    "uuid": "https://esm.sh/uuid",
+    "@supabase/gotrue-js": "https://aistudiocdn.com/@supabase/gotrue-js@^2.71.1"
   }
 }
 </script>
@@ -667,9 +688,16 @@
         <span></span>
     </div>
     <script>
-      // Polyfill process.env for browser environment to prevent crash from missing API key variable.
+      // Polyfill process.env for browser environment.
       if (typeof window.process === 'undefined') {
-        window.process = { env: { API_KEY: '' } };
+        window.process = { 
+            env: { 
+                API_KEY: '', // This will be handled externally
+                // IMPORTANT: Replace these fake placeholders with your actual Supabase project credentials
+                SUPABASE_URL: 'https://ophlmmpisgizpvgxndkh.supabase.co', 
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9waGxtbXBpc2dpenB2Z3huZGtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNTcxMDIsImV4cCI6MjA2NzczMzEwMn0.c489RBMwNt_k5cHLVOJX44Ocn7hMgCA_bZkCFJVLxrM'
+            } 
+        };
       }
     </script>
     <script type="module" src="/index.tsx"></script>

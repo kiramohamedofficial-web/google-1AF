@@ -1,7 +1,8 @@
 
+// FIX: Import User from @supabase/gotrue-js to solve export issue.
+import type { User as SupabaseUser } from '@supabase/gotrue-js';
 
-
-export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave' | 'royal' | 'paper';
+export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'sunset' | 'matrix' | 'wave';
 
 export type Page = 
     | 'home' 
@@ -18,25 +19,28 @@ export type Page =
     | 'about'
     | 'my-bookings'
     | 'smart-schedule'
-    | 'feedback'
+    | 'educational-platform'
+    | 'platform-admin-dashboard'
     | 'instructions'
     | 'privacy-policy'
     | 'terms-of-service';
 
 export interface User {
     id: string;
+    supabaseUser?: SupabaseUser | null;
     role: 'student' | 'admin';
     name: string;
     email: string;
     phone: string;
-    guardianPhone: string;
+    guardian_phone: string;
     school: string;
     grade: string;
-    profilePicture?: string;
+    profile_picture_url?: string;
     dob?: string;
     section?: 'علمي علوم' | 'علمي رياضة' | 'أدبي' | 'عام';
-    lastScheduleEdit?: number;
-    xpPoints?: number;
+    last_schedule_edit?: number;
+    xp_points?: number;
+    subscription_end_date?: string; // New field for platform subscription
 }
 
 export interface Lesson {
@@ -49,8 +53,8 @@ export interface Lesson {
     grade: string;
     notes?: string;
     capacity?: number;
-    bookedCount?: number;
-    bookingRequired?: boolean;
+    booked_count?: number;
+    booking_required?: boolean;
 }
 
 export interface Trip {
@@ -59,11 +63,11 @@ export interface Trip {
     description: string;
     date: string;
     time: string;
-    meetingPoint: string;
+    meeting_point: string;
     capacity: number;
-    bookedCount: number;
+    booked_count: number;
     cost?: number;
-    imageUrls: string[];
+    image_urls: string[];
 }
 
 export interface Post {
@@ -71,17 +75,17 @@ export interface Post {
     title: string;
     author: string;
     content: string;
-    imageUrls?: string[];
-    timestamp: string;
+    image_urls?: string[];
+    timestamp: string; // This will be a ISO string from DB, we can format it
     status: 'published' | 'draft';
-    isPinned?: boolean;
+    is_pinned?: boolean;
 }
 
 export interface Teacher {
     id: string;
     name: string;
     subject: string;
-    imageUrl: string;
+    image_url: string;
     bio: string;
     phone?: string;
     email?: string;
@@ -92,7 +96,7 @@ export interface Book {
     id: string;
     title: string;
     description: string;
-    pdfUrl: string;
+    pdf_url: string;
 }
 
 export interface Question {
@@ -104,7 +108,7 @@ export interface Question {
     stem: string; // The question text itself
     context?: string; // Optional context like a text, graph description, etc.
     options: string[];
-    correctOptionIndex: number;
+    correct_option_index: number;
     rationale: string; // Explanation for the correct answer
     skills?: string[]; // e.g., "Reasoning", "Data Interpretation"
     tags?: string[];
@@ -145,7 +149,7 @@ export interface ExamResult {
 
 export interface GalleryImage {
     id: string;
-    imageUrl: string;
+    image_url: string;
     title: string;
     album: 'رحلات' | 'أنشطة' | 'تكريم' | 'حصص';
 }
@@ -156,25 +160,25 @@ export type ServiceType = 'حصة' | 'رحلة';
 
 export interface Booking {
     id: string;
-    studentId: string;
-    studentName: string;
-    serviceType: ServiceType;
-    serviceId: string;
-    serviceName: string;
+    student_id: string;
+    student_name: string;
+    service_type: ServiceType;
+    service_id: string;
+    service_name: string;
     date: string;
     time: string;
     location: string;
     status: BookingStatus;
     notes?: string;
-    createdAt: number;
+    created_at: string;
 }
 
 export interface Notification {
   id: string;
-  userId: string; // ID of the user this notification is for
+  user_id: string; // ID of the user this notification is for
   title: string;
   message: string;
-  timestamp: number;
+  created_at: string;
   read: boolean;
   link?: Page; // Optional page to navigate to on click
 }
@@ -186,6 +190,97 @@ export interface ScheduleItem {
     title: string;
     type: 'study' | 'break' | 'lesson' | 'sleep' | 'personal';
     subject?: string;
-    isLocked?: boolean; // For pre-set lessons
-    isCompleted?: boolean;
+    is_locked?: boolean; // For pre-set lessons
+    is_completed?: boolean;
+}
+
+export interface SocialLinks {
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+}
+
+export interface SiteSettings {
+    id: number | string; // Can be a number (like 1) or a UUID string.
+    key?: string; // The database error indicates this field exists and is NOT NULL.
+    site_name?: string;
+    seo_title?: string;
+    seo_description?: string;
+    favicon_url?: string;
+    social_links?: SocialLinks;
+}
+
+export type ToastType = 'success' | 'info' | 'warning' | 'error';
+
+export interface ToastNotification {
+  id: string;
+  type: ToastType;
+  title: string;
+  message: string;
+}
+
+// --- Educational Platform Types ---
+
+export interface PlatformTeacher {
+  id: string;
+  name: string;
+  subject: string;
+  image_url: string;
+  bio: string;
+}
+
+export interface LessonContent {
+  id: string;
+  type: 'video' | 'summary' | 'exercise';
+  title: string;
+  url: string;
+  duration_minutes?: number;
+}
+
+export interface CourseLesson {
+  id: string;
+  title: string;
+  is_free?: boolean;
+  content: LessonContent[];
+}
+
+export interface CourseUnit {
+  id: string;
+  title: string;
+  lessons: CourseLesson[];
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  teacher_id: string;
+  teacher_name: string; // Denormalized for easy display
+  // FIX: Added optional teacher_image property. The `getCourses` service function dynamically adds this
+  // denormalized field, but it was missing from the type definition, causing a type error in `saveCourse`.
+  teacher_image?: string;
+  grade: string;
+  subject: string;
+  image_url: string;
+  structure: CourseUnit[]; // Stored as JSONB in Supabase
+}
+
+export interface SubscriptionRequest {
+  id: string;
+  student_id: string;
+  student_name: string;
+  selected_subjects: string[];
+  duration_months: number;
+  amount_paid: number;
+  payment_phone: string;
+  discount_code?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
+// --- AI Chat Types ---
+export interface ChatMessage {
+  role: 'user' | 'model';
+  parts: { text: string }[];
 }

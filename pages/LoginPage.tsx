@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AnimatedCat from '../components/common/AnimatedCat.tsx';
 import Footer from '../components/layout/Footer.tsx';
-import { Page } from '../types.ts';
+import { Page, SiteSettings } from '../types.ts';
 
 
 interface LoginPageProps {
-    onLogin: (userType: 'student' | 'admin') => void;
+    onLogin: (credentials: { email: string; password: string; }) => Promise<string | null>;
+    onSignup: (details: any) => void;
     onNavigate: (page: Page) => void;
+    siteSettings: SiteSettings | null;
 }
 
 // --- Icon Components ---
@@ -325,9 +327,10 @@ const ParticleNetwork: React.FC = () => {
 };
 
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignup, onNavigate, siteSettings }) => {
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
     const [signupStep, setSignupStep] = useState(1);
+    const [error, setError] = useState<string | null>(null);
 
     // Login fields
     const [loginEmail, setLoginEmail] = useState('');
@@ -346,20 +349,28 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
 
     const showSectionField = grade.includes('الثانوي');
 
-    const handleLoginSubmit = (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would add real login logic
-        onLogin('student');
+        setError(null);
+        const errorMessage = await onLogin({ email: loginEmail, password: loginPassword });
+        if (errorMessage) {
+            setError(errorMessage);
+        }
     };
 
     const handleSignupSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would add real signup logic
-        onLogin('student');
+        onSignup({
+            email, password, name, phone, guardian_phone: guardianPhone, school, grade, section
+        });
     };
 
     const handleNextStep = () => {
-        if (name && email && password && password === confirmPassword && phone && guardianPhone) {
+        if (password !== confirmPassword) {
+            alert('كلمتا المرور غير متطابقتين.');
+            return;
+        }
+        if (name && email && password && phone && guardianPhone) {
             setSignupStep(2);
         } else {
             alert('يرجى ملء جميع البيانات الأساسية بشكل صحيح.');
@@ -382,7 +393,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
                         <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#38bdf8" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
+                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">{siteSettings?.site_name || 'سنتر جوجل التعليمي'}</h1>
                         <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     
@@ -397,6 +408,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
                                 <form onSubmit={handleLoginSubmit} className="space-y-6">
                                     <InputField label="البريد الإلكتروني" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} icon={<EmailIcon />}/>
                                     <InputField label="كلمة المرور" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} icon={<LockIcon />}/>
+                                    {error && (
+                                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-bold text-center p-3 rounded-lg">
+                                            {error}
+                                        </div>
+                                    )}
                                     <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
                                         دخول
                                     </button>
@@ -444,30 +460,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onNavigate }) => {
                                     )}
                                 </form>
                             )}
-                            
-                            <div className="flex items-center my-6">
-                                <hr className="flex-grow border-slate-700" />
-                                <span className="mx-4 text-slate-500 text-sm font-medium">أو</span>
-                                <hr className="flex-grow border-slate-700" />
-                            </div>
-
-                            <div className="text-center">
-                                <p className="text-sm text-slate-400 mb-4 font-medium">قم بتجربة المنصة كـ</p>
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <button onClick={() => onLogin('student')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                                        <StudentIcon /> طالب
-                                    </button>
-                                    <button onClick={() => onLogin('admin')} className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-slate-700 text-slate-300 font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105">
-                                        <AdminIcon /> مدير
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div className="relative z-10">
-                 <Footer onNavigate={onNavigate} insideApp={false} />
+                 <Footer onNavigate={onNavigate} insideApp={false} siteSettings={siteSettings} />
             </div>
         </div>
     );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User, Theme, Page } from '../../types.ts';
 import ThemeSwitcher from '../common/ThemeSwitcher.tsx';
@@ -7,7 +6,7 @@ import {
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
     Cog6ToothIcon, ArrowLeftOnRectangleIcon, PhotoIcon, 
     NewspaperIcon, ClipboardListIcon, SmartScheduleIcon,
-    FeedbackIcon, InstructionsIcon, PrivacyIcon, TermsIcon
+    InstructionsIcon, PrivacyIcon, TermsIcon
 } from '../common/Icons.tsx';
 
 interface SidebarProps {
@@ -21,14 +20,14 @@ interface SidebarProps {
     setTheme: (theme: Theme) => void;
 }
 
-const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean }> = ({ icon, label, onClick, isActive }) => (
+const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean; extraClassName?: string; }> = ({ icon, label, onClick, isActive, extraClassName = '' }) => (
     <button 
         onClick={onClick} 
         className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 relative ${
             isActive 
                 ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' 
                 : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[hsl(var(--color-text-primary))]'
-        }`}
+        } ${extraClassName}`}
     >
         {icon}
         <span className="font-medium">{label}</span>
@@ -47,7 +46,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
     // Core, high-frequency actions
     const coreLinks = [
         { page: 'home', label: 'الرئيسية', icon: <HomeIcon /> },
-        { page: 'profile', label: 'الملف الشخصي', icon: <UserCircleIcon /> },
         { page: 'smart-schedule', label: 'الجدول الذكي', icon: <SmartScheduleIcon /> },
         { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon /> },
         { page: 'my-bookings', label: 'حجوزاتي', icon: <ClipboardListIcon /> },
@@ -56,6 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
     
     // Content and community sections
     const contentLinks = [
+        { page: 'educational-platform', label: 'المنصة التعليمية', icon: <BookOpenIcon /> },
         { page: 'news-board', label: 'لوحة الأخبار', icon: <NewspaperIcon /> },
         { page: 'teachers', label: 'المدرسين', icon: <UsersIcon /> },
         { page: 'trips', label: 'الرحلات', icon: <TruckIcon /> },
@@ -65,11 +64,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
     // Personal, settings, and help sections
     const helpLinks = [
-        { page: 'feedback', label: 'التعليقات', icon: <FeedbackIcon /> },
         { page: 'instructions', label: 'تعليمات الاستخدام', icon: <InstructionsIcon /> },
         { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
-        { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon /> },
-        { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon /> },
     ];
 
     const studentLinks = [...coreLinks, ...contentLinks, ...helpLinks];
@@ -78,6 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
     const adminLinks = [
         ...coreLinks,
         { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> },
+        { page: 'platform-admin-dashboard', label: 'تحكم المنصة', icon: <Cog6ToothIcon /> },
         ...contentLinks,
         ...helpLinks
     ];
@@ -86,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
     return (
         <>
-            <div className={`fixed top-0 right-0 h-full w-64 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))]`}>
+            <div className={`fixed lg:static top-0 right-0 h-full w-64 flex-shrink-0 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:transform-none rounded-l-2xl`}>
                 <div className="flex flex-col h-full">
                     {/* Logo Header */}
                     <div className="p-4 border-b border-[hsl(var(--color-border))] flex flex-col items-center h-16 justify-center">
@@ -97,14 +94,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                     </div>
 
                     {/* User Profile Section */}
-                    <div className="p-3 flex flex-col items-center text-center border-b border-[hsl(var(--color-border))]">
-                        <img src={user.profilePicture} alt="Profile" className="w-16 h-16 rounded-full border-2 border-[hsl(var(--color-primary))] object-cover shadow-lg mb-2"/>
-                        <p className="font-bold text-lg text-[hsl(var(--color-text-primary))] truncate w-full">
-                            {user.role === 'admin' ? '⚙️ إدارة النظام' : user.name}
+                    <div className="p-4 flex flex-col items-center text-center border-b border-[hsl(var(--color-border))] bg-gradient-to-b from-black/5 to-transparent dark:from-white/5">
+                        <p className="font-bold text-xl text-[hsl(var(--color-text-primary))] truncate w-full mb-1">
+                            {user.name}
                         </p>
-                        {user.role === 'student' && (
-                           <p className="text-xs text-[hsl(var(--color-text-secondary))]">{user.grade}</p>
+                        {user.role === 'student' ? (
+                           <p className="text-sm text-[hsl(var(--color-text-secondary))]">{user.grade}</p>
+                        ) : (
+                           <p className="text-sm text-[hsl(var(--color-primary))] font-semibold">⚙️ مدير النظام</p>
                         )}
+                        <button
+                            onClick={() => handleNavigation('profile')}
+                            className={`w-auto mx-auto mt-3 flex items-center justify-center gap-2 px-4 py-1.5 text-xs rounded-full transition-all duration-200  ${
+                                currentPage === 'profile'
+                                ? 'bg-[hsl(var(--color-primary))] text-white shadow-md'
+                                : 'bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent hover:border-[hsl(var(--color-primary))]'
+                            }`}
+                        >
+                            <UserCircleIcon className="w-4 h-4" />
+                            <span>عرض الملف الشخصي</span>
+                        </button>
                     </div>
 
                     <nav className="flex-grow p-3 space-y-1.5 overflow-y-auto">
@@ -115,6 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                                 label={link.label} 
                                 onClick={() => handleNavigation(link.page as Page)}
                                 isActive={currentPage === link.page}
+                                extraClassName={link.page === 'educational-platform' ? 'nav-link-neon-border' : ''}
                             />
                         ))}
                     </nav>

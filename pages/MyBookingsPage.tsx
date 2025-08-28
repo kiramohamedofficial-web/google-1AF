@@ -16,12 +16,20 @@ const statusStyles: Record<BookingStatus, { bg: string; text: string; icon: stri
 
 const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
     const style = statusStyles[booking.status];
+
+    const formattedDate = useMemo(() => {
+        if (booking.service_type === 'رحلة' && booking.date && booking.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return new Date(booking.date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        return booking.date;
+    }, [booking.date, booking.service_type]);
+
     return (
         <div className="bg-[hsl(var(--color-surface))] rounded-xl shadow-lg p-5 border-l-4 border-[hsl(var(--color-primary))] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h2 className="text-xl font-bold text-[hsl(var(--color-text-primary))]">{booking.serviceName}</h2>
+                <h2 className="text-xl font-bold text-[hsl(var(--color-text-primary))]">{booking.service_name}</h2>
                 <p className="text-sm text-[hsl(var(--color-text-secondary))] mt-1">
-                    <span>{booking.date}</span> | <span>{booking.time}</span> | <span>{booking.location}</span>
+                    <span>{formattedDate}</span> | <span>{booking.time}</span> | <span>{booking.location}</span>
                 </p>
                  <p className="text-xs text-[hsl(var(--color-text-secondary))] mt-2 font-mono">ID: {booking.id}</p>
             </div>
@@ -39,8 +47,8 @@ const MyBookingsPage: React.FC<MyBookingsPageProps> = ({ user, allBookings }) =>
 
     const userBookings = useMemo(() => {
         const sorted = allBookings
-            .filter(b => b.studentId === user.id)
-            .sort((a, b) => b.createdAt - a.createdAt);
+            .filter(b => b.student_id === user.id)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         if (activeFilter === 'الكل') {
             return sorted;
         }

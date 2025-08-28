@@ -1,7 +1,8 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { User, Lesson } from '../types.ts';
-import { getSubjectStyle } from '../constants.ts';
+import { getSubjectStyle, DAY_NAMES } from '../constants.ts';
 
 interface FullSchedulePageProps {
   user: User;
@@ -11,10 +12,10 @@ interface FullSchedulePageProps {
 const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) => {
     const [showMyGradeOnly, setShowMyGradeOnly] = useState(false);
     
-    const daysOfWeek = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+    const daysOfWeek = DAY_NAMES;
 
     const filteredLessons = useMemo(() => {
-        const sorted = [...lessons].sort((a, b) => a.time.localeCompare(b.time, 'ar-EG-u-nu-latn'));
+        const sorted = [...lessons].sort((a, b) => (a.time || '').localeCompare(b.time || '', 'ar-EG-u-nu-latn'));
         if (showMyGradeOnly) {
             return sorted.filter(lesson => lesson.grade === user.grade);
         }

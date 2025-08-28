@@ -15,16 +15,16 @@ const NewsBoardPage: React.FC<NewsBoardPageProps> = ({ posts }) => {
             <div className="space-y-8">
                 {publishedPosts.length > 0 ? publishedPosts.map(post => (
                     <div key={post.id} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden border border-[hsl(var(--color-border))]">
-                        {post.imageUrls && post.imageUrls.length > 0 && (
+                        {post.image_urls && post.image_urls.length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
-                                {post.imageUrls.map((url, index) => (
+                                {post.image_urls.map((url, index) => (
                                     <img key={index} src={url} alt={`${post.title} image ${index + 1}`} className="w-full h-56 object-cover"/>
                                 ))}
                             </div>
                         )}
                         <div className="p-6">
                             <h2 className="text-2xl font-bold text-[hsl(var(--color-text-primary))]">{post.title}</h2>
-                            <p className="text-sm text-[hsl(var(--color-text-secondary))] my-2">{post.author} - {post.timestamp}</p>
+                            <p className="text-sm text-[hsl(var(--color-text-secondary))] my-2">{post.author} - {post.timestamp ? new Date(post.timestamp).toLocaleString('ar-EG') : ''}</p>
                             <p className="text-lg text-[hsl(var(--color-text-secondary))] whitespace-pre-line">{post.content}</p>
                         </div>
                     </div>

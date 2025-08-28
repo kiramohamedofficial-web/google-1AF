@@ -13,7 +13,7 @@ interface TripsPageProps {
 const TripsPage: React.FC<TripsPageProps> = ({ trips, user, onCreateBooking, bookings }) => {
     
     const userBookedTripIds = useMemo(() =>
-        bookings.filter(b => b.studentId === user.id && b.serviceType === 'رحلة').map(b => b.serviceId),
+        bookings.filter(b => b.student_id === user.id && b.service_type === 'رحلة').map(b => b.service_id),
         [bookings, user.id]
     );
 
@@ -32,12 +32,12 @@ const TripsPage: React.FC<TripsPageProps> = ({ trips, user, onCreateBooking, boo
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {trips.map(trip => {
                     const isBooked = userBookedTripIds.includes(trip.id);
-                    const isFull = trip.bookedCount >= trip.capacity;
+                    const isFull = trip.booked_count >= trip.capacity;
                     
                     return (
                         <div key={trip.id} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden flex flex-col border border-[hsl(var(--color-border))] transform hover:-translate-y-2 transition-transform duration-300">
                             <div className="relative">
-                                <img src={trip.imageUrls[0]} alt={trip.title} className="w-full h-56 object-cover" />
+                                <img src={trip.image_urls[0]} alt={trip.title} className="w-full h-56 object-cover" />
                                 {trip.cost && (
                                      <div className="absolute top-4 right-4 bg-yellow-400 text-black font-bold px-3 py-1 rounded-full shadow-md">
                                         {trip.cost} ج.م
@@ -49,18 +49,18 @@ const TripsPage: React.FC<TripsPageProps> = ({ trips, user, onCreateBooking, boo
                                 <p className="text-[hsl(var(--color-text-secondary))] flex-grow mb-4">{trip.description}</p>
                                 
                                 <div className="space-y-2 text-sm text-[hsl(var(--color-text-primary))] mb-4">
-                                    <div className="flex items-center gap-2"><span className="w-5 text-center">📅</span><span className="font-medium">{trip.date}</span></div>
+                                    <div className="flex items-center gap-2"><span className="w-5 text-center">📅</span><span className="font-medium">{trip.date ? new Date(trip.date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : 'غير محدد'}</span></div>
                                     <div className="flex items-center gap-2"><span className="w-5 text-center">🕒</span><span className="font-medium">{trip.time}</span></div>
-                                    <div className="flex items-center gap-2"><span className="w-5 text-center">📍</span><span className="font-medium">{trip.meetingPoint}</span></div>
+                                    <div className="flex items-center gap-2"><span className="w-5 text-center">📍</span><span className="font-medium">{trip.meeting_point}</span></div>
                                 </div>
 
                                 <div className="bg-[hsl(var(--color-background))] p-3 rounded-lg flex justify-between items-center mb-4">
                                     <span className="font-semibold">المقاعد</span>
                                     <div className="flex items-center gap-2">
                                         <div className="w-24 bg-black/10 dark:bg-white/10 rounded-full h-2.5">
-                                            <div className="bg-[hsl(var(--color-primary))] h-2.5 rounded-full" style={{ width: `${(trip.bookedCount / trip.capacity) * 100}%` }}></div>
+                                            <div className="bg-[hsl(var(--color-primary))] h-2.5 rounded-full" style={{ width: `${(trip.booked_count / trip.capacity) * 100}%` }}></div>
                                         </div>
-                                        <span className="font-mono text-sm">{trip.bookedCount} / {trip.capacity}</span>
+                                        <span className="font-mono text-sm">{trip.booked_count} / {trip.capacity}</span>
                                     </div>
                                 </div>
 

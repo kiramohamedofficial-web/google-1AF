@@ -1,13 +1,19 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { User, Lesson, Trip, Post, Page, Booking } from '../types.ts';
-import { getSubjectStyle } from '../constants.ts';
+import { getSubjectStyle, DAY_NAMES } from '../constants.ts';
 
-const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: (lesson: Lesson) => void; onClose: () => void; }> = ({ lesson, isBooked, onBook, onClose }) => {
-    const isFull = lesson.capacity ? lesson.bookedCount! >= lesson.capacity : false;
+const LessonDetailsModal: React.FC<{ 
+    lesson: Lesson; 
+    isBooked: boolean; 
+    onBook: (lesson: Lesson) => void; 
+    onClose: () => void; 
+    isReminderSet: boolean;
+    onSetReminder: (lesson: Lesson) => void;
+}> = ({ lesson, isBooked, onBook, onClose, isReminderSet, onSetReminder }) => {
+    const isFull = lesson.capacity ? lesson.booked_count! >= lesson.capacity : false;
     const style = getSubjectStyle(lesson.subject);
-    const bookingNotRequired = lesson.bookingRequired === false;
+    const bookingNotRequired = lesson.booking_required === false;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-12 sm:items-center sm:pt-4" onClick={onClose}>
@@ -32,16 +38,26 @@ const LessonDetailsModal: React.FC<{ lesson: Lesson; isBooked: boolean; onBook: 
                             <span className="font-semibold">الحجوزات</span>
                             <div className="flex items-center gap-2">
                                 <div className="w-24 bg-black/10 dark:bg-white/10 rounded-full h-2.5">
-                                    <div className={`${style.progressBarClass} h-2.5 rounded-full`} style={{ width: `${((lesson.bookedCount || 0) / (lesson.capacity || 1)) * 100}%` }}></div>
+                                    <div className={`${style.progressBarClass} h-2.5 rounded-full`} style={{ width: `${((lesson.booked_count || 0) / (lesson.capacity || 1)) * 100}%` }}></div>
                                 </div>
-                                <span>{lesson.bookedCount} / {lesson.capacity}</span>
+                                <span>{lesson.booked_count} / {lesson.capacity}</span>
                             </div>
                         </div>
                     )}
                      <button 
+                        onClick={() => onSetReminder(lesson)}
+                        disabled={isReminderSet}
+                        className={`mt-4 w-full font-semibold py-3 px-4 rounded-lg transition-all duration-300 text-base
+                            ${isReminderSet 
+                                ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 cursor-default' 
+                                : 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/60'}`}
+                    >
+                        {isReminderSet ? '✅ تم ضبط التذكير' : '🔔 ذكرني قبل الحصة بـ 15 دقيقة'}
+                    </button>
+                     <button 
                         onClick={() => !bookingNotRequired && onBook(lesson)}
                         disabled={isBooked || isFull || bookingNotRequired}
-                        className={`mt-4 w-full font-bold py-3 px-4 rounded-lg transition-all duration-300 text-lg
+                        className={`mt-2 w-full font-bold py-3 px-4 rounded-lg transition-all duration-300 text-lg
                             ${bookingNotRequired ? 'bg-cyan-500 text-white cursor-default' :
                             isBooked ? 'bg-yellow-500 text-white cursor-default' : 
                             isFull ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 
@@ -86,7 +102,7 @@ const TimeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-
 const LocationIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
 
 const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], onLessonClick: (lesson: Lesson) => void, bookedLessonIds: string[] }> = ({ lessons, onLessonClick, bookedLessonIds }) => {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const days = DAY_NAMES;
     const todayName = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayIndex = days.indexOf(todayName);
     const orderedDays = todayIndex !== -1 ? [...days.slice(todayIndex + 1), ...days.slice(0, todayIndex + 1)] : days;
@@ -94,7 +110,7 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], onLessonClick: (lesson
     return (
         <div className="flex space-x-6 space-x-reverse overflow-x-auto pb-4 -mx-6 px-6">
             {orderedDays.map((day, dayIndex) => {
-                const dayLessons = lessons.filter(l => l.day === day).sort((a,b) => a.time.localeCompare(b.time));
+                const dayLessons = lessons.filter(l => l.day === day).sort((a,b) => (a.time || '').localeCompare(b.time || ''));
                 if (dayLessons.length === 0) return null;
 
                 return (
@@ -148,10 +164,10 @@ const Announcements: React.FC<{ posts: Post[], onNavigate: (page: Page) => void;
     <div className="space-y-6">
         {posts.slice(0, 2).map(post => (
             <div key={post.id} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden border border-[hsl(var(--color-border))]">
-                {post.imageUrls && post.imageUrls.length > 0 && <img src={post.imageUrls[0]} alt="Announcement" className="w-full h-48 object-cover" />}
+                {post.image_urls && post.image_urls.length > 0 && <img src={post.image_urls[0]} alt="Announcement" className="w-full h-48 object-cover" />}
                 <div className="p-5">
                     <h3 className="font-bold text-xl text-[hsl(var(--color-text-primary))]">{post.title}</h3>
-                    <p className="text-sm text-[hsl(var(--color-text-secondary))] mb-2">{post.author} - {post.timestamp}</p>
+                    <p className="text-sm text-[hsl(var(--color-text-secondary))] mb-2">{post.author} - {post.timestamp ? new Date(post.timestamp).toLocaleString('ar-EG') : ''}</p>
                     <p className="text-[hsl(var(--color-text-primary))] text-lg line-clamp-2">{post.content}</p>
                 </div>
             </div>
@@ -166,12 +182,14 @@ const TripsSection: React.FC<{ trips: Trip[], onNavigate: (page: Page) => void; 
     <div className="space-y-6">
         {trips.slice(0, 2).map(trip => (
             <div key={trip.id} className="relative rounded-2xl overflow-hidden shadow-lg group">
-                <img src={trip.imageUrls[0]} alt={trip.title} className="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110" />
+                <img src={trip.image_urls[0]} alt={trip.title} className="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                 <div className="absolute bottom-0 right-0 p-5 text-white">
                     <h3 className="text-2xl font-bold">{trip.title}</h3>
                     <p className="text-sm opacity-90 mt-1 line-clamp-1">{trip.description}</p>
-                    <p className="text-xs mt-2 font-semibold bg-yellow-400 text-black inline-block px-2 py-1 rounded">{trip.date}</p>
+                    <p className="text-xs mt-2 font-semibold bg-yellow-400 text-black inline-block px-2 py-1 rounded">
+                        {trip.date ? new Date(trip.date).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' }) : 'غير محدد'}
+                    </p>
                 </div>
             </div>
         ))}
@@ -188,11 +206,11 @@ const PinnedPost: React.FC<{ post: Post }> = ({ post }) => (
             <span>📌</span>
             <span>منشور مثبت: {post.title}</span>
         </h3>
-        {post.imageUrls && post.imageUrls.length > 0 && (
-            <img src={post.imageUrls[0]} alt="Pinned Post" className="w-full h-48 object-cover rounded-lg my-4 shadow-lg"/>
+        {post.image_urls && post.image_urls.length > 0 && (
+            <img src={post.image_urls[0]} alt="Pinned Post" className="w-full h-48 object-cover rounded-lg my-4 shadow-lg"/>
         )}
         <p className="text-lg opacity-90">{post.content}</p>
-        <p className="text-sm opacity-70 mt-3">{post.author} - {post.timestamp}</p>
+        <p className="text-sm opacity-70 mt-3">{post.author} - {post.timestamp ? new Date(post.timestamp).toLocaleString('ar-EG') : ''}</p>
     </div>
 );
 
@@ -205,18 +223,30 @@ interface HomePageProps {
     onNavigate: (page: Page) => void;
     bookings: Booking[];
     onCreateBooking: (lesson: Lesson, type: 'حصة') => void;
+    onSetReminder: (lesson: Lesson, minutesBefore: number) => Promise<boolean>;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavigate, bookings, onCreateBooking }) => {
+const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavigate, bookings, onCreateBooking, onSetReminder }) => {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+    const [remindersSet, setRemindersSet] = useState<string[]>(() => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const initialReminders: string[] = [];
+        lessons.forEach(lesson => {
+            const reminderKey = `reminder_set_${lesson.id}_${todayStr}`;
+            if (typeof window !== 'undefined' && localStorage.getItem(reminderKey)) {
+                initialReminders.push(lesson.id);
+            }
+        });
+        return initialReminders;
+    });
     
     const userBookedLessonIds = useMemo(() => 
-        bookings.filter(b => b.studentId === user.id && b.serviceType === 'حصة').map(b => b.serviceId),
+        bookings.filter(b => b.student_id === user.id && b.service_type === 'حصة').map(b => b.service_id),
         [bookings, user.id]
     );
     
-    const pinnedPost = useMemo(() => posts.find(p => p.isPinned && p.status === 'published'), [posts]);
-    const regularPosts = useMemo(() => posts.filter(p => !p.isPinned && p.status === 'published'), [posts]);
+    const pinnedPost = useMemo(() => posts.find(p => p.is_pinned && p.status === 'published'), [posts]);
+    const regularPosts = useMemo(() => posts.filter(p => !p.is_pinned && p.status === 'published'), [posts]);
 
     const userLessons = lessons.filter(l => l.grade === user.grade);
     const today = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
@@ -235,11 +265,23 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
         setSelectedLesson(null);
     };
 
+    const handleSetLessonReminder = async (lesson: Lesson) => {
+        const success = await onSetReminder(lesson, 15);
+        if (success) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const reminderKey = `reminder_set_${lesson.id}_${todayStr}`;
+            localStorage.setItem(reminderKey, 'true');
+            setRemindersSet(prev => [...prev, lesson.id]);
+            alert('تم ضبط التذكير بنجاح! سيصلك إشعار قبل الحصة بـ 15 دقيقة.');
+        } else {
+            alert('لا يمكن ضبط تذكير لحصة قد بدأت بالفعل أو انتهت.');
+        }
+    };
 
     return (
         <div className="space-y-12 animate-fade-in-up">
             <div>
-                <h1 className="text-4xl font-extrabold mb-1">مرحباً بك، {user.name.split(' ')[0]}!</h1>
+                <h1 className="text-4xl font-extrabold mb-1">مرحباً بك، {(user.name || '').split(' ')[0]}!</h1>
                 <p className="text-lg text-[hsl(var(--color-text-secondary))]">إليك ملخص يومك وأهم الأحداث القادمة.</p>
             </div>
 
@@ -288,6 +330,8 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, posts, trips, onNavi
                     isBooked={userBookedLessonIds.includes(selectedLesson.id)}
                     onBook={handleBookLesson}
                     onClose={handleCloseModal} 
+                    isReminderSet={remindersSet.includes(selectedLesson.id)}
+                    onSetReminder={handleSetLessonReminder}
                 />
             )}
         </div>
