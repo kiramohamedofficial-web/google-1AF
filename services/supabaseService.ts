@@ -1,5 +1,6 @@
 import { supabase, getPublicUrl } from './supabaseClient.ts';
-import { User, Lesson, Trip, Post, Teacher, Booking, Notification, Page, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from '../types.ts';
+// FIX: Changed import from 'Notification' to 'AppNotification' to match exported type.
+import { User, Lesson, Trip, Post, Teacher, Booking, AppNotification, Page, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
 // FIX: Import AuthError from @supabase/gotrue-js to solve export issue.
 import { AuthError } from '@supabase/gotrue-js';
@@ -339,7 +340,7 @@ export const updateBookingStatus = async (bookingId: string, status: Booking['st
 
 // --- Notification Functions ---
 
-export const getNotifications = async (userId: string): Promise<Notification[]> => {
+export const getNotifications = async (userId: string): Promise<AppNotification[]> => {
     try {
         const { data, error } = await supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
         if (error) throw error;
@@ -350,7 +351,7 @@ export const getNotifications = async (userId: string): Promise<Notification[]> 
     }
 };
 
-export const createNotification = async (userId: string, title: string, message: string, link?: Page): Promise<Notification> => {
+export const createNotification = async (userId: string, title: string, message: string, link?: Page): Promise<AppNotification> => {
     try {
         const notificationData = { user_id: userId, title, message, link, read: false };
         const { data, error } = await supabase.from('notifications').insert(notificationData).select().single();

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { User, Notification, Page } from '../../types.ts';
+import { User, AppNotification, Page } from '../../types.ts';
 import { SparklesIcon } from '../common/Icons.tsx';
 
 const timeAgo = (timestamp: number): string => {
@@ -15,7 +15,7 @@ const timeAgo = (timestamp: number): string => {
 };
 
 interface NotificationPanelProps {
-    notifications: Notification[];
+    notifications: AppNotification[];
     onNavigate: (page: Page) => void;
     onMarkAsRead: (id: string) => void;
     onMarkAllAsRead: () => void;
@@ -25,7 +25,7 @@ interface NotificationPanelProps {
 
 const NotificationPanel: React.FC<NotificationPanelProps> = ({ notifications, onNavigate, onMarkAsRead, onMarkAllAsRead, onDismiss, onClose }) => {
     
-    const handleNotificationClick = (notification: Notification) => {
+    const handleNotificationClick = (notification: AppNotification) => {
         onMarkAsRead(notification.id);
         if (notification.link) {
             onNavigate(notification.link);
@@ -84,7 +84,7 @@ interface HeaderProps {
     user: User;
     title: string;
     onMenuClick: () => void;
-    notifications: Notification[];
+    notifications: AppNotification[];
     onNavigate: (page: Page) => void;
     onMarkAsRead: (id: string) => void;
     onMarkAllAsRead: (userId: string) => void;

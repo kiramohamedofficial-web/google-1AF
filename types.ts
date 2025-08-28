@@ -173,7 +173,7 @@ export interface Booking {
     created_at: string;
 }
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   user_id: string; // ID of the user this notification is for
   title: string;

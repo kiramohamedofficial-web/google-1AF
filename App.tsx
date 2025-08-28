@@ -1,10 +1,11 @@
 
 
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 // FIX: Import Session from @supabase/gotrue-js to solve export issue.
 import type { Session } from '@supabase/gotrue-js';
-import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, Notification, ToastNotification, ToastType, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from './types.ts';
+import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, AppNotification, ToastNotification, ToastType, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from './types.ts';
 import * as supabaseService from './services/supabaseService.ts';
 import { supabase } from './services/supabaseClient.ts';
 import { v4 as uuidv4 } from 'uuid';
@@ -67,7 +68,7 @@ const App: React.FC = () => {
     const [trips, setTrips] = useState<Trip[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [students, setStudents] = useState<User[]>([]);
     const [platformTeachers, setPlatformTeachers] = useState<PlatformTeacher[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
