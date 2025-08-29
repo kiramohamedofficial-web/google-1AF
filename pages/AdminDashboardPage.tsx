@@ -4,6 +4,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Lesson, Trip, Teacher, Post, User, Booking, SiteSettings, ToastType } from '../types.ts';
 import { 
@@ -11,7 +13,6 @@ import {
     NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon, StarIcon, UploadIcon
 } from '../components/common/Icons.tsx';
 // FIX: Import 'getPathFromUrl' and 'getSupabaseErrorMessage' for robust functionality.
-import { getPublicUrl } from '../services/supabaseClient.ts';
 import * as supabaseService from '../services/supabaseService.ts';
 import { TeachersManager } from '../components/admin/TeachersManager.tsx';
 
