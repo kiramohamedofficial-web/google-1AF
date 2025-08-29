@@ -6,6 +6,8 @@
 
 
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, AppNotification, ToastNotification, ToastType, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from './types.ts';
@@ -496,14 +498,12 @@ const App: React.FC = () => {
     }, [posts, addToast]);
     
     const handleDeletePost = useCallback(async (postId: string) => {
-        if (confirm('هل أنت متأكد من حذف هذا المنشور؟')) {
-            try {
-                await supabaseService.deletePost(postId);
-                setPosts(prev => prev.filter(p => p.id !== postId));
-                addToast('success', 'تم الحذف', 'تم حذف المنشور بنجاح.');
-            } catch (error) {
-                 addToast('error', 'فشل حذف المنشور', supabaseService.getSupabaseErrorMessage(error));
-            }
+        try {
+            await supabaseService.deletePost(postId);
+            setPosts(prev => prev.filter(p => p.id !== postId));
+            addToast('success', 'تم الحذف', 'تم حذف المنشور بنجاح.');
+        } catch (error) {
+             addToast('error', 'فشل حذف المنشور', supabaseService.getSupabaseErrorMessage(error));
         }
     }, [addToast]);
 

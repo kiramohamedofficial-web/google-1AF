@@ -3,6 +3,7 @@ import { Teacher, ToastType } from '../../types.ts';
 import { PencilIcon, TrashIcon, PlusIcon, UploadIcon } from '../common/Icons.tsx';
 import { uploadFile, getSupabaseErrorMessage } from '../../services/supabaseService.ts';
 import { getPublicUrl } from '../../services/supabaseClient.ts';
+import ConfirmationModal from '../common/ConfirmationModal.tsx';
 
 const emptyTeacherFormData = {
     name: '',
@@ -23,6 +24,8 @@ export const TeachersManager: React.FC<{
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [formData, setFormData] = useState(emptyTeacherFormData);
   const [isUploading, setIsUploading] = useState(false);
+  const [confirmDeleteState, setConfirmDeleteState] = useState<{ isOpen: boolean; teacher: Teacher | null }>({ isOpen: false, teacher: null });
+
 
   const resetForm = () => {
     setFormData(emptyTeacherFormData);
@@ -84,10 +87,15 @@ export const TeachersManager: React.FC<{
     resetForm();
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا المعلم؟')) {
-      onDeleteTeacher(id);
+  const handleDeleteClick = (teacher: Teacher) => {
+    setConfirmDeleteState({ isOpen: true, teacher });
+  };
+
+  const handleConfirmDelete = () => {
+    if (confirmDeleteState.teacher) {
+      onDeleteTeacher(confirmDeleteState.teacher.id);
     }
+    setConfirmDeleteState({ isOpen: false, teacher: null });
   };
 
   return (
@@ -114,7 +122,7 @@ export const TeachersManager: React.FC<{
                 <p className="text-sm text-[hsl(var(--color-text-secondary))] flex-grow line-clamp-2">{teacher.bio}</p>
                 <div className="flex gap-2 mt-4 pt-3 border-t border-[hsl(var(--color-border))]">
                     <button onClick={() => openEditDialog(teacher)} className="p-2 w-full flex justify-center items-center hover:bg-blue-500/10 rounded-md text-blue-500" aria-label="تعديل"><PencilIcon /></button>
-                    <button onClick={() => handleDelete(teacher.id)} className="p-2 w-full flex justify-center items-center hover:bg-red-500/10 rounded-md text-red-500" aria-label="حذف"><TrashIcon /></button>
+                    <button onClick={() => handleDeleteClick(teacher)} className="p-2 w-full flex justify-center items-center hover:bg-red-500/10 rounded-md text-red-500" aria-label="حذف"><TrashIcon /></button>
                 </div>
             </div>
         ))}
@@ -156,6 +164,15 @@ export const TeachersManager: React.FC<{
                 </div>
             </div>
         )}
+
+        <ConfirmationModal
+            isOpen={confirmDeleteState.isOpen}
+            onClose={() => setConfirmDeleteState({ isOpen: false, teacher: null })}
+            onConfirm={handleConfirmDelete}
+            title="تأكيد حذف المدرس"
+            message={`هل أنت متأكد من حذف المدرس "${confirmDeleteState.teacher?.name}"؟ لا يمكن التراجع عن هذا الإجراء.`}
+            confirmText="نعم، حذف"
+        />
     </div>
   )
 };
