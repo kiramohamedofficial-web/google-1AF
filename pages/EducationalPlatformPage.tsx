@@ -577,9 +577,16 @@ function SubscriptionView({ user, userPendingRequest, onCreateSubscriptionReques
                             <h2 className="text-xl font-bold mb-3">1. اختر المواد</h2>
                             <div className="flex flex-wrap gap-2">
                                 <button onClick={() => setSelectedSubjects(MOCK_SUBJECTS)} className="px-3 py-1.5 bg-blue-500 text-white rounded-full font-semibold text-sm">اختر الكل</button>
-                                {MOCK_SUBJECTS.map(s => <button key={s} onClick={() => setSelectedSubjects(p => p.includes(s) ? p.filter(i => i !== s) : [...p, s])} className={`px-3 py-1.5 rounded-full font-semibold text-sm border-2 transition-colors ${selectedSubjects.includes(s) ? 'bg-[hsl(var(--color-primary))] border-[hsl(var(--color-primary))] text-white' : 'border-[hsl(var(--color-border))] bg-transparent'}`}>{s}</button>
-                            ))}
-                        </div>
+                                {MOCK_SUBJECTS.map(s => (
+                                    <button 
+                                        key={s} 
+                                        onClick={() => setSelectedSubjects(p => p.includes(s) ? p.filter(i => i !== s) : [...p, s])} 
+                                        className={`px-3 py-1.5 rounded-full font-semibold text-sm border-2 transition-colors ${selectedSubjects.includes(s) ? 'bg-[hsl(var(--color-primary))] border-[hsl(var(--color-primary))] text-white' : 'border-[hsl(var(--color-border))] bg-transparent'}`}
+                                    >
+                                        {s}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                         <div>
                             <h2 className="text-xl font-bold mb-3">2. اختر المدة</h2>
