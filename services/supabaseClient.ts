@@ -14,8 +14,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
     // Add this to potentially resolve fetch issues in some environments
     global: {
-        // FIX: Explicitly define fetch arguments to resolve spread operator type error.
-        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
+        fetch: fetch,
     },
 });
 
