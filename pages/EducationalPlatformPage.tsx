@@ -119,15 +119,15 @@ const CloseIcon: React.FC = () => <svg className="w-6 h-6" fill="none" viewBox="
 // --- Reusable Components ---
 function MainFilterTabs({ items, selected, onSelect }: { items: { key: string, label: string }[], selected: string, onSelect: (key: any) => void }) {
     return (
-        <div className="flex items-center justify-center gap-8">
+        <div className="bg-[hsl(var(--color-surface))] p-2 rounded-xl flex items-center gap-2 max-w-md mx-auto border border-[hsl(var(--color-border))] shadow-sm">
             {items.map(item => (
                 <button
                     key={item.key}
                     onClick={() => onSelect(item.key)}
-                    className={`text-center py-2 px-6 font-bold transition-all duration-300 text-lg ${
+                    className={`w-full text-center py-2 px-4 font-semibold rounded-lg transition-all duration-300 ${
                         selected === item.key
-                            ? 'bg-yellow-400 text-black rounded-xl shadow-lg'
-                            : 'text-[hsl(var(--color-text-secondary))]'
+                            ? 'bg-[hsl(var(--color-primary))] text-white shadow-md'
+                            : 'hover:bg-black/5 dark:hover:bg-white/5'
                     }`}
                 >
                     {item.label}
@@ -146,7 +146,7 @@ function FilterChips({ items, selected, onSelect, className = "" }: { items: { k
                     onClick={() => onSelect(item.key)}
                     className={`flex-shrink-0 text-center py-2 px-5 font-semibold rounded-full transition-all duration-300 text-sm ${
                         selected === item.key
-                            ? 'bg-yellow-400 text-black'
+                            ? 'bg-[hsl(var(--color-primary))] text-white'
                             : 'bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-primary))] hover:bg-black/5 dark:hover:bg-white/10'
                     }`}
                 >
@@ -240,14 +240,6 @@ const VideoPlayerView: React.FC<{ content: PlatformContent; onClose: () => void;
 
     return (
         <div className="fixed inset-0 bg-[hsl(var(--color-background))] z-50 flex flex-col animate-fade-in-up">
-            <div className="flex-shrink-0 bg-[#2d3748] text-white p-2 flex items-center justify-between shadow-md">
-                <h1 className="font-bold text-lg">نسخة من مركز جوجل التعليمي A2</h1>
-                <div className="flex items-center gap-2">
-                    <button onClick={refreshPlayer} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 transition-colors" title="تحديث المشغل"><RefreshIcon /></button>
-                    <button onClick={handleFullscreen} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 transition-colors" title="ملء الشاشة"><FullscreenIcon /></button>
-                </div>
-            </div>
-
             <header className="flex-shrink-0 bg-[hsl(var(--color-surface))] p-3 flex items-center justify-between shadow-sm border-b border-[hsl(var(--color-border))]">
                 <button onClick={onClose} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10">
                     <CloseIcon />
@@ -311,7 +303,7 @@ function LessonDetailView({ lesson, onBack, onPlayVideo }: { lesson: PlatformLes
                     <button 
                         key={content.id}
                         onClick={() => onPlayVideo(content)}
-                        className="w-full bg-[hsl(var(--color-surface))] rounded-2xl p-4 flex items-center gap-4 border border-[hsl(var(--color-border))] transition-all hover:shadow-xl hover:border-yellow-400"
+                        className="w-full bg-[hsl(var(--color-surface))] rounded-2xl p-4 flex items-center gap-4 border border-[hsl(var(--color-border))] transition-all hover:shadow-xl hover:border-[hsl(var(--color-primary))]"
                         style={{animation: `fadeIn-up 0.5s ${index * 100}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`}}
                     >
                         <div className="w-16 h-16 flex-shrink-0 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
@@ -365,13 +357,15 @@ function CourseView({ teacher, onSelectLesson, onBack }: { teacher: PlatformTeac
                                 <button 
                                     key={lesson.id}
                                     onClick={() => onSelectLesson(lesson)}
-                                    className="w-full p-4 bg-[hsl(var(--color-surface))] rounded-2xl flex items-center gap-4 text-right transition-all duration-300 border border-[hsl(var(--color-border))] hover:shadow-xl hover:border-yellow-400"
+                                    className="w-full p-4 bg-[hsl(var(--color-surface))] rounded-2xl flex items-center gap-4 text-right transition-all duration-300 border border-[hsl(var(--color-border))] hover:shadow-xl hover:border-[hsl(var(--color-primary))]"
                                 >
-                                    <div className="w-20 h-20 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                                    <div className="w-20 h-20 rounded-lg bg-[hsl(var(--color-background))] flex-shrink-0 flex items-center justify-center font-bold text-2xl text-[hsl(var(--color-text-secondary))]">
+                                        {lesson.title.match(/\d+/)?.[0] || '★'}
+                                    </div>
                                     <div className="flex-grow">
                                         {lesson.isFree && <p className="font-bold text-xs text-green-700 dark:text-green-400 mb-1 bg-green-500/20 px-2 py-0.5 rounded-full inline-block">حصة مجانية</p>}
-                                        <p className="font-bold text-base text-[hsl(var(--color-text-primary))]">{lesson.title}</p>
-                                        <p className="font-semibold text-md text-blue-600 dark:text-blue-400">{lesson.subtitle}</p>
+                                        <p className="font-bold text-lg text-[hsl(var(--color-text-primary))] line-clamp-1">{lesson.title}</p>
+                                        <p className="font-semibold text-md text-blue-600 dark:text-blue-400 line-clamp-2">{lesson.subtitle}</p>
                                         <div className="flex items-center gap-2 text-sm text-[hsl(var(--color-text-secondary))] mt-1">
                                             <ClockIcon />
                                             <span>{lesson.availability}</span>
@@ -583,15 +577,16 @@ function SubscriptionView({ user, userPendingRequest, onCreateSubscriptionReques
                             <h2 className="text-xl font-bold mb-3">1. اختر المواد</h2>
                             <div className="flex flex-wrap gap-2">
                                 <button onClick={() => setSelectedSubjects(MOCK_SUBJECTS)} className="px-3 py-1.5 bg-blue-500 text-white rounded-full font-semibold text-sm">اختر الكل</button>
-                                {MOCK_SUBJECTS.map(s => <button key={s} onClick={() => setSelectedSubjects(p => p.includes(s) ? p.filter(i => i !== s) : [...p, s])} className={`px-3 py-1.5 rounded-full font-semibold text-sm border-2 transition-colors ${selectedSubjects.includes(s) ? 'bg-yellow-400 border-yellow-400 text-black' : 'border-[hsl(var(--color-border))] bg-transparent'}`}>{s}</button>)}
-                            </div>
+                                {MOCK_SUBJECTS.map(s => <button key={s} onClick={() => setSelectedSubjects(p => p.includes(s) ? p.filter(i => i !== s) : [...p, s])} className={`px-3 py-1.5 rounded-full font-semibold text-sm border-2 transition-colors ${selectedSubjects.includes(s) ? 'bg-[hsl(var(--color-primary))] border-[hsl(var(--color-primary))] text-white' : 'border-[hsl(var(--color-border))] bg-transparent'}`}>{s}</button>
+                            ))}
+                        </div>
                         </div>
                         <div>
                             <h2 className="text-xl font-bold mb-3">2. اختر المدة</h2>
                             <div className="flex bg-[hsl(var(--color-background))] p-1 rounded-xl gap-1">
-                                <button onClick={() => setDuration(1)} className={`w-full py-2 font-bold rounded-lg ${duration === 1 ? 'bg-yellow-400 text-black' : ''}`}>شهر</button>
-                                <button onClick={() => setDuration(3)} className={`w-full py-2 font-bold rounded-lg ${duration === 3 ? 'bg-yellow-400 text-black' : ''}`}>3 شهور (خصم 10%)</button>
-                                <button onClick={() => setDuration(6)} className={`w-full py-2 font-bold rounded-lg ${duration === 6 ? 'bg-yellow-400 text-black' : ''}`}>ترم كامل (خصم 20%)</button>
+                                <button onClick={() => setDuration(1)} className={`w-full py-2 font-bold rounded-lg ${duration === 1 ? 'bg-[hsl(var(--color-primary))] text-white shadow-sm' : ''}`}>شهر</button>
+                                <button onClick={() => setDuration(3)} className={`w-full py-2 font-bold rounded-lg ${duration === 3 ? 'bg-[hsl(var(--color-primary))] text-white shadow-sm' : ''}`}>3 شهور (خصم 10%)</button>
+                                <button onClick={() => setDuration(6)} className={`w-full py-2 font-bold rounded-lg ${duration === 6 ? 'bg-[hsl(var(--color-primary))] text-white shadow-sm' : ''}`}>ترم كامل (خصم 20%)</button>
                             </div>
                         </div>
                         <div className="bg-[hsl(var(--color-background))] p-4 rounded-xl text-center">

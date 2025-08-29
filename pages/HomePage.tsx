@@ -76,21 +76,22 @@ const LessonDetailsModal: React.FC<{
 
 const DailyScheduleBar: React.FC<{ lessons: Lesson[], onLessonClick: (lesson: Lesson) => void }> = ({ lessons, onLessonClick }) => (
     <div className="flex space-x-4 space-x-reverse overflow-x-auto pb-4 -mx-4 px-4">
-        {lessons.length > 0 ? lessons.map((lesson, index) => {
+        {lessons.length > 0 ? lessons.map((lesson) => {
              const style = getSubjectStyle(lesson.subject);
             return (
                 <button 
                     key={lesson.id} 
                     onClick={() => onLessonClick(lesson)} 
-                    className={`lesson-card flex-shrink-0 w-56 p-4 rounded-xl shadow-md transition-all hover:shadow-lg hover:-translate-y-1 text-right ${style.bgColor} lesson-card-cocktail lesson-card-ocean`}
-                    style={{ '--card-index': index } as React.CSSProperties}
+                    className="lesson-card flex-shrink-0 w-64 p-4 rounded-xl text-right"
                     data-subject={lesson.subject}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-start gap-3">
                         <span className="lesson-card-icon text-2xl">{style.icon}</span>
-                        <h4 className="lesson-card-subject font-bold text-[hsl(var(--color-text-primary))] mt-2">{lesson.subject}</h4>
+                        <div>
+                           <h4 className="lesson-card-subject font-bold text-lg">{lesson.subject}</h4>
+                           <p className="lesson-card-details text-sm">{lesson.time}</p>
+                        </div>
                     </div>
-                    <p className="lesson-card-details text-sm text-[hsl(var(--color-text-secondary))]">{lesson.time}</p>
                 </button>
             )
         }) : <p className="text-center text-[hsl(var(--color-text-secondary))] w-full">لا توجد حصص اليوم. استمتع بيومك!</p>}
@@ -118,27 +119,27 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], onLessonClick: (lesson
                         <div className="p-4 border-b-2 border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
                             <h3 className="text-2xl font-bold text-center text-[hsl(var(--color-primary))]">{day}</h3>
                         </div>
-                        <div className="p-2 md:p-4 space-y-3 flex-grow overflow-y-auto">
+                        <div className="p-2 md:p-3 space-y-2 flex-grow overflow-y-auto">
                             {dayLessons.map((lesson, lessonIndex) => {
-                                const style = getSubjectStyle(lesson.subject);
                                 const isBooked = bookedLessonIds.includes(lesson.id);
                                 return (
                                     <button
                                         key={lesson.id}
                                         onClick={() => onLessonClick(lesson)}
-                                        className={`lesson-card w-full text-right p-3 rounded-xl transition-all duration-300 border-2 hover:shadow-lg hover:border-[hsl(var(--color-primary))] lesson-card-cocktail lesson-card-ocean
-                                            ${isBooked ? 'bg-yellow-400/10 border-yellow-400' : 'bg-[hsl(var(--color-background))] border-transparent'}`}
+                                        className="lesson-card w-full text-right p-3 rounded-xl"
                                         style={{ 
                                             animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`,
-                                            '--card-index': dayIndex * 5 + lessonIndex
-                                        } as React.CSSProperties}
+                                        }}
                                         data-subject={lesson.subject}
                                     >
-                                        <div className="flex items-center gap-3 mb-2.5">
-                                            <span className="lesson-card-icon text-3xl p-2 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
-                                            <h4 className="lesson-card-subject text-lg font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <span className="lesson-card-icon text-2xl p-2">{getSubjectStyle(lesson.subject).icon}</span>
+                                            <div>
+                                              <h4 className="lesson-card-subject text-lg font-bold truncate">{lesson.subject}</h4>
+                                              {isBooked && <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">تم الحجز</span>}
+                                            </div>
                                         </div>
-                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-[hsl(var(--color-text-secondary))] items-center">
+                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm items-center pr-1">
                                             <TeacherIcon />
                                             <span className="truncate">{lesson.teacher}</span>
                                             

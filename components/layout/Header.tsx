@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ user, title, onMenuClick, notifications
     );
 
     return (
-        <header className="absolute top-0 right-0 left-0 z-40 h-20 transition-all duration-300">
+        <header className="absolute top-0 right-0 left-0 z-30 h-20 transition-all duration-300">
             <div className="container mx-auto px-4 sm:px-6 h-full flex items-center">
                 <div className="w-full flex items-center justify-between bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-2 border border-[hsl(var(--color-border))]">
                     <button

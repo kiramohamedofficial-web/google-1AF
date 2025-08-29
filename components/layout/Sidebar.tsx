@@ -23,15 +23,15 @@ interface SidebarProps {
 const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean; extraClassName?: string; }> = ({ icon, label, onClick, isActive, extraClassName = '' }) => (
     <button 
         onClick={onClick} 
-        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 relative ${
+        className={`w-full flex items-center gap-4 px-4 py-2 text-md rounded-lg transition-all duration-200 relative ${
             isActive 
                 ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' 
                 : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[hsl(var(--color-text-primary))]'
         } ${extraClassName}`}
     >
         {icon}
-        <span className="font-medium">{label}</span>
-        {isActive && <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-1 bg-[hsl(var(--color-primary))] rounded-r-full"></div>}
+        <span className="font-semibold">{label}</span>
+        {isActive && <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-7 w-1.5 bg-[hsl(var(--color-primary))] rounded-r-full"></div>}
     </button>
 );
 
@@ -41,9 +41,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
         onClose();
     };
 
-    // --- Reordered Links for Better UX ---
-
-    // Core, high-frequency actions
     const coreLinks = [
         { page: 'home', label: 'الرئيسية', icon: <HomeIcon /> },
         { page: 'smart-schedule', label: 'الجدول الذكي', icon: <SmartScheduleIcon /> },
@@ -52,7 +49,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
         { page: 'ai-exam', label: 'الاختبارات الذكية', icon: <AcademicCapIcon /> },
     ];
     
-    // Content and community sections
     const contentLinks = [
         { page: 'educational-platform', label: 'المنصة التعليمية', icon: <BookOpenIcon /> },
         { page: 'news-board', label: 'لوحة الأخبار', icon: <NewspaperIcon /> },
@@ -62,7 +58,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
         { page: 'gallery', label: 'معرض الصور', icon: <PhotoIcon /> },
     ];
 
-    // Personal, settings, and help sections
     const helpLinks = [
         { page: 'instructions', label: 'تعليمات الاستخدام', icon: <InstructionsIcon /> },
         { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
@@ -70,7 +65,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
     const studentLinks = [...coreLinks, ...contentLinks, ...helpLinks];
     
-    // For admin, add dashboard after core features for high visibility.
     const adminLinks = [
         ...coreLinks,
         { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> },
@@ -83,40 +77,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
     return (
         <>
-            <div className={`fixed lg:static top-0 right-0 h-full w-64 flex-shrink-0 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:transform-none rounded-l-2xl`}>
+            <div className={`fixed lg:static top-0 right-0 h-full w-72 flex-shrink-0 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:transform-none rounded-l-2xl`}>
                 <div className="flex flex-col h-full">
-                    {/* Logo Header */}
-                    <div className="p-4 border-b border-[hsl(var(--color-border))] flex flex-col items-center h-16 justify-center">
-                         <div className="flex items-center gap-2 text-xl font-bold text-[hsl(var(--color-primary))]">
-                            <BookOpenIcon />
-                            <span className="font-extrabold">سنتر جوجل</span>
+                    <div className="p-4 flex items-center gap-4 border-b border-[hsl(var(--color-border))]">
+                        <img src={user.profile_picture_url || `https://i.pravatar.cc/150?u=${user.id}`} alt="User" className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(var(--color-primary))]"/>
+                        <div className="flex-grow overflow-hidden">
+                            <p className="font-bold text-lg text-[hsl(var(--color-text-primary))] truncate">{user.name}</p>
+                             {user.role === 'student' ? (
+                                <p className="text-sm text-[hsl(var(--color-text-secondary))]">{user.grade}</p>
+                            ) : (
+                                <p className="text-sm text-[hsl(var(--color-primary))] font-semibold">⚙️ مدير النظام</p>
+                            )}
                         </div>
-                    </div>
-
-                    {/* User Profile Section */}
-                    <div className="p-4 flex flex-col items-center text-center border-b border-[hsl(var(--color-border))] bg-gradient-to-b from-black/5 to-transparent dark:from-white/5">
-                        <p className="font-bold text-xl text-[hsl(var(--color-text-primary))] truncate w-full mb-1">
-                            {user.name}
-                        </p>
-                        {user.role === 'student' ? (
-                           <p className="text-sm text-[hsl(var(--color-text-secondary))]">{user.grade}</p>
-                        ) : (
-                           <p className="text-sm text-[hsl(var(--color-primary))] font-semibold">⚙️ مدير النظام</p>
-                        )}
-                        <button
+                         <button
                             onClick={() => handleNavigation('profile')}
-                            className={`w-auto mx-auto mt-3 flex items-center justify-center gap-2 px-4 py-1.5 text-xs rounded-full transition-all duration-200  ${
-                                currentPage === 'profile'
-                                ? 'bg-[hsl(var(--color-primary))] text-white shadow-md'
-                                : 'bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5 border border-transparent hover:border-[hsl(var(--color-primary))]'
-                            }`}
+                            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                            aria-label="View Profile"
                         >
-                            <UserCircleIcon className="w-4 h-4" />
-                            <span>عرض الملف الشخصي</span>
+                           <UserCircleIcon className={`w-6 h-6 ${currentPage === 'profile' ? 'text-[hsl(var(--color-primary))]' : 'text-[hsl(var(--color-text-secondary))]'}`} />
                         </button>
                     </div>
 
-                    <nav className="flex-grow p-3 space-y-1.5 overflow-y-auto">
+                    <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
                         {links.map(link => (
                             <NavLink 
                                 key={link.page} 
@@ -128,14 +110,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                             />
                         ))}
                     </nav>
-                    <div className="p-3 border-t border-[hsl(var(--color-border))]">
-                        <div className="bg-[hsl(var(--color-background))] p-2 rounded-xl">
+
+                    <div className="p-4 border-t border-[hsl(var(--color-border))] space-y-4">
+                        <div>
                             <p className="text-xs font-bold text-center mb-2 text-[hsl(var(--color-text-secondary))]">اختر الثيم</p>
                             <ThemeSwitcher currentTheme={theme} onChangeTheme={setTheme} />
                         </div>
-                        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-2">
+                        <button onClick={onLogout} className="w-full flex items-center gap-4 px-4 py-2 text-md rounded-lg text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200">
                            <ArrowLeftOnRectangleIcon/>
-                           <span className="font-medium">تسجيل الخروج</span>
+                           <span className="font-semibold">تسجيل الخروج</span>
                         </button>
                     </div>
                 </div>

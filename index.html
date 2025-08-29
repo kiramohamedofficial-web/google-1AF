@@ -359,271 +359,98 @@
         pointer-events: none;
       }
 
-
-      /* Theme-specific Lesson Card Styles */
-
-      /* Cocktail Theme - Multi-color cards */
-      html.cocktail .lesson-card-cocktail {
-        --card-hue: calc(var(--card-index, 0) * 40);
-        background: linear-gradient(135deg, hsl(var(--card-hue), 80%, 75%), hsl(calc(var(--card-hue) + 30), 85%, 80%));
-        border: 1px solid hsla(var(--card-hue), 80%, 80%, 0.5);
-        box-shadow: 0 4px 12px hsla(var(--card-hue), 70%, 50%, 0.2);
-        transition: all 0.3s ease;
-      }
-      /* Ensure text inside is readable and consistent */
-      html.cocktail .lesson-card-cocktail,
-      html.cocktail .lesson-card-cocktail h1,
-      html.cocktail .lesson-card-cocktail h2,
-      html.cocktail .lesson-card-cocktail h3,
-      html.cocktail .lesson-card-cocktail h4,
-      html.cocktail .lesson-card-cocktail p,
-      html.cocktail .lesson-card-cocktail span,
-      html.cocktail .lesson-card-cocktail div {
-        color: hsl(var(--card-hue), 95%, 20%) !important;
-      }
-      html.cocktail .lesson-card-cocktail svg {
-        stroke: hsl(var(--card-hue), 95%, 20%) !important;
-        fill: hsl(var(--card-hue), 95%, 20%) !important;
-      }
-      html.cocktail .lesson-card-cocktail .text-\[hsl\(var\(--color-text-secondary\)\)\] {
-          color: hsl(var(--card-hue), 50%, 30%) !important;
-      }
-
-      /* --- Ocean Theme Styles --- */
-      @keyframes ocean-wave-animate {
-        0% { background-position-x: 0; }
-        100% { background-position-x: 1000px; }
-      }
-
-      /* Common Wave Container styles */
-      .lesson-card-ocean,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\] {
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-      }
-      .lesson-card-ocean > *,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\] > * {
-        position: relative;
-        z-index: 2;
-      }
-
-      html.ocean .lesson-card-ocean {
-        background: linear-gradient(to top, hsl(200, 80%, 92%), hsl(210, 80%, 96%));
-      }
-
-      html.ocean .lesson-card-ocean::before,
-      html.ocean .lesson-card-ocean::after,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-repeat: repeat-x;
-        animation: ocean-wave-animate linear infinite;
-        z-index: 1;
-      }
-
-      /* Wave Layer 1 (Back) */
-      html.ocean .lesson-card-ocean::before,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 100' preserveAspectRatio='none'%3e%3cpath fill='hsl(210, 80%25, 90%25)' fill-opacity='0.6' d='M0,60 C250,110 350,10 500,60 C650,110 750,10 1000,60 L1000,100 L0,100 Z'%3e%3c/path%3e%3c/svg%3e");
-        animation-duration: 25s;
-      }
-
-      /* Wave Layer 2 (Front) */
-      html.ocean .lesson-card-ocean::after,
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 100' preserveAspectRatio='none'%3e%3cpath fill='hsl(205, 85%25, 85%25)' fill-opacity='0.7' d='M0,70 C150,20 350,120 500,70 C650,20 850,120 1000,70 L1000,100 L0,100 Z'%3e%3c/path%3e%3c/svg%3e");
-        animation-duration: 18s;
-        animation-direction: reverse;
-      }
-
-      /* Sizing for Lesson Cards */
-      html.ocean .lesson-card-ocean::before {
-        height: 60px;
-        background-size: 1000px 60px;
-      }
-      html.ocean .lesson-card-ocean::after {
-        height: 80px;
-        background-size: 1000px 80px;
-        bottom: -5px;
-      }
-
-      /* Sizing for Header */
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
-        height: 30px;
-        background-size: 1000px 30px;
-      }
-      html.ocean header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
-        height: 40px;
-        background-size: 1000px 40px;
-        bottom: -2px;
-      }
-       /* --- Sunset (merged with Serene) Theme Styles --- */
-      html.sunset .lesson-card {
-        position: relative;
-        overflow: hidden;
+      /* --- UNIFIED LESSON CARD DESIGN SYSTEM --- */
+      .lesson-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        box-shadow: 0 4px 12px hsla(var(--color-text-primary), 0.05) !important;
         border-width: 1px;
-        padding: 20px !important;
         background-image: none !important; /* Reset other theme backgrounds */
       }
-      html.sunset .lesson-card:hover {
+      .lesson-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 8px 16px hsla(var(--color-text-primary), 0.1) !important;
       }
       
-      /* Base styles for Sunset cards */
-      html.sunset .lesson-card, html.sunset .lesson-card[data-subject] {
-        background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
-        border-color: rgba(128, 128, 128, 0.2);
+      /* Base styles for cards */
+      .lesson-card, .lesson-card[data-subject] {
+        background: linear-gradient(135deg, hsl(var(--color-surface)) 0%, hsl(var(--color-background)) 100%);
+        border-color: hsla(var(--color-border));
       }
-      html.sunset .lesson-card .lesson-card-icon {
-        background-color: rgba(128, 128, 128, 0.15);
-        color: #555 !important;
+      .lesson-card .lesson-card-icon {
+        background-color: hsla(var(--color-text-secondary), 0.08);
+        color: hsl(var(--color-text-primary)) !important;
       }
-      html.sunset .lesson-card .lesson-card-subject, html.sunset .lesson-card .lesson-card-subject * { color: #333 !important; }
-      html.sunset .lesson-card .lesson-card-details, html.sunset .lesson-card .lesson-card-details * { color: #666 !important; }
+      .lesson-card .lesson-card-subject, .lesson-card .lesson-card-subject * { color: hsl(var(--color-text-primary)) !important; }
+      .lesson-card .lesson-card-details, .lesson-card .lesson-card-details * { color: hsl(var(--color-text-secondary)) !important; }
 
       /* Chemistry */
-      html.sunset .lesson-card[data-subject*="كيمياء"] {
+      .lesson-card[data-subject*="كيمياء"] {
         background: linear-gradient(135deg, #e8f5e9 0%, #d6ecd0 100%);
         border-color: rgba(76, 175, 80, 0.2);
       }
-      html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-icon { background-color: rgba(76, 175, 80, 0.15); color: #4caf50 !important; }
-      html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="كيمياء"] .lesson-card-subject * { color: #2e7d32 !important; }
+      .light .lesson-card[data-subject*="كيمياء"] .lesson-card-icon, .dark .lesson-card[data-subject*="كيمياء"] .lesson-card-icon { background-color: rgba(76, 175, 80, 0.15); color: #4caf50 !important; }
+      .light .lesson-card[data-subject*="كيمياء"] .lesson-card-subject, .light .lesson-card[data-subject*="كيمياء"] .lesson-card-subject * { color: #2e7d32 !important; }
+      .dark .lesson-card[data-subject*="كيمياء"] { background: linear-gradient(135deg, #1c331d 0%, #152916 100%); border-color: rgba(102, 187, 106, 0.3); }
+      .dark .lesson-card[data-subject*="كيمياء"] .lesson-card-subject, .dark .lesson-card[data-subject*="كيمياء"] .lesson-card-subject * { color: #a5d6a7 !important; }
       
       /* Physics */
-      html.sunset .lesson-card[data-subject*="فيزياء"] {
+      .lesson-card[data-subject*="فيزياء"] {
         background: linear-gradient(135deg, #ede7f6 0%, #e4daf0 100%);
         border-color: rgba(103, 58, 183, 0.2);
       }
-      html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-icon { background-color: rgba(103, 58, 183, 0.15); color: #673ab7 !important; }
-      html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="فيزياء"] .lesson-card-subject * { color: #4527a0 !important; }
-
+      .light .lesson-card[data-subject*="فيزياء"] .lesson-card-icon, .dark .lesson-card[data-subject*="فيزياء"] .lesson-card-icon { background-color: rgba(103, 58, 183, 0.15); color: #673ab7 !important; }
+      .light .lesson-card[data-subject*="فيزياء"] .lesson-card-subject, .light .lesson-card[data-subject*="فيزياء"] .lesson-card-subject * { color: #4527a0 !important; }
+      .dark .lesson-card[data-subject*="فيزياء"] { background: linear-gradient(135deg, #2c213d 0%, #221a30 100%); border-color: rgba(179, 157, 219, 0.3); }
+      .dark .lesson-card[data-subject*="فيزياء"] .lesson-card-subject, .dark .lesson-card[data-subject*="فيزياء"] .lesson-card-subject * { color: #d1c4e9 !important; }
+      
       /* Arabic */
-      html.sunset .lesson-card[data-subject*="عربية"] {
+      .lesson-card[data-subject*="عربية"] {
         background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
         border-color: rgba(229, 57, 53, 0.2);
       }
-      html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-icon { background-color: rgba(229, 57, 53, 0.15); color: #e53935 !important; }
-      html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="عربية"] .lesson-card-subject * { color: #b71c1c !important; }
-
+      .light .lesson-card[data-subject*="عربية"] .lesson-card-icon, .dark .lesson-card[data-subject*="عربية"] .lesson-card-icon { background-color: rgba(229, 57, 53, 0.15); color: #e53935 !important; }
+      .light .lesson-card[data-subject*="عربية"] .lesson-card-subject, .light .lesson-card[data-subject*="عربية"] .lesson-card-subject * { color: #b71c1c !important; }
+      .dark .lesson-card[data-subject*="عربية"] { background: linear-gradient(135deg, #3c1f20 0%, #2f1819 100%); border-color: rgba(239, 154, 154, 0.3); }
+      .dark .lesson-card[data-subject*="عربية"] .lesson-card-subject, .dark .lesson-card[data-subject*="عربية"] .lesson-card-subject * { color: #ffcdd2 !important; }
+      
       /* Math */
-      html.sunset .lesson-card[data-subject*="رياضيات"] {
+      .lesson-card[data-subject*="رياضيات"] {
         background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
         border-color: rgba(33, 150, 243, 0.2);
       }
-      html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-icon { background-color: rgba(33, 150, 243, 0.15); color: #1976d2 !important; }
-      html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="رياضيات"] .lesson-card-subject * { color: #0d47a1 !important; }
+      .light .lesson-card[data-subject*="رياضيات"] .lesson-card-icon, .dark .lesson-card[data-subject*="رياضيات"] .lesson-card-icon { background-color: rgba(33, 150, 243, 0.15); color: #1976d2 !important; }
+      .light .lesson-card[data-subject*="رياضيات"] .lesson-card-subject, .light .lesson-card[data-subject*="رياضيات"] .lesson-card-subject * { color: #0d47a1 !important; }
+      .dark .lesson-card[data-subject*="رياضيات"] { background: linear-gradient(135deg, #1a3040 0%, #142533 100%); border-color: rgba(144, 202, 249, 0.3); }
+      .dark .lesson-card[data-subject*="رياضيات"] .lesson-card-subject, .dark .lesson-card[data-subject*="رياضيات"] .lesson-card-subject * { color: #bbdefb !important; }
 
       /* Biology */
-       html.sunset .lesson-card[data-subject*="أحياء"] {
+      .lesson-card[data-subject*="أحياء"] {
         background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
         border-color: rgba(0, 150, 136, 0.2);
       }
-      html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-icon { background-color: rgba(0, 150, 136, 0.15); color: #00796b !important; }
-      html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-subject, html.sunset .lesson-card[data-subject*="أحياء"] .lesson-card-subject * { color: #004d40 !important; }
+      .light .lesson-card[data-subject*="أحياء"] .lesson-card-icon, .dark .lesson-card[data-subject*="أحياء"] .lesson-card-icon { background-color: rgba(0, 150, 136, 0.15); color: #00796b !important; }
+      .light .lesson-card[data-subject*="أحياء"] .lesson-card-subject, .light .lesson-card[data-subject*="أحياء"] .lesson-card-subject * { color: #004d40 !important; }
+      .dark .lesson-card[data-subject*="أحياء"] { background: linear-gradient(135deg, #17302f 0%, #112524 100%); border-color: rgba(128, 203, 196, 0.3); }
+      .dark .lesson-card[data-subject*="أحياء"] .lesson-card-subject, .dark .lesson-card[data-subject*="أحياء"] .lesson-card-subject * { color: #b2dfdb !important; }
+
+      .dark .lesson-card .lesson-card-details * { color: hsla(var(--color-text-secondary), 0.8) !important; }
 
       /* Icon & text styling */
-      html.sunset .lesson-card-icon {
-        width: 40px; height: 40px; border-radius: 50%;
+      .lesson-card-icon {
+        width: 40px; height: 40px; border-radius: 12px;
         display: inline-flex; align-items: center; justify-content: center;
         font-size: 24px !important;
         flex-shrink: 0;
         margin-left: 10px;
         background-color: transparent !important; /* Reset inline styles */
       }
-      html.sunset .lesson-card-subject {
+      .lesson-card-subject {
         font-weight: 700;
-        font-size: 1.2em;
+        font-size: 1.1em;
       }
-      html.sunset .lesson-card-details {
-        font-size: 0.95em;
-        margin-top: 15px; padding-top: 15px;
-        border-top: 1px dashed rgba(0, 0, 0, 0.1);
-      }
-
-      /* Decorative elements */
-      @keyframes float {
-        0%, 100% { transform: translateY(0) translateX(0); }
-        50% { transform: translateY(-10px) translateX(10px); }
-      }
-      html.sunset .lesson-card::before, html.sunset .lesson-card::after {
-        content: '☀️';
-        position: absolute;
-        opacity: 0.1;
-        z-index: 0;
-        font-size: 80px;
-        color: hsl(var(--color-primary));
-        animation: float 15s ease-in-out infinite;
-      }
-      html.sunset .lesson-card::before { top: -20px; right: -30px; }
-      html.sunset .lesson-card::after { bottom: -15px; left: -25px; font-size: 70px; animation-duration: 12s; animation-direction: reverse; }
-
-      /* Sunset Header Decorations */
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\],
-      html.sunset header .container {
-        position: relative;
-        overflow: hidden;
-      }
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\] > * {
-        position: relative;
-        z-index: 2; /* Ensure header content is above clouds */
-      }
-      
-      /* Common cloud styles for all 4 pseudo-elements */
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before,
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after,
-      html.sunset header .container::before,
-      html.sunset header .container::after {
-        content: '☁️';
-        position: absolute;
-        opacity: 0.3;
-        z-index: 1;
-        color: #ffffff;
-        animation: float 20s ease-in-out infinite;
-        pointer-events: none; /* Make sure they don't block clicks */
-      }
-
-      /* Cloud 1 (original) */
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::before {
-        font-size: 80px;
-        top: -20px;
-        right: -30px;
-        animation-duration: 25s;
-      }
-
-      /* Cloud 2 (original) */
-      html.sunset header .bg-\[hsl\(var\(--color-surface\)\)\]::after {
-        font-size: 70px;
-        bottom: -15px;
-        left: -25px;
-        animation-duration: 20s;
-        animation-direction: reverse;
-      }
-
-      /* Cloud 3 (New) */
-      html.sunset header .container::before {
-        font-size: 50px;
-        top: 5px;
-        left: 30%;
-        animation-duration: 18s;
-        opacity: 0.2;
-      }
-
-      /* Cloud 4 (New) */
-      html.sunset header .container::after {
-        font-size: 65px;
-        bottom: -10px;
-        right: 25%;
-        animation-duration: 22s;
-        animation-direction: reverse;
-        opacity: 0.25;
+      .lesson-card-details {
+        font-size: 0.9em;
+        margin-top: 8px;
       }
 
       /* Toast Notification Animations */

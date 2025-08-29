@@ -52,7 +52,7 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-                {daysOfWeek.map((day, dayIndex) => {
+                {daysOfWeek.map((day) => {
                     const dayLessons = lessonsByDay[day] || [];
                     return (
                         <div key={day} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg border border-[hsl(var(--color-border))] overflow-hidden flex flex-col">
@@ -61,34 +61,31 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
                             </h2>
                             <div className="p-4 space-y-3 flex-grow">
                                 {dayLessons.length > 0 ? (
-                                    dayLessons.map((lesson, lessonIndex) => {
+                                    dayLessons.map((lesson) => {
                                         const style = getSubjectStyle(lesson.subject);
                                         const isMyGrade = lesson.grade === user.grade;
                                         return (
                                             <div 
                                                 key={lesson.id} 
-                                                className={`lesson-card p-4 rounded-xl shadow-sm transition-all duration-300 border-l-4 lesson-card-cocktail lesson-card-ocean ${isMyGrade ? 'border-[hsl(var(--color-primary))]' : 'border-transparent'} ${showMyGradeOnly ? '' : 'bg-[hsl(var(--color-background))]'}`}
-                                                style={{ '--card-index': dayIndex * dayLessons.length + lessonIndex } as React.CSSProperties}
+                                                className="lesson-card p-3 rounded-xl"
                                                 data-subject={lesson.subject}
                                             >
                                                 <div className="flex justify-between items-start gap-4">
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-[hsl(var(--color-text-primary))] flex items-center gap-3">
-                                                            <span className="lesson-card-icon text-3xl">{style.icon}</span>
-                                                            <span className="lesson-card-subject">{lesson.subject}</span>
-                                                        </h3>
-                                                        <div className="lesson-card-details">
-                                                          <p className="text-md text-[hsl(var(--color-text-secondary))] mt-1">{lesson.teacher}</p>
-                                                        </div>
+                                                    <div className="flex items-center gap-3">
+                                                         <span className="lesson-card-icon text-2xl">{style.icon}</span>
+                                                         <div>
+                                                            <h3 className="lesson-card-subject text-lg font-bold">{lesson.subject}</h3>
+                                                            <p className="lesson-card-details text-sm">{lesson.teacher}</p>
+                                                         </div>
                                                     </div>
                                                     <div className="text-left flex-shrink-0">
-                                                        <p className="font-semibold text-lg text-[hsl(var(--color-text-primary))]">{lesson.time}</p>
+                                                        <p className="font-semibold text-md text-[hsl(var(--color-text-primary))]">{lesson.time}</p>
                                                         <p className="text-sm text-[hsl(var(--color-text-secondary))]">{lesson.hall}</p>
                                                     </div>
                                                 </div>
                                                  {!showMyGradeOnly && (
-                                                    <div className="mt-3 pt-2 border-t border-[hsl(var(--color-border))]">
-                                                         <p className={`text-sm font-medium ${isMyGrade ? 'text-[hsl(var(--color-primary))]' : 'text-[hsl(var(--color-text-secondary))]'}`}>{lesson.grade}</p>
+                                                    <div className="mt-2 pt-2 border-t border-[hsl(var(--color-border))]">
+                                                         <p className={`text-xs font-medium ${isMyGrade ? 'text-[hsl(var(--color-primary))] font-bold' : 'text-[hsl(var(--color-text-secondary))]'}`}>{lesson.grade}</p>
                                                     </div>
                                                 )}
                                             </div>
