@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User, PlatformTeacher, Course, CourseUnit, CourseLesson, LessonContent, SubscriptionRequest } from '../types.ts';
-import { uploadFile, getPathFromUrl } from '../services/supabaseService.ts';
+import { User, PlatformTeacher, Course, CourseUnit, CourseLesson, LessonContent, SubscriptionRequest, ToastType } from '../types.ts';
+import { uploadFile, getPathFromUrl, getSupabaseErrorMessage } from '../services/supabaseService.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { MOCK_SUBJECTS } from '../constants.ts';
 
@@ -38,7 +38,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
 
 // Teacher Modal
 const emptyTeacher: Omit<PlatformTeacher, 'id'> = { name: '', subject: '', bio: '', image_url: '' };
-const TeacherFormModal: React.FC<{ teacher: PlatformTeacher | null; onClose: () => void; onSave: (teacher: PlatformTeacher) => void; }> = ({ teacher, onClose, onSave }) => {
+const TeacherFormModal: React.FC<{ teacher: PlatformTeacher | null; onClose: () => void; onSave: (teacher: PlatformTeacher) => void; addToast: (type: ToastType, title: string, message: string) => void; }> = ({ teacher, onClose, onSave, addToast }) => {
     const [formData, setFormData] = useState(emptyTeacher);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -53,19 +53,22 @@ const TeacherFormModal: React.FC<{ teacher: PlatformTeacher | null; onClose: () 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUploading(true);
-        let finalImageUrl = teacher?.image_url || '';
-        if (imageFile) {
-            const path = await uploadFile('platform_teacher_images', imageFile);
-            if (path) finalImageUrl = path;
-            else {
-                alert('فشل رفع الصورة');
-                setIsUploading(false);
-                return;
+        try {
+            let finalImageUrl = teacher?.image_url || '';
+            if (imageFile) {
+                const path = await uploadFile('platform_teacher_images', imageFile);
+                if (path) finalImageUrl = path;
+                else {
+                    throw new Error('File path not returned from upload.');
+                }
             }
+            onSave({ ...formData, id: teacher?.id || `new_${uuidv4()}`, image_url: finalImageUrl });
+            onClose();
+        } catch (error) {
+            addToast('error', 'فشل حفظ المدرس', getSupabaseErrorMessage(error));
+        } finally {
+            setIsUploading(false);
         }
-        onSave({ ...formData, id: teacher?.id || `new_${uuidv4()}`, image_url: finalImageUrl });
-        setIsUploading(false);
-        onClose();
     };
 
     return (
@@ -94,7 +97,7 @@ const TeacherFormModal: React.FC<{ teacher: PlatformTeacher | null; onClose: () 
 
 // Course Modal
 const emptyCourse: Omit<Course, 'id' | 'teacher_name' | 'teacher_image'> = { title: '', description: '', teacher_id: '', grade: '', subject: '', image_url: '', structure: [] };
-const CourseFormModal: React.FC<{ course: Course | null; teachers: PlatformTeacher[]; onClose: () => void; onSave: (course: Course) => void; }> = ({ course, teachers, onClose, onSave }) => {
+const CourseFormModal: React.FC<{ course: Course | null; teachers: PlatformTeacher[]; onClose: () => void; onSave: (course: Course) => void; addToast: (type: ToastType, title: string, message: string) => void; }> = ({ course, teachers, onClose, onSave, addToast }) => {
     const [formData, setFormData] = useState<Omit<Course, 'id' | 'teacher_name' | 'teacher_image'>>(emptyCourse);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -150,24 +153,25 @@ const CourseFormModal: React.FC<{ course: Course | null; teachers: PlatformTeach
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUploading(true);
-        let finalImageUrl = course?.image_url || '';
-        if (imageFile) {
-            const path = await uploadFile('course_images', imageFile);
-            if (path) finalImageUrl = path;
-            else {
-                alert('فشل رفع الصورة');
-                setIsUploading(false);
-                return;
+        try {
+            let finalImageUrl = course?.image_url || '';
+            if (imageFile) {
+                const path = await uploadFile('course_images', imageFile);
+                if (path) finalImageUrl = path;
+                else {
+                    throw new Error('File path not returned from upload.');
+                }
             }
+            const selectedTeacher = teachers.find(t => t.id === formData.teacher_id);
+            const teacherName = selectedTeacher ? selectedTeacher.name : 'غير محدد';
+            
+            onSave({ ...formData, id: course?.id || `new_${uuidv4()}`, image_url: finalImageUrl, teacher_name: teacherName });
+            onClose();
+        } catch (error) {
+            addToast('error', 'فشل حفظ الكورس', getSupabaseErrorMessage(error));
+        } finally {
+            setIsUploading(false);
         }
-        // FIX: Add the required 'teacher_name' property to the course object before saving.
-        // This is a denormalized field that is required by the Course type.
-        const selectedTeacher = teachers.find(t => t.id === formData.teacher_id);
-        const teacherName = selectedTeacher ? selectedTeacher.name : 'غير محدد';
-        
-        onSave({ ...formData, id: course?.id || `new_${uuidv4()}`, image_url: finalImageUrl, teacher_name: teacherName });
-        setIsUploading(false);
-        onClose();
     };
 
     const gradeOptions = ['الصف الأول الإعدادي', 'الصف الثاني الإعدادي', 'الصف الثالث الإعدادي', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'].map(g => ({value: g, label: g}));
@@ -254,10 +258,11 @@ interface PlatformAdminDashboardPageProps {
   subscriptionRequests: SubscriptionRequest[];
   onApproveSubscription: (request: SubscriptionRequest) => void;
   onRejectSubscription: (request: SubscriptionRequest) => void;
+  addToast: (type: ToastType, title: string, message: string) => void;
 }
 
 const PlatformAdminDashboardPage: React.FC<PlatformAdminDashboardPageProps> = (props) => {
-  const { students, onUserUpdate, platformTeachers, onSavePlatformTeacher, onDeletePlatformTeacher, courses, onSaveCourse, onDeleteCourse, subscriptionRequests, onApproveSubscription, onRejectSubscription } = props;
+  const { students, onUserUpdate, platformTeachers, onSavePlatformTeacher, onDeletePlatformTeacher, courses, onSaveCourse, onDeleteCourse, subscriptionRequests, onApproveSubscription, onRejectSubscription, addToast } = props;
   const [activeTab, setActiveTab] = useState('subscriptions');
   
   // State for modals
@@ -420,8 +425,8 @@ const PlatformAdminDashboardPage: React.FC<PlatformAdminDashboardPageProps> = (p
              )}
           </div>
        </div>
-       {teacherModal.isOpen && <TeacherFormModal teacher={teacherModal.teacher} onClose={() => setTeacherModal({isOpen: false, teacher: null})} onSave={onSavePlatformTeacher}/>}
-       {courseModal.isOpen && <CourseFormModal course={courseModal.course} teachers={platformTeachers} onClose={() => setCourseModal({isOpen: false, course: null})} onSave={onSaveCourse} />}
+       {teacherModal.isOpen && <TeacherFormModal teacher={teacherModal.teacher} onClose={() => setTeacherModal({isOpen: false, teacher: null})} onSave={onSavePlatformTeacher} addToast={addToast}/>}
+       {courseModal.isOpen && <CourseFormModal course={courseModal.course} teachers={platformTeachers} onClose={() => setCourseModal({isOpen: false, course: null})} onSave={onSaveCourse} addToast={addToast} />}
     </div>
   );
 };

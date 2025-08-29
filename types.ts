@@ -1,4 +1,5 @@
 
+
 // FIX: Import User from @supabase/gotrue-js to solve export issue.
 import type { User as SupabaseUser } from '@supabase/gotrue-js';
 
@@ -13,7 +14,6 @@ export type Page =
     | 'gallery'
     | 'news-board'
     | 'ai-exam' 
-    | 'admin-stats' 
     | 'admin-dashboard' 
     | 'profile' 
     | 'about'

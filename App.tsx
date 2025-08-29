@@ -78,7 +78,7 @@ const App: React.FC = () => {
     useEffect(() => {
         try {
             const root = window.document.documentElement;
-            root.classList.remove('light', 'dark', 'pink', 'cocktail', 'ocean', 'sunset', 'matrix', 'wave', 'royal', 'paper', 'forest');
+            root.classList.remove('light', 'dark', 'pink', 'cocktail', 'ocean', 'sunset', 'matrix', 'wave');
             root.classList.add(theme);
             localStorage.setItem('theme', theme);
         } catch (error) { console.error("Could not save theme to localStorage", error); }
@@ -673,6 +673,7 @@ const App: React.FC = () => {
                     subscriptionRequests={subscriptionRequests}
                     onApproveSubscription={handleApproveSubscription}
                     onRejectSubscription={handleRejectSubscription}
+                    addToast={addToast}
                  /> : <HomePage user={currentUser} lessons={lessons} posts={posts} trips={trips} onNavigate={setCurrentPage} bookings={bookings} onCreateBooking={handleCreateBooking} onSetReminder={handleSetReminder} />;
             case 'admin-dashboard':
                 return currentUser.role === 'admin' ? <AdminDashboardPage 

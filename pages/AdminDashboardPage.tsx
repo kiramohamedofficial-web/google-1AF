@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Lesson, Trip, Teacher, Post, User, Booking, SiteSettings, ToastType } from '../types.ts';
 import { 
@@ -69,9 +71,9 @@ const LessonFormModal: React.FC<LessonFormModalProps> = ({ isOpen, onClose, onSa
     );
 };
 
-interface TripFormModalProps { isOpen: boolean; onClose: () => void; onSave: (trip: Trip) => void; tripToEdit: Trip | null; }
+interface TripFormModalProps { isOpen: boolean; onClose: () => void; onSave: (trip: Trip) => void; tripToEdit: Trip | null; addToast: (type: ToastType, title: string, message: string) => void;}
 const emptyTrip: Omit<Trip, 'id'> = { title: '', description: '', date: '', time: '', meeting_point: '', capacity: 50, booked_count: 0, cost: 0, image_urls: [] };
-const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, tripToEdit }) => {
+const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, tripToEdit, addToast }) => {
     const [formData, setFormData] = useState(emptyTrip);
     const [selectedImageFiles, setSelectedImageFiles] = useState<FileList | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -88,23 +90,27 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
     const handleSubmit = async (e: React.FormEvent) => { 
         e.preventDefault();
         setIsUploading(true);
-        let finalImageUrls = tripToEdit?.image_urls || [];
+        try {
+            let finalImageUrls = tripToEdit?.image_urls || [];
 
-        if (selectedImageFiles && selectedImageFiles.length > 0) {
-            // FIX: Explicitly type `file` as File to resolve TypeScript error with Array.from(FileList).
-            const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('trip_images', file));
-            const uploadedPaths = await Promise.all(uploadPromises);
-            const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
+            if (selectedImageFiles && selectedImageFiles.length > 0) {
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('trip_images', file));
+                const uploadedPaths = await Promise.all(uploadPromises);
+                const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
-            if (successfulPaths.length < uploadedPaths.length) {
-                alert('فشل رفع بعض الصور. سيتم حفظ الصور التي تم رفعها بنجاح فقط.');
+                if (successfulPaths.length < uploadedPaths.length) {
+                    addToast('warning', 'فشل رفع بعض الصور', 'سيتم حفظ الصور التي تم رفعها بنجاح فقط.');
+                }
+                finalImageUrls = successfulPaths;
             }
-            finalImageUrls = successfulPaths; // Replace all old images with new ones.
+            
+            onSave({ ...formData, image_urls: finalImageUrls, id: tripToEdit?.id || `new_${Date.now()}` });
+            onClose(); 
+        } catch (error) {
+            addToast('error', 'فشل حفظ الرحلة', getSupabaseErrorMessage(error));
+        } finally {
+            setIsUploading(false);
         }
-        
-        onSave({ ...formData, image_urls: finalImageUrls, id: tripToEdit?.id || `new_${Date.now()}` });
-        setIsUploading(false);
-        onClose(); 
     };
 
     if (!isOpen) return null;
@@ -125,7 +131,6 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
                             <label className="block text-sm font-medium mb-1">صور الرحلة (يمكن اختيار أكثر من صورة)</label>
                             <input type="file" multiple accept="image/*" onChange={(e) => setSelectedImageFiles(e.target.files)} className="mt-1 block w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 cursor-pointer"/>
                             <div className="mt-2 flex flex-wrap gap-2">
-                                {/* FIX: Explicitly type `file` as File to resolve TypeScript error with Array.from(FileList). */}
                                 {(selectedImageFiles ? Array.from(selectedImageFiles) : []).map((file: File, index) => (
                                     <img key={index} src={URL.createObjectURL(file)} alt="Preview" className="w-20 h-20 rounded-md object-cover"/>
                                 ))}
@@ -147,9 +152,9 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
     );
 };
 
-interface PostFormModalProps { isOpen: boolean; onClose: () => void; onSave: (post: Post) => void; postToEdit: Post | null; }
+interface PostFormModalProps { isOpen: boolean; onClose: () => void; onSave: (post: Post) => void; postToEdit: Post | null; addToast: (type: ToastType, title: string, message: string) => void; }
 const emptyPost: Omit<Post, 'id' | 'timestamp'> = { title: '', content: '', author: 'إدارة السنتر', status: 'published', image_urls: [], is_pinned: false };
-const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, postToEdit }) => {
+const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, postToEdit, addToast }) => {
     const [formData, setFormData] = useState(emptyPost);
     const [selectedImageFiles, setSelectedImageFiles] = useState<FileList | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -165,22 +170,27 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
     const handleSubmit = async (e: React.FormEvent) => { 
         e.preventDefault(); 
         setIsUploading(true);
-        let finalImageUrls = postToEdit?.image_urls || [];
-        
-        if (selectedImageFiles && selectedImageFiles.length > 0) {
-            const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('post_images', file));
-            const uploadedPaths = await Promise.all(uploadPromises);
-            const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
+        try {
+            let finalImageUrls = postToEdit?.image_urls || [];
+            
+            if (selectedImageFiles && selectedImageFiles.length > 0) {
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('post_images', file));
+                const uploadedPaths = await Promise.all(uploadPromises);
+                const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
-            if (successfulPaths.length < uploadedPaths.length) {
-                alert('فشل رفع بعض الصور. سيتم حفظ الصور التي تم رفعها بنجاح فقط.');
+                if (successfulPaths.length < uploadedPaths.length) {
+                    addToast('warning', 'فشل رفع بعض الصور', 'سيتم حفظ الصور التي تم رفعها بنجاح فقط.');
+                }
+                finalImageUrls = successfulPaths;
             }
-            finalImageUrls = successfulPaths;
-        }
 
-        onSave({ ...formData, image_urls: finalImageUrls, id: postToEdit?.id || `new_${Date.now()}`, timestamp: new Date().toISOString() }); 
-        setIsUploading(false);
-        onClose(); 
+            onSave({ ...formData, image_urls: finalImageUrls, id: postToEdit?.id || `new_${Date.now()}`, timestamp: new Date().toISOString() }); 
+            onClose(); 
+        } catch (error) {
+            addToast('error', 'فشل حفظ المنشور', getSupabaseErrorMessage(error));
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -764,8 +774,8 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <div className="p-6">{renderContent()}</div>
             </div>
             <LessonFormModal isOpen={isLessonModalOpen} onClose={() => setIsLessonModalOpen(false)} onSave={onSaveLesson} lessonToEdit={lessonToEdit} teachers={teachers} />
-            <TripFormModal isOpen={isTripModalOpen} onClose={() => setIsTripModalOpen(false)} onSave={onSaveTrip} tripToEdit={tripToEdit} />
-            <PostFormModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} onSave={handleSavePostModal} postToEdit={postToEdit} />
+            <TripFormModal isOpen={isTripModalOpen} onClose={() => setIsTripModalOpen(false)} onSave={onSaveTrip} tripToEdit={tripToEdit} addToast={addToast} />
+            <PostFormModal isOpen={isPostModalOpen} onClose={() => setIsPostModalOpen(false)} onSave={handleSavePostModal} postToEdit={postToEdit} addToast={addToast} />
             <StudentFormModal isOpen={isStudentModalOpen} onClose={() => setIsStudentModalOpen(false)} onSave={onSaveStudent} studentToEdit={studentToEdit} />
             <TripBookingsModal isOpen={!!viewingBookingsTrip} onClose={() => setViewingBookingsTrip(null)} trip={viewingBookingsTrip} students={students} bookings={bookings}/>
         </div>
