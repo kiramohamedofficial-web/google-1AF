@@ -1,7 +1,13 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+// Explicitly use window.process.env which is polyfilled in index.html
+const supabaseUrl = (window as any).process?.env?.SUPABASE_URL || '';
+const supabaseAnonKey = (window as any).process?.env?.SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase URL or Anon Key is missing. Check the environment configuration in index.html. The application will not work.");
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {

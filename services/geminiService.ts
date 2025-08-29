@@ -9,7 +9,11 @@ let ai: GoogleGenAI | null = null;
 // Lazy initialization of the AI client to prevent startup crash
 const getAi = (): GoogleGenAI => {
     if (!ai) {
-        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const apiKey = (window as any).process?.env?.API_KEY || '';
+        if (!apiKey) {
+            console.error("Gemini API Key is missing. AI features will not work. Check environment configuration in index.html.");
+        }
+        ai = new GoogleGenAI({ apiKey });
     }
     return ai;
 };

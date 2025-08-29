@@ -1,23 +1,13 @@
 
-
-
-
-
-
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Lesson, Trip, Teacher, Post, User, Booking, SiteSettings, ToastType } from '../types.ts';
 import { 
     UsersIcon, CalendarIcon, AcademicCapIcon, TruckIcon, 
     NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon, StarIcon, UploadIcon
 } from '../components/common/Icons.tsx';
-// FIX: Import 'getPathFromUrl' and 'getSupabaseErrorMessage' for robust functionality.
-import * as supabaseService from '../services/supabaseService.ts';
+import { getSupabaseErrorMessage, uploadFile, getPathFromUrl, getSiteSettings, saveSiteSettings as saveSettingsToDb } from '../services/supabaseService.ts';
 import { TeachersManager } from '../components/admin/TeachersManager.tsx';
 
-
-type AdminTab = 'stats' | 'lessons' | 'trips' | 'teachers' | 'posts' | 'students' | 'bookings' | 'site_settings';
 
 // --- Reusable InputField Component ---
 const InputField: React.FC<{ label: string, name: string, value: string | number, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void, type?: string, required?: boolean, placeholder?: string, as?: 'input' | 'textarea' | 'select', options?: {value: string, label: string}[], rows?: number }> = 
@@ -96,7 +86,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
             let finalImageUrls = tripToEdit?.image_urls || [];
 
             if (selectedImageFiles && selectedImageFiles.length > 0) {
-                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => supabaseService.uploadFile('trip_images', file));
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('trip_images', file));
                 const uploadedPaths = await Promise.all(uploadPromises);
                 const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
@@ -109,7 +99,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
             onSave({ ...formData, image_urls: finalImageUrls, id: tripToEdit?.id || `new_${Date.now()}` });
             onClose(); 
         } catch (error) {
-            addToast('error', 'فشل حفظ الرحلة', supabaseService.getSupabaseErrorMessage(error));
+            addToast('error', 'فشل حفظ الرحلة', getSupabaseErrorMessage(error));
         } finally {
             setIsUploading(false);
         }
@@ -176,7 +166,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
             let finalImageUrls = postToEdit?.image_urls || [];
             
             if (selectedImageFiles && selectedImageFiles.length > 0) {
-                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => supabaseService.uploadFile('post_images', file));
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('post_images', file));
                 const uploadedPaths = await Promise.all(uploadPromises);
                 const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
@@ -189,7 +179,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
             onSave({ ...formData, image_urls: finalImageUrls, id: postToEdit?.id || `new_${Date.now()}`, timestamp: new Date().toISOString() }); 
             onClose(); 
         } catch (error) {
-            addToast('error', 'فشل حفظ المنشور', supabaseService.getSupabaseErrorMessage(error));
+            addToast('error', 'فشل حفظ المنشور', getSupabaseErrorMessage(error));
         } finally {
             setIsUploading(false);
         }
@@ -350,7 +340,7 @@ function SiteSettingsTab() {
     useEffect(() => {
         const fetchSettings = async () => {
             setLoading(true);
-            const data = await supabaseService.getSiteSettings();
+            const data = await getSiteSettings();
             if (data) {
                 setSettings(data);
             }
@@ -386,10 +376,10 @@ function SiteSettingsTab() {
             social_links: settings.social_links
         };
 
-        let faviconPath = supabaseService.getPathFromUrl(settings.favicon_url);
+        let faviconPath = getPathFromUrl(settings.favicon_url);
 
         if (faviconFile) {
-            const path = await supabaseService.uploadFile('site_assets', faviconFile);
+            const path = await uploadFile('site_assets', faviconFile);
             if (path) {
                 faviconPath = path;
             } else {
@@ -400,7 +390,7 @@ function SiteSettingsTab() {
         
         settingsToSave.favicon_url = faviconPath;
 
-        const savedSettings = await supabaseService.saveSiteSettings(settingsToSave);
+        const savedSettings = await saveSettingsToDb(settingsToSave);
         if (savedSettings) {
             setSettings(savedSettings);
             alert('تم حفظ الإعدادات بنجاح!');
@@ -513,6 +503,8 @@ interface AdminDashboardPageProps {
     students: User[]; onSaveStudent: (student: User) => void; onDeleteStudent: (id: string) => void;
     addToast: (type: ToastType, title: string, message: string) => void;
 }
+
+type AdminTab = 'stats' | 'lessons' | 'trips' | 'teachers' | 'posts' | 'students' | 'bookings' | 'site_settings';
 
 const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ 
     teachers, onSaveTeacher, onDeleteTeacher, 
