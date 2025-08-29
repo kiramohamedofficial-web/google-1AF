@@ -3,8 +3,8 @@
 
 
 
-// FIX: Import User from @supabase/gotrue-js to solve export issue.
-import type { User as SupabaseUser } from '@supabase/gotrue-js';
+
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'sunset' | 'matrix' | 'wave';
 

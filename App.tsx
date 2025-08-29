@@ -4,9 +4,10 @@
 
 
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
-// FIX: Import Session from @supabase/gotrue-js to solve export issue.
-import type { Session } from '@supabase/gotrue-js';
+import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Trip, Post, Booking, AppNotification, ToastNotification, ToastType, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from './types.ts';
 import * as supabaseService from './services/supabaseService.ts';
 import { supabase } from './services/supabaseClient.ts';

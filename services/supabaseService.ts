@@ -1,9 +1,7 @@
 import { supabase, getPublicUrl } from './supabaseClient.ts';
-// FIX: Changed import from 'Notification' to 'AppNotification' to match exported type.
 import { User, Lesson, Trip, Post, Teacher, Booking, AppNotification, Page, SiteSettings, PlatformTeacher, Course, SubscriptionRequest } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
-// FIX: Import AuthError from @supabase/gotrue-js to solve export issue.
-import { AuthError } from '@supabase/gotrue-js';
+import { AuthError } from '@supabase/supabase-js';
 
 // --- NEW Error Handling Helper ---
 export const getSupabaseErrorMessage = (error: unknown): string => {
