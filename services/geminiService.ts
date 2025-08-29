@@ -3,7 +3,17 @@ import { GoogleGenAI, Type, GenerateContentResponse, Content } from "@google/gen
 import { Question, ExamResult, SubjectScore, PerformanceBreakdown, AnswerReview, ScheduleItem, Lesson, User } from '../types.ts';
 
 const MODEL_NAME_GEMINI = 'gemini-2.5-flash';
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+let ai: GoogleGenAI | null = null;
+
+// Lazy initialization of the AI client to prevent startup crash
+const getAi = (): GoogleGenAI => {
+    if (!ai) {
+        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return ai;
+};
+
 
 interface Answer {
     questionId: string;
@@ -22,7 +32,7 @@ const NEO_SYSTEM_PROMPT = `You are Neo 🤖, the friendly and knowledgeable AI a
 - IMPORTANT: All your responses must be in ARABIC.`;
 
 export const getNeoChatResponseStream = async (history: Content[]) => {
-    const responseStream = await ai.models.generateContentStream({
+    const responseStream = await getAi().models.generateContentStream({
         model: MODEL_NAME_GEMINI,
         contents: history,
         config: {
@@ -200,7 +210,7 @@ export const generateExamQuestions = async (
     const user_prompt = `Please generate exactly ${questionCount} questions for the grade "${gradeLevel}" covering the following subjects: ${subjects.join(', ')}. The exam system is "${system}". Ensure the questions meet all the instructions provided in the system prompt.`;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAi().models.generateContent({
             model: MODEL_NAME_GEMINI,
             contents: user_prompt,
             config: {
@@ -314,7 +324,7 @@ export const gradeExamAndGetFeedbackAI = async (
     };
 
     try {
-        const result = await ai.models.generateContent({
+        const result = await getAi().models.generateContent({
             model: MODEL_NAME_GEMINI,
             contents: user_prompt,
             config: {
@@ -493,7 +503,7 @@ export const generateSmartSchedule = async (
     `;
     
     try {
-        const response = await ai.models.generateContent({
+        const response = await getAi().models.generateContent({
             model: MODEL_NAME_GEMINI,
             contents: user_prompt,
             config: {
