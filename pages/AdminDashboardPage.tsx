@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Lesson, Trip, Teacher, Post, User, Booking, SiteSettings, ToastType } from '../types.ts';
 import { 
@@ -9,7 +11,6 @@ import {
     NewspaperIcon, PencilIcon, TrashIcon, PlusIcon, TicketIcon, StarIcon, UploadIcon
 } from '../components/common/Icons.tsx';
 // FIX: Import 'getPathFromUrl' and 'getSupabaseErrorMessage' for robust functionality.
-import { uploadFile, getPathFromUrl, getSupabaseErrorMessage } from '../services/supabaseService.ts';
 import { getPublicUrl } from '../services/supabaseClient.ts';
 import * as supabaseService from '../services/supabaseService.ts';
 import { TeachersManager } from '../components/admin/TeachersManager.tsx';
@@ -94,7 +95,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
             let finalImageUrls = tripToEdit?.image_urls || [];
 
             if (selectedImageFiles && selectedImageFiles.length > 0) {
-                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('trip_images', file));
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => supabaseService.uploadFile('trip_images', file));
                 const uploadedPaths = await Promise.all(uploadPromises);
                 const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
@@ -107,7 +108,7 @@ const TripFormModal: React.FC<TripFormModalProps> = ({ isOpen, onClose, onSave, 
             onSave({ ...formData, image_urls: finalImageUrls, id: tripToEdit?.id || `new_${Date.now()}` });
             onClose(); 
         } catch (error) {
-            addToast('error', 'فشل حفظ الرحلة', getSupabaseErrorMessage(error));
+            addToast('error', 'فشل حفظ الرحلة', supabaseService.getSupabaseErrorMessage(error));
         } finally {
             setIsUploading(false);
         }
@@ -174,7 +175,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
             let finalImageUrls = postToEdit?.image_urls || [];
             
             if (selectedImageFiles && selectedImageFiles.length > 0) {
-                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => uploadFile('post_images', file));
+                const uploadPromises = Array.from(selectedImageFiles).map((file: File) => supabaseService.uploadFile('post_images', file));
                 const uploadedPaths = await Promise.all(uploadPromises);
                 const successfulPaths = uploadedPaths.filter((path): path is string => path !== null);
 
@@ -187,7 +188,7 @@ const PostFormModal: React.FC<PostFormModalProps> = ({ isOpen, onClose, onSave, 
             onSave({ ...formData, image_urls: finalImageUrls, id: postToEdit?.id || `new_${Date.now()}`, timestamp: new Date().toISOString() }); 
             onClose(); 
         } catch (error) {
-            addToast('error', 'فشل حفظ المنشور', getSupabaseErrorMessage(error));
+            addToast('error', 'فشل حفظ المنشور', supabaseService.getSupabaseErrorMessage(error));
         } finally {
             setIsUploading(false);
         }
@@ -384,10 +385,10 @@ function SiteSettingsTab() {
             social_links: settings.social_links
         };
 
-        let faviconPath = getPathFromUrl(settings.favicon_url);
+        let faviconPath = supabaseService.getPathFromUrl(settings.favicon_url);
 
         if (faviconFile) {
-            const path = await uploadFile('site_assets', faviconFile);
+            const path = await supabaseService.uploadFile('site_assets', faviconFile);
             if (path) {
                 faviconPath = path;
             } else {
