@@ -4,13 +4,6 @@ import Footer from '../components/layout/Footer.tsx';
 import { Page, SiteSettings } from '../types.ts';
 
 
-interface LoginPageProps {
-    onLogin: (credentials: { email: string; password: string; }) => Promise<string | null>;
-    onSignup: (details: any) => void;
-    onNavigate: (page: Page) => void;
-    siteSettings: SiteSettings | null;
-}
-
 // --- Icon Components ---
 const EmailIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>;
 const LockIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>;
@@ -25,7 +18,7 @@ const GuardianIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-
 const StudentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14v7m-4-4l-4 2" /></svg>;
 const AdminIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066 2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 
-// --- Input Field Component ---
+// --- Input Field Component (Moved to top level) ---
 const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'select', icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, children?: React.ReactNode, required?: boolean }> = 
 ({ label, type = 'text', as = 'input', icon, value, onChange, children, required = true }) => {
     const commonClasses = "peer block w-full rounded-lg border border-slate-600 bg-black/20 focus:border-blue-500 focus:ring-blue-500 shadow-sm p-3 pr-10 transition text-white font-bold";
@@ -67,7 +60,7 @@ const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'selec
     );
 };
 
-// --- Particle Network Background ---
+// --- Particle Network Background (Moved to top level) ---
 interface Particle {
     x: number;
     y: number;
@@ -326,6 +319,13 @@ const ParticleNetwork: React.FC = () => {
     return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0" />;
 };
 
+
+interface LoginPageProps {
+    onLogin: (credentials: { email: string; password: string; }) => Promise<string | null>;
+    onSignup: (details: any) => void;
+    onNavigate: (page: Page) => void;
+    siteSettings: SiteSettings | null;
+}
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignup, onNavigate, siteSettings }) => {
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
