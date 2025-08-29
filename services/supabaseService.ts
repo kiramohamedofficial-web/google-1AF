@@ -456,27 +456,20 @@ export const deletePost = (postId: string) => deleteData('posts', postId);
 
 export const togglePinPost = async (postId: string, shouldBePinned: boolean): Promise<void> => {
     try {
-        // To ensure only one post can be pinned at a time, this logic is implemented here.
-        // When pinning a new post, we first unpin any existing pinned post.
-        if (shouldBePinned) {
-            const { error: unpinError } = await supabase
-                .from('posts')
-                .update({ is_pinned: false })
-                .eq('is_pinned', true);
-            
-            if (unpinError) throw unpinError;
+        // Using an RPC is better for this operation as it can be done atomically on the database.
+        // The error message from the user suggests this RPC is expected to exist.
+        const { error } = await supabase.rpc('set_pinned_post', {
+            p_post_id_to_pin: postId,
+            p_should_pin: shouldBePinned
+        });
+
+        if (error) {
+            throw error;
         }
-
-        // Now, set the pin status for the target post.
-        const { error: pinError } = await supabase
-            .from('posts')
-            .update({ is_pinned: shouldBePinned })
-            .eq('id', postId);
-
-        if (pinError) throw pinError;
     } catch (error) {
-        console.error('Error toggling pin status:', error);
-        throw new Error(getSupabaseErrorMessage(error));
+        console.error('Error toggling pin status via RPC:', error);
+        // Re-throw the error to be handled by the calling function.
+        throw error;
     }
 };
 
