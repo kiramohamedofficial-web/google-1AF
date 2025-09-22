@@ -1,5 +1,6 @@
 import React from 'react';
 import { Teacher } from '../types.ts';
+import { generateAvatar } from '../constants.ts';
 
 const PhoneIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -16,7 +17,7 @@ const TeachersPage: React.FC<{ teachers: Teacher[] }> = ({ teachers }) => {
                 {teachers.map(teacher => (
                     <div key={teacher.id} className="bg-[hsl(var(--color-surface))] rounded-xl shadow-lg text-center p-6 transform hover:-translate-y-2 transition-transform duration-300 border border-[hsl(var(--color-border))]">
                         <img 
-                            src={teacher.imageUrl} 
+                            src={teacher.imageUrl || generateAvatar(teacher.name)} 
                             alt={teacher.name} 
                             className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-[hsl(var(--color-primary))] object-cover"
                         />

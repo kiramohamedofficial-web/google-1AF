@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { User, Lesson, Page } from '../types.ts';
-import { getSubjectStyle } from '../constants.ts';
+import { getSubjectStyle, normalizeArabic } from '../constants.ts';
 
 
 const DailyScheduleBar: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => (
@@ -93,7 +93,11 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
-    const userLessons = lessons.filter(l => l.grade === user.grade);
+    const userLessons = useMemo(() => {
+        const normalizedUserGrade = normalizeArabic(user.grade);
+        return lessons.filter(l => normalizeArabic(l.grade) === normalizedUserGrade);
+    }, [lessons, user.grade]);
+    
     const today = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayLessons = userLessons.filter(l => l.day === today);
 

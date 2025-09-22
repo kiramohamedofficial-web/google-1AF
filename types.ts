@@ -60,7 +60,7 @@ export interface Teacher {
     id: string;
     name: string;
     subject: string;
-    imageUrl: string;
+    imageUrl?: string;
     bio: string;
     phone?: string;
     email?: string;

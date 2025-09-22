@@ -24,6 +24,46 @@ export const getSubjectStyle = (subject: string) => {
     return subjectStyles[key];
 };
 
+/**
+ * Normalizes an Arabic string for more reliable comparisons.
+ * - Replaces different forms of alef with a plain alef.
+ * - Replaces 'ى' with 'ي'.
+ * - Trims and collapses whitespace.
+ * @param str The string to normalize.
+ * @returns The normalized string.
+ */
+export const normalizeArabic = (str: string | undefined): string => {
+    if (!str) return '';
+    return str
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/\s+/g, ' ')
+        .trim();
+};
+
+export const generateAvatar = (name: string): string => {
+    if (!name) name = '?';
+    const nameParts = name.split(' ').filter(Boolean);
+    const initials = (
+      nameParts.length > 1 
+      ? nameParts[0][0] + nameParts[nameParts.length - 1][0] 
+      : nameParts.length === 1 
+      ? nameParts[0].slice(0, 2) 
+      : '?'
+    ).toUpperCase();
+    
+    const colors = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#9e9e9e", "#607d8b"];
+    const charCodeSum = initials.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const bgColor = colors[charCodeSum % colors.length];
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+        <rect width="200" height="200" fill="${bgColor}"></rect>
+        <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Cairo, sans-serif" font-size="90" fill="#ffffff">${initials}</text>
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+};
+
+
 export const MOCK_USER_STUDENT: User = {
     id: 'STU-2024-0001',
     role: 'student',
