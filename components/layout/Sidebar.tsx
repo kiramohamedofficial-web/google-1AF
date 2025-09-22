@@ -1,12 +1,12 @@
 import React from 'react';
 import { User, Theme, Page } from '../../types.ts';
-import ThemeSwitcher from '../common/ThemeSwitcher.tsx';
+import ThemeSwitcher from './ThemeSwitcher.tsx';
 import { 
-    HomeIcon, CalendarIcon, UsersIcon, TruckIcon, BookOpenIcon, 
+    HomeIcon, CalendarIcon, UsersIcon, 
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
-    Cog6ToothIcon, ArrowLeftOnRectangleIcon, PhotoIcon, 
-    NewspaperIcon, ClipboardListIcon, SmartScheduleIcon,
-    InstructionsIcon, PrivacyIcon, TermsIcon
+    Cog6ToothIcon, ArrowLeftOnRectangleIcon, 
+    PrivacyIcon, TermsIcon, BookOpenIcon,
+    NewsIcon, PhotoIcon
 } from '../common/Icons.tsx';
 
 interface SidebarProps {
@@ -20,20 +20,27 @@ interface SidebarProps {
     setTheme: (theme: Theme) => void;
 }
 
-const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean; extraClassName?: string; }> = ({ icon, label, onClick, isActive, extraClassName = '' }) => (
+const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean }> = ({ icon, label, onClick, isActive }) => (
     <button 
         onClick={onClick} 
-        className={`w-full flex items-center gap-4 px-4 py-2 text-md rounded-lg transition-all duration-200 relative ${
+        className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 relative ${
             isActive 
                 ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' 
                 : 'text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/5 hover:text-[hsl(var(--color-text-primary))]'
-        } ${extraClassName}`}
+        }`}
     >
         {icon}
-        <span className="font-semibold">{label}</span>
-        {isActive && <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-7 w-1.5 bg-[hsl(var(--color-primary))] rounded-r-full"></div>}
+        <span className="font-medium">{label}</span>
+        {isActive && <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-1 bg-[hsl(var(--color-primary))] rounded-r-full"></div>}
     </button>
 );
+
+const NavSection: React.FC<{title: string, children: React.ReactNode}> = ({title, children}) => (
+    <div>
+        <h3 className="px-3 pt-4 pb-2 text-xs font-bold uppercase text-[hsl(var(--color-text-secondary))] tracking-wider">{title}</h3>
+        <div className="space-y-1.5">{children}</div>
+    </div>
+)
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, onNavigate, onLogout, theme, setTheme }) => {
     const handleNavigation = (page: Page) => {
@@ -41,84 +48,89 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
         onClose();
     };
 
-    const coreLinks = [
+    const mainLinks = [
         { page: 'home', label: 'الرئيسية', icon: <HomeIcon /> },
-        { page: 'smart-schedule', label: 'الجدول الذكي', icon: <SmartScheduleIcon /> },
         { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon /> },
-        { page: 'my-bookings', label: 'حجوزاتي', icon: <ClipboardListIcon /> },
-        { page: 'ai-exam', label: 'الاختبارات الذكية', icon: <AcademicCapIcon /> },
     ];
     
-    const contentLinks = [
-        { page: 'educational-platform', label: 'المنصة التعليمية', icon: <BookOpenIcon /> },
-        { page: 'news-board', label: 'لوحة الأخبار', icon: <NewspaperIcon /> },
+    const learnLinks = [
         { page: 'teachers', label: 'المدرسين', icon: <UsersIcon /> },
-        { page: 'trips', label: 'الرحلات', icon: <TruckIcon /> },
-        { page: 'books', label: 'الكتب', icon: <BookOpenIcon /> },
-        { page: 'gallery', label: 'معرض الصور', icon: <PhotoIcon /> },
     ];
 
-    const helpLinks = [
-        { page: 'instructions', label: 'تعليمات الاستخدام', icon: <InstructionsIcon /> },
-        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
+    const centerLinks = [
+        { page: 'news', label: 'الأخبار', icon: <NewsIcon /> },
     ];
-
-    const studentLinks = [...coreLinks, ...contentLinks, ...helpLinks];
     
-    const adminLinks = [
-        ...coreLinks,
-        { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> },
-        { page: 'platform-admin-dashboard', label: 'تحكم المنصة', icon: <Cog6ToothIcon /> },
-        ...contentLinks,
-        ...helpLinks
+    const helpLinks = [
+        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
+        { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon /> },
+        { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon /> },
     ];
-
-    const links = user.role === 'admin' ? adminLinks : studentLinks;
+    
+    const adminDashboardLink = { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> };
+    const appControlLink = { page: 'app-control', label: 'صور البروفايل', icon: <PhotoIcon /> };
 
     return (
         <>
-            <div className={`fixed lg:static top-0 right-0 h-full w-72 flex-shrink-0 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:transform-none rounded-l-2xl`}>
+            <div className={`fixed top-0 right-0 h-full w-64 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))]`}>
                 <div className="flex flex-col h-full">
-                    <div className="p-4 flex items-center gap-4 border-b border-[hsl(var(--color-border))]">
-                        <img src={user.profile_picture_url || `https://i.pravatar.cc/150?u=${user.id}`} alt="User" className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(var(--color-primary))]"/>
-                        <div className="flex-grow overflow-hidden">
-                            <p className="font-bold text-lg text-[hsl(var(--color-text-primary))] truncate">{user.name}</p>
-                             {user.role === 'student' ? (
-                                <p className="text-sm text-[hsl(var(--color-text-secondary))]">{user.grade}</p>
-                            ) : (
-                                <p className="text-sm text-[hsl(var(--color-primary))] font-semibold">⚙️ مدير النظام</p>
-                            )}
+                    <div className="p-4 border-b border-[hsl(var(--color-border))] flex flex-col items-center h-16 justify-center">
+                         <div className="flex items-center gap-2 text-xl font-bold text-[hsl(var(--color-primary))]">
+                            <BookOpenIcon />
+                            <span className="font-extrabold">{user.center?.name || 'المنصة التعليمية'}</span>
                         </div>
-                         <button
+                    </div>
+
+                    <div className="p-3 flex flex-col items-center text-center border-b border-[hsl(var(--color-border))]">
+                        <img src={user.profilePicture} alt="Profile" className="w-16 h-16 rounded-full border-2 border-[hsl(var(--color-primary))] object-cover shadow-lg mb-2"/>
+                        <p className="font-bold text-lg text-[hsl(var(--color-text-primary))] truncate w-full">
+                            {user.role === 'admin' ? '⚙️ إدارة النظام' : user.name}
+                        </p>
+                        {user.role === 'student' && (
+                           <p className="text-xs text-[hsl(var(--color-text-secondary))] mb-2">{user.grade}</p>
+                        )}
+                        <button
                             onClick={() => handleNavigation('profile')}
-                            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                            aria-label="View Profile"
+                            className={`w-full max-w-[150px] mt-2 flex items-center justify-center gap-2 px-3 py-1.5 text-xs rounded-full transition-all duration-200 ${
+                                currentPage === 'profile'
+                                    ? 'bg-[hsl(var(--color-primary))] text-white shadow-md'
+                                    : 'bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] hover:bg-black/10 dark:hover:bg-white/10 hover:text-[hsl(var(--color-text-primary))] border border-transparent hover:border-[hsl(var(--color-border))]'
+                            }`}
                         >
-                           <UserCircleIcon className={`w-6 h-6 ${currentPage === 'profile' ? 'text-[hsl(var(--color-primary))]' : 'text-[hsl(var(--color-text-secondary))]'}`} />
+                            <UserCircleIcon />
+                            <span className="font-medium">الملف الشخصي</span>
                         </button>
                     </div>
 
-                    <nav className="flex-grow p-4 space-y-2 overflow-y-auto">
-                        {links.map(link => (
-                            <NavLink 
-                                key={link.page} 
-                                icon={link.icon} 
-                                label={link.label} 
-                                onClick={() => handleNavigation(link.page as Page)}
-                                isActive={currentPage === link.page}
-                                extraClassName={link.page === 'educational-platform' ? 'nav-link-neon-border' : ''}
-                            />
-                        ))}
+                    <nav className="flex-grow p-3 overflow-y-auto">
+                        <NavSection title="الرئيسية">
+                             {mainLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                        </NavSection>
+                        <NavSection title="تعلم">
+                             {learnLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                        </NavSection>
+                        <NavSection title="المركز">
+                             {centerLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                        </NavSection>
+                         {user.role === 'admin' && (
+                             <NavSection title="تحكم التطبيق">
+                                <NavLink {...adminDashboardLink} onClick={() => handleNavigation(adminDashboardLink.page as Page)} isActive={currentPage === adminDashboardLink.page} />
+                                <NavLink {...appControlLink} onClick={() => handleNavigation(appControlLink.page as Page)} isActive={currentPage === appControlLink.page} />
+                            </NavSection>
+                        )}
+                        <NavSection title="مساعدة">
+                             {helpLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                        </NavSection>
                     </nav>
 
-                    <div className="p-4 border-t border-[hsl(var(--color-border))] space-y-4">
-                        <div>
+                    <div className="p-3 border-t border-[hsl(var(--color-border))]">
+                        <div className="bg-[hsl(var(--color-background))] p-2 rounded-xl">
                             <p className="text-xs font-bold text-center mb-2 text-[hsl(var(--color-text-secondary))]">اختر الثيم</p>
                             <ThemeSwitcher currentTheme={theme} onChangeTheme={setTheme} />
                         </div>
-                        <button onClick={onLogout} className="w-full flex items-center gap-4 px-4 py-2 text-md rounded-lg text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200">
+                        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-2">
                            <ArrowLeftOnRectangleIcon/>
-                           <span className="font-semibold">تسجيل الخروج</span>
+                           <span className="font-medium">تسجيل الخروج</span>
                         </button>
                     </div>
                 </div>

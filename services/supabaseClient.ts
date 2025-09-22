@@ -1,31 +1,36 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// Explicitly use window.process.env which is polyfilled in index.html
-const supabaseUrl = (window as any).process?.env?.SUPABASE_URL || '';
-const supabaseAnonKey = (window as any).process?.env?.SUPABASE_ANON_KEY || '';
+const supabaseUrl = "https://zetgvwnhiozgjbjpydjr.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpldGd2d25oaW96Z2pianB5ZGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc4NjE0MDcsImV4cCI6MjA3MzQzNzQwN30.U-OLh9vOzCCViOpDwhhmunFv-Gc_gig-3Y-F944UIsk";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Supabase URL or Anon Key is missing. Check the environment configuration in index.html. The application will not work.");
-}
+// A custom fetch implementation to add robustness and improved error logging for network issues.
+const robustFetch: typeof fetch = async (input, init) => {
+  try {
+    // Add robust fetch options to potentially mitigate transient network issues.
+    const options: RequestInit = {
+      ...init,
+      mode: 'cors', // Explicitly set CORS mode.
+      cache: 'no-cache', // Bypass browser cache.
+    };
+    return await fetch(input, options);
+  } catch (error) {
+    // Provide a more informative error message for the common "Failed to fetch" error.
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      console.error(
+        'Supabase fetch failed. This is likely a network error or a CORS configuration issue. Please ensure you are online and that this application\'s domain is added to the CORS origins list in your Supabase project settings (Authentication -> URL Configuration).',
+        { error }
+      );
+    } else {
+       console.error('An unexpected error occurred during the Supabase fetch operation:', error);
+    }
+    // Re-throw the error so the Supabase client's error handling can proceed.
+    throw error;
+  }
+};
+
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        // Supabase client-side auth uses localStorage by default.
-        // No need to specify storage unless you want to customize it.
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-    },
-    // Add this to potentially resolve fetch issues in some environments
     global: {
-        fetch: fetch,
-    },
+        fetch: robustFetch,
+    }
 });
-
-// Helper function to get the public URL for a storage item
-export const getPublicUrl = (bucket: string, path: string | undefined | null) => {
-    if (!path) return '/default-profile.png'; // A default placeholder image
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-    return data.publicUrl;
-}

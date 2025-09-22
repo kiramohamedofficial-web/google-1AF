@@ -1,8 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AnimatedCat from '../components/common/AnimatedCat.tsx';
 import Footer from '../components/layout/Footer.tsx';
-import { Page, SiteSettings } from '../types.ts';
+import { Page, User, Center } from '../types.ts';
+import { supabase } from '../services/supabaseClient.ts';
 
+const generateAvatar = (name: string): string => {
+    const nameParts = name.split(' ').filter(Boolean);
+    const initials = (
+      nameParts.length > 1 
+      ? nameParts[0][0] + nameParts[nameParts.length - 1][0] 
+      : nameParts.length === 1 
+      ? nameParts[0].slice(0, 2) 
+      : '?'
+    ).toUpperCase();
+    
+    const colors = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#9e9e9e", "#607d8b"];
+    const charCodeSum = initials.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const bgColor = colors[charCodeSum % colors.length];
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+        <rect width="200" height="200" fill="${bgColor}"></rect>
+        <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Cairo, sans-serif" font-size="90" fill="#ffffff">${initials}</text>
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`;
+};
+
+
+interface LoginPageProps {
+    onNavigate: (page: Page) => void;
+}
 
 // --- Icon Components ---
 const EmailIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>;
@@ -13,12 +39,10 @@ const SchoolIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 
 const GradeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>;
 const SectionIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>;
 const GuardianIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a6 6 0 00-9-5.197" /></svg>;
+const GenderIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m-4-12h8m-8 4h8m-8 4h8" /></svg>;
+const CenterIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>;
 
-
-const StudentIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14v7m-4-4l-4 2" /></svg>;
-const AdminIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066 2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
-
-// --- Input Field Component (Moved to top level) ---
+// --- Input Field Component ---
 const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'select', icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, children?: React.ReactNode, required?: boolean }> = 
 ({ label, type = 'text', as = 'input', icon, value, onChange, children, required = true }) => {
     const commonClasses = "peer block w-full rounded-lg border border-slate-600 bg-black/20 focus:border-blue-500 focus:ring-blue-500 shadow-sm p-3 pr-10 transition text-white font-bold";
@@ -60,7 +84,7 @@ const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'selec
     );
 };
 
-// --- Particle Network Background (Moved to top level) ---
+// --- Particle Network Background ---
 interface Particle {
     x: number;
     y: number;
@@ -320,60 +344,215 @@ const ParticleNetwork: React.FC = () => {
 };
 
 
-interface LoginPageProps {
-    onLogin: (credentials: { email: string; password: string; }) => Promise<string | null>;
-    onSignup: (details: any) => void;
-    onNavigate: (page: Page) => void;
-    siteSettings: SiteSettings | null;
-}
-
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignup, onNavigate, siteSettings }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
     const [signupStep, setSignupStep] = useState(1);
-    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
 
     // Login fields
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
+    const [resetEmail, setResetEmail] = useState('');
 
     // Signup fields
+    const [centers, setCenters] = useState<Center[]>([]);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [centerId, setCenterId] = useState('');
     const [phone, setPhone] = useState('');
     const [guardianPhone, setGuardianPhone] = useState('');
     const [grade, setGrade] = useState('');
+    const [gender, setGender] = useState<'ذكر' | 'أنثى' | ''>('');
     const [section, setSection] = useState('');
     const [school, setSchool] = useState('');
 
     const showSectionField = grade.includes('الثانوي');
 
-    const handleLoginSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        const errorMessage = await onLogin({ email: loginEmail, password: loginPassword });
-        if (errorMessage) {
-            setError(errorMessage);
+    useEffect(() => {
+        const fetchCenters = async () => {
+            const { data, error } = await supabase.from('centers').select('id, name');
+            if (error) {
+                console.error("Error fetching centers:", error.message, error);
+                setError("لم نتمكن من تحميل قائمة المراكز. يرجى المحاولة مرة أخرى.");
+            } else {
+                setCenters(data || []);
+            }
+        };
+        if (activeTab === 'signup') {
+            fetchCenters();
         }
-    };
-
-    const handleSignupSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        onSignup({
-            email, password, name, phone, guardian_phone: guardianPhone, school, grade, section
-        });
-    };
+    }, [activeTab]);
 
     const handleNextStep = () => {
-        if (password !== confirmPassword) {
-            alert('كلمتا المرور غير متطابقتين.');
+        setError('');
+        if (!name.trim() || !email.trim() || !password.trim()) {
+            setError("يرجى ملء جميع الحقول الأساسية.");
             return;
         }
-        if (name && email && password && phone && guardianPhone) {
-            setSignupStep(2);
-        } else {
-            alert('يرجى ملء جميع البيانات الأساسية بشكل صحيح.');
+        if (password.trim() !== confirmPassword.trim()) {
+            setError("كلمتا المرور غير متطابقتين.");
+            return;
+        }
+        setSignupStep(2);
+    };
+
+
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+        setIsLoading(true);
+
+        if (!loginEmail.trim() || !loginPassword.trim()) {
+            setError("يرجى إدخال البريد الإلكتروني وكلمة المرور.");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: loginEmail.trim(),
+                password: loginPassword.trim(),
+            });
+
+            if (error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+                } else if (error.message.includes('Email not confirmed')) {
+                    setError("يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد الخاص بك.");
+                } else {
+                    setError("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
+                }
+                console.error('Login error:', error.message, error);
+            }
+        } catch (err: any) {
+            console.error("Login exception:", err.message, err);
+            setError("حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const handleSignupSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+
+        if (!centerId || !phone.trim() || !grade || !gender) {
+            setError("يرجى ملء جميع الحقول المطلوبة.");
+            return;
+        }
+        
+        setIsLoading(true);
+
+        try {
+            const { data: { user }, error: authError } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+            });
+
+            if (authError) {
+                console.error("Signup auth error:", authError.message, authError);
+                if (authError.message.includes('already registered')) {
+                    setError("هذا البريد الإلكتروني مسجل بالفعل.");
+                    setSignupStep(1);
+                } else if (authError.message.includes('Password should be at least 6 characters')) {
+                    setError("يجب أن تكون كلمة المرور 6 أحرف على الأقل.");
+                    setSignupStep(1);
+                } else {
+                    setError("حدث خطأ أثناء إنشاء الحساب.");
+                }
+                setIsLoading(false);
+                return;
+            }
+
+            if (user) {
+                let profilePictureUrl = '';
+                const mappedGender = gender === 'ذكر' ? 'male' : 'female';
+                const { data: pictures, error: picError } = await supabase
+                    .from('default_profile_pictures')
+                    .select('image_url')
+                    .eq('gender', mappedGender);
+
+                if (picError || !pictures || pictures.length === 0) {
+                    console.warn('Could not fetch default profile pictures, falling back to generated SVG avatar.', picError);
+                    profilePictureUrl = generateAvatar(name.trim());
+                } else {
+                    const randomIndex = Math.floor(Math.random() * pictures.length);
+                    profilePictureUrl = pictures[randomIndex].image_url;
+                }
+                
+                const newUserProfile = {
+                    id: user.id,
+                    role: 'student',
+                    name: name.trim(),
+                    email: email.trim(),
+                    phone: phone.trim(),
+                    guardianPhone: guardianPhone.trim(),
+                    school: school.trim(),
+                    grade: grade.trim(),
+                    profilePicture: profilePictureUrl,
+                    xpPoints: 0,
+                    gender: gender as User['gender'],
+                    section: (showSectionField && section ? section : 'عام') as User['section'],
+                    center_id: centerId,
+                };
+                
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .upsert(newUserProfile);
+
+                if (profileError) {
+                    console.error("Signup profile upsert error:", profileError.message, profileError);
+                    setError("حدث خطأ أثناء إعداد ملفك الشخصي. يرجى الاتصال بالدعم.");
+                } else {
+                    setActiveTab('login');
+                    setSignupStep(1);
+                    setMessage('✅ تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.');
+                }
+            }
+
+        } catch (err: any) {
+            console.error("Signup exception:", err.message, err);
+            setError("حدث خطأ غير متوقع أثناء إنشاء الحساب.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const handlePasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+        setIsLoading(true);
+
+        if (!resetEmail.trim()) {
+            setError("يرجى إدخال البريد الإلكتروني.");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const { error: resetError } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+                redirectTo: window.location.href,
+            });
+
+            if (resetError) {
+                console.error('Password reset error:', resetError.message);
+            }
+            
+            setMessage("إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة التعيين.");
+
+        } catch(err: any) {
+             console.error("Password reset exception:", err.message, err);
+             setMessage("إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، فقد تم إرسال رابط إعادة التعيين.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -387,73 +566,107 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignup, onNavigate, si
         <div className="min-h-screen flex flex-col bg-[#0a192f] text-slate-200 overflow-hidden">
             <ParticleNetwork />
             <AnimatedCat />
-            <div className="flex-grow flex justify-center p-4 py-12 sm:py-16">
+            <div className="flex-grow flex items-center justify-center p-4">
                 <div className="relative z-10 w-full max-w-md animate-fade-in-up">
                     <div className="text-center mb-8">
                         <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#38bdf8" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">{siteSettings?.site_name || 'سنتر جوجل التعليمي'}</h1>
+                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">المنصة التعليمية</h1>
                         <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     
                     <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/20 border border-slate-700 overflow-hidden">
                         <div className="flex">
-                            <button onClick={() => { setActiveTab('login'); setSignupStep(1); }} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
-                            <button onClick={() => setActiveTab('signup')} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
+                            <button onClick={() => { setActiveTab('login'); setIsForgotPassword(false); setError(''); setMessage(''); }} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
+                            <button onClick={() => { setActiveTab('signup'); setSignupStep(1); setError(''); setMessage(''); }} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
                         </div>
                         
                         <div className="p-8">
                             {activeTab === 'login' ? (
-                                <form onSubmit={handleLoginSubmit} className="space-y-6">
-                                    <InputField label="البريد الإلكتروني" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} icon={<EmailIcon />}/>
-                                    <InputField label="كلمة المرور" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} icon={<LockIcon />}/>
-                                    {error && (
-                                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-bold text-center p-3 rounded-lg">
-                                            {error}
+                                isForgotPassword ? (
+                                    <form onSubmit={handlePasswordReset} className="space-y-6">
+                                        <h3 className="text-xl font-bold text-center">إعادة تعيين كلمة المرور</h3>
+                                        {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
+                                        {message && <p className="text-green-400 text-center font-semibold bg-green-500/10 p-3 rounded-lg">{message}</p>}
+                                        <p className="text-slate-400 text-center text-sm">أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.</p>
+                                        <InputField label="البريد الإلكتروني" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} icon={<EmailIcon />}/>
+                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                            {isLoading ? 'جاري الإرسال...' : 'إرسال رابط إعادة التعيين'}
+                                        </button>
+                                        <button type="button" onClick={() => {setIsForgotPassword(false); setMessage(''); setError('')}} className="w-full text-center text-slate-400 hover:text-white transition-colors pt-2">
+                                            &larr; العودة لتسجيل الدخول
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <form onSubmit={handleLoginSubmit} className="space-y-6">
+                                        {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
+                                        {message && <p className="text-green-400 text-center font-semibold bg-green-500/10 p-3 rounded-lg">{message}</p>}
+                                        <InputField label="البريد الإلكتروني" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} icon={<EmailIcon />}/>
+                                        <InputField label="كلمة المرور" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} icon={<LockIcon />}/>
+                                        <div className="text-right -mt-2">
+                                            <button type="button" onClick={() => {setIsForgotPassword(true); setMessage(''); setError('');}} className="text-sm text-slate-400 hover:text-white transition-colors">
+                                                نسيت كلمة المرور؟
+                                            </button>
                                         </div>
-                                    )}
-                                    <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
-                                        دخول
-                                    </button>
-                                </form>
+                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                            {isLoading ? 'جاري الدخول...' : 'دخول'}
+                                        </button>
+                                    </form>
+                                )
                             ) : (
                                 <form onSubmit={handleSignupSubmit} className="space-y-6">
-                                    {signupStep === 1 && (
+                                    {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
+                                    
+                                    {signupStep === 1 ? (
                                         <>
-                                            <p className="text-center font-bold text-slate-300">الخطوة 1 من 2: البيانات الأساسية</p>
+                                            <h3 className="text-xl font-bold text-center">الخطوة 1: معلومات الحساب</h3>
                                             <InputField label="الاسم الكامل" type="text" value={name} onChange={e => setName(e.target.value)} icon={<UserIcon />}/>
                                             <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
                                             <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
                                             <InputField label="تأكيد كلمة المرور" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} icon={<LockIcon />}/>
-                                            <InputField label="رقم هاتف الطالب" type="tel" value={phone} onChange={e => setPhone(e.target.value)} icon={<PhoneIcon />} />
-                                            <InputField label="رقم هاتف ولي الأمر" type="tel" value={guardianPhone} onChange={e => setGuardianPhone(e.target.value)} icon={<GuardianIcon />} />
-                                            <button type="button" onClick={handleNextStep} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
+                                            <button type="button" onClick={handleNextStep} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg">
                                                 التالي
                                             </button>
                                         </>
-                                    )}
-                                    {signupStep === 2 && (
+                                    ) : (
                                         <>
-                                             <p className="text-center font-bold text-slate-300">الخطوة 2 من 2: البيانات الدراسية</p>
+                                            <h3 className="text-xl font-bold text-center">الخطوة 2: معلومات الطالب</h3>
+                                            <InputField as="select" label="اختر المركز الخاص بك" value={centerId} onChange={e => setCenterId(e.target.value)} icon={<CenterIcon />}>
+                                                {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            </InputField>
+                                            <InputField label="رقم هاتف الطالب" type="tel" value={phone} onChange={e => setPhone(e.target.value)} icon={<PhoneIcon />} />
+                                            <InputField label="رقم هاتف ولي الأمر" type="tel" value={guardianPhone} onChange={e => setGuardianPhone(e.target.value)} icon={<GuardianIcon />} />
                                             <InputField as="select" label="الصف الدراسي" value={grade} onChange={e => setGrade(e.target.value)} icon={<GradeIcon />}>
                                                 {gradeOptions.map(g => <option key={g} value={g}>{g}</option>)}
                                             </InputField>
                                             
                                             {showSectionField && (
-                                                <InputField as="select" label="القسم" value={section} onChange={e => setSection(e.target.value)} icon={<SectionIcon />}>
+                                                <InputField as="select" label="الشعبة" value={section} onChange={e => setSection(e.target.value)} icon={<SectionIcon />}>
                                                     {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
                                                 </InputField>
                                             )}
-
+                                            <div>
+                                                <label className="text-sm font-bold text-slate-300 mb-2 block">الجنس</label>
+                                                <div className="flex gap-4">
+                                                    <label className={`flex-1 p-3 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'ذكر' ? 'bg-blue-600/80 border-blue-500 text-white' : 'bg-black/20 border-slate-600'}`}>
+                                                        <input type="radio" name="gender" value="ذكر" checked={gender === 'ذكر'} onChange={() => setGender('ذكر')} className="sr-only" />
+                                                        ذكر
+                                                    </label>
+                                                    <label className={`flex-1 p-3 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'أنثى' ? 'bg-pink-600/80 border-pink-500 text-white' : 'bg-black/20 border-slate-600'}`}>
+                                                        <input type="radio" name="gender" value="أنثى" checked={gender === 'أنثى'} onChange={() => setGender('أنثى')} className="sr-only" />
+                                                        أنثى
+                                                    </label>
+                                                </div>
+                                            </div>
                                             <InputField label="المدرسة" type="text" value={school} onChange={e => setSchool(e.target.value)} icon={<SchoolIcon />} required={false} />
 
                                             <div className="flex gap-4">
-                                                <button type="button" onClick={() => setSignupStep(1)} className="w-full bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg">
-                                                    رجوع
+                                                <button type="button" onClick={() => setSignupStep(1)} className="w-1/2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg">
+                                                    السابق
                                                 </button>
-                                                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105">
-                                                    إنشاء الحساب
+                                                <button type="submit" disabled={isLoading} className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                                    {isLoading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
                                                 </button>
                                             </div>
                                         </>
@@ -465,7 +678,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onSignup, onNavigate, si
                 </div>
             </div>
             <div className="relative z-10">
-                 <Footer onNavigate={onNavigate} insideApp={false} siteSettings={siteSettings} />
+                 <Footer onNavigate={onNavigate} insideApp={false} />
             </div>
         </div>
     );
