@@ -356,7 +356,7 @@ const App: React.FC = () => {
             case 'privacy-policy':
                 return (
                     <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6">
+                        <main className="flex-grow p-4 md:p-6 pb-12">
                             <PrivacyPolicyPage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
                         <Footer onNavigate={setCurrentPage} insideApp={false} />
@@ -365,7 +365,7 @@ const App: React.FC = () => {
             case 'terms-of-service':
                  return (
                     <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6">
+                        <main className="flex-grow p-4 md:p-6 pb-12">
                             <TermsOfServicePage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
                         <Footer onNavigate={setCurrentPage} insideApp={false} />
@@ -439,8 +439,8 @@ const App: React.FC = () => {
                 theme={theme}
                 setTheme={setTheme}
             />
-            <div className={`flex flex-col h-full lg:pl-64`}>
-                <main className={`flex-grow pt-20 overflow-y-auto`}>
+            <div className={`flex flex-col h-full lg:pr-64`}>
+                <main className={`flex-grow pt-20 pb-12 overflow-y-auto`}>
                     <div className='p-4 md:p-6'>
                         {renderPageContent()}
                     </div>
