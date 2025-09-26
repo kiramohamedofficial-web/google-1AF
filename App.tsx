@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Notification, Post, Center } from './types.ts';
@@ -420,7 +421,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[hsl(var(--color-background))]">
+        <div className="h-full bg-[hsl(var(--color-background))]">
             <Header
                 user={currentUser}
                 onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -438,7 +439,7 @@ const App: React.FC = () => {
                 theme={theme}
                 setTheme={setTheme}
             />
-            <div className={`flex flex-col lg:pr-64`} style={{ minHeight: '100vh' }}>
+            <div className={`flex flex-col h-full lg:pl-64`}>
                 <main className={`flex-grow pt-20`}>
                     <div className='p-4 md:p-6'>
                         {renderPageContent()}
