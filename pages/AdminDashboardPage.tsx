@@ -32,6 +32,33 @@ const to12Hour = (timeStr: string): string => {
     return `${displayHours}:${minutes} ${modifier}`;
 };
 
+// --- Reusable Form Field Components (defined top-level to prevent re-renders) ---
+const inputSharedClass = "w-full p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]";
+
+const FormInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
+    <input {...props} className={`${inputSharedClass} break-words`} />
+);
+
+const FormSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, ...props }) => (
+    <select {...props} className={inputSharedClass}>
+        {children}
+    </select>
+);
+
+const FormTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
+    <textarea {...props} className={`${inputSharedClass} h-32 resize-y break-words`} />
+);
+
+const FormFileInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
+    <input
+        type="file"
+        accept="image/*"
+        className="w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 file:cursor-pointer cursor-pointer"
+        {...props}
+    />
+);
+
+
 // --- Reusable UI Components ---
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
     <div className="bg-[hsl(var(--color-surface))] p-5 rounded-2xl flex items-center gap-4 border-l-4" style={{ borderColor: color }}>
@@ -470,12 +497,6 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
     };
 
     const renderForm = () => {
-        const inputClass = "w-full p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]";
-        const Input = (props: any) => <input {...props} value={formData[props.name] || ''} onChange={handleChange} className={`${inputClass} break-words`} />;
-        const Select = (props: any) => <select {...props} value={formData[props.name] || ''} onChange={handleChange} className={inputClass}><option value="" disabled>{props.children[0]}</option>{props.children.slice(1)}</select>;
-        const Textarea = (props: any) => <textarea {...props} value={formData[props.name] || ''} onChange={handleChange} className={`${inputClass} h-32 resize-y break-words`} />;
-        const FileInput = (props: any) => <input type="file" onChange={handleFileChange} accept="image/*" className="w-full text-sm text-[hsl(var(--color-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[hsl(var(--color-primary))] file:text-white hover:file:opacity-90 file:cursor-pointer cursor-pointer" {...props} />;
-        
         switch (type) {
             case 'teacher': return <>
                 {previewUrl ? (
@@ -485,41 +506,47 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
                         <span className="text-sm text-[hsl(var(--color-text-secondary))] text-center">صورة<br/>المعلم</span>
                     </div>
                 )}
-                <Input name="name" placeholder="الاسم" required />
-                <Input name="subject" placeholder="المادة" required />
-                <Input name="grades" placeholder="الصفوف التي يدرسها" />
-                <Input name="phone" placeholder="الهاتف" />
-                <Input name="email" type="email" placeholder="البريد الإلكتروني" />
-                <Textarea name="bio" placeholder="نبذة تعريفية" />
+                <FormInput name="name" placeholder="الاسم" required value={formData.name || ''} onChange={handleChange} />
+                <FormInput name="subject" placeholder="المادة" required value={formData.subject || ''} onChange={handleChange} />
+                <FormInput name="grades" placeholder="الصفوف التي يدرسها" value={formData.grades || ''} onChange={handleChange} />
+                <FormInput name="phone" placeholder="الهاتف" value={formData.phone || ''} onChange={handleChange} />
+                <FormInput name="email" type="email" placeholder="البريد الإلكتروني" value={formData.email || ''} onChange={handleChange} />
+                <FormTextarea name="bio" placeholder="نبذة تعريفية" value={formData.bio || ''} onChange={handleChange} />
                 <label className="text-sm font-medium text-[hsl(var(--color-text-secondary))]">الصورة الشخصية</label>
-                <FileInput name="imageFile" />
+                <FormFileInput name="imageFile" onChange={handleFileChange} />
             </>;
             case 'lesson': return <>
-                <Input name="subject" placeholder="المادة" required />
-                <Select name="teacher_id" required>{["اختر مدرسًا", ...teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)]}</Select>
-                <Select name="day" required>{["اختر يومًا", ...days.map(d => <option key={d} value={d}>{d}</option>)]}</Select>
+                <FormInput name="subject" placeholder="المادة" required value={formData.subject || ''} onChange={handleChange} />
+                <FormSelect name="teacher_id" required value={formData.teacher_id || ''} onChange={handleChange}>
+                    <option value="" disabled>اختر مدرسًا</option>
+                    {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </FormSelect>
+                <FormSelect name="day" required value={formData.day || ''} onChange={handleChange}>
+                    <option value="" disabled>اختر يومًا</option>
+                    {days.map(d => <option key={d} value={d}>{d}</option>)}
+                </FormSelect>
                 <div className="grid grid-cols-2 gap-2">
-                    <div><label>وقت البدء</label><input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className={inputClass} required/></div>
-                    <div><label>وقت الانتهاء</label><input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className={inputClass} required/></div>
+                    <div><label>وقت البدء</label><FormInput type="time" value={startTime} onChange={e => setStartTime(e.target.value)} required/></div>
+                    <div><label>وقت الانتهاء</label><FormInput type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required/></div>
                 </div>
-                <Input name="hall" placeholder="القاعة" required />
-                <Input name="grade" placeholder="الصف الدراسي" required />
-                <Textarea name="notes" placeholder="ملاحظات" />
+                <FormInput name="hall" placeholder="القاعة" required value={formData.hall || ''} onChange={handleChange} />
+                <FormInput name="grade" placeholder="الصف الدراسي" required value={formData.grade || ''} onChange={handleChange} />
+                <FormTextarea name="notes" placeholder="ملاحظات" value={formData.notes || ''} onChange={handleChange} />
             </>;
             case 'post': return <>
-                <Input name="title" placeholder="العنوان" required />
-                <Textarea name="content" placeholder="المحتوى" required />
+                <FormInput name="title" placeholder="العنوان" required value={formData.title || ''} onChange={handleChange} />
+                <FormTextarea name="content" placeholder="المحتوى" required value={formData.content || ''} onChange={handleChange} />
                 {previewUrl && (
                      <img src={previewUrl} alt="Preview" className="w-full max-h-48 rounded-lg my-2 object-contain bg-[hsl(var(--color-background))]" />
                 )}
                 <label className="text-sm font-medium text-[hsl(var(--color-text-secondary))]">صورة (اختياري)</label>
-                <FileInput name="imageFile" />
+                <FormFileInput name="imageFile" onChange={handleFileChange} />
             </>;
             case 'student': return <>
-                <Input name="name" placeholder="الاسم" required />
-                <Input name="email" type="email" placeholder="البريد الإلكتروني" required />
-                <Input name="phone" placeholder="الهاتف" />
-                <Input name="grade" placeholder="الصف الدراسي" />
+                <FormInput name="name" placeholder="الاسم" required value={formData.name || ''} onChange={handleChange} />
+                <FormInput name="email" type="email" placeholder="البريد الإلكتروني" required value={formData.email || ''} onChange={handleChange} />
+                <FormInput name="phone" placeholder="الهاتف" value={formData.phone || ''} onChange={handleChange} />
+                <FormInput name="grade" placeholder="الصف الدراسي" value={formData.grade || ''} onChange={handleChange} />
             </>;
             default: return null;
         }
