@@ -27,7 +27,9 @@ export const getSubjectStyle = (subject: string) => {
 /**
  * Normalizes an Arabic string for more reliable comparisons.
  * - Replaces different forms of alef with a plain alef.
- * - Replaces 'ى' with 'ي'.
+ * - Replaces 'ى' (Alef Maqsura) with 'ي' (Yeh).
+ * - Replaces 'ة' (Teh Marbuta) with 'ه' (Heh).
+ * - Removes Arabic diacritics (tashkeel).
  * - Trims and collapses whitespace.
  * @param str The string to normalize.
  * @returns The normalized string.
@@ -35,8 +37,10 @@ export const getSubjectStyle = (subject: string) => {
 export const normalizeArabic = (str: string | undefined): string => {
     if (!str) return '';
     return str
-        .replace(/[أإآ]/g, 'ا')
-        .replace(/ى/g, 'ي')
+        .replace(/[أإآ]/g, 'ا') // Normalize Alef
+        .replace(/ى/g, 'ي')     // Normalize Alef Maqsura to Yeh
+        .replace(/ة/g, 'ه')     // Normalize Teh Marbuta to Heh
+        .replace(/[\u064B-\u0652]/g, '') // Remove diacritics
         .replace(/\s+/g, ' ')
         .trim();
 };

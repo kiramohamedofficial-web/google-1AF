@@ -32,10 +32,14 @@ const TimeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-
 const LocationIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
 
 const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
     const todayName = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayIndex = days.indexOf(todayName);
-    const orderedDays = todayIndex !== -1 ? [...days.slice(todayIndex + 1), ...days.slice(0, todayIndex + 1)] : days;
+
+    // Show the next 6 days, starting from tomorrow. Today is already in its own section.
+    const orderedDays = todayIndex !== -1 
+        ? [...days.slice(todayIndex + 1), ...days.slice(0, todayIndex)] 
+        : days;
 
     return (
         <div className="flex space-x-6 space-x-reverse overflow-x-auto pb-4 -mx-6 px-6">

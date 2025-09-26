@@ -203,11 +203,17 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         }
     };
     
-    const handleDelete = async (id: string, table: string) => {
+    const createDeleteHandler = (table: string) => async (id: string) => {
         if (!window.confirm("هل أنت متأكد من رغبتك في الحذف؟ لا يمكن التراجع عن هذا الإجراء.")) return;
+        
         const { error } = await supabase.from(table).delete().eq('id', id);
-        if (error) alert(`Error deleting: ${error.message}`);
-        else onDataChange();
+        
+        if (error) {
+            alert(`خطأ أثناء الحذف: ${error.message}`);
+            console.error(`Error deleting item ${id} from ${table}:`, error);
+        } else {
+            onDataChange();
+        }
     };
 
     // Filtered Data Memos
@@ -282,21 +288,21 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <StatCard title="إجمالي الحصص" value={lessons.length} icon={<CalendarIcon />} color="#10b981" />
                 <StatCard title="إجمالي الإعلانات" value={posts.length} icon={<NewsIcon />} color="#f97316" />
             </div>;
-            case 'students': return <DataTable title="الطلاب" data={filteredStudents} columns={{ name: 'الاسم', email: 'الإيميل', phone: 'الهاتف', grade: 'الصف' }} onEdit={item => handleOpenModal('student', item)} onDelete={id => handleDelete(id, 'users')}>
+            case 'students': return <DataTable title="الطلاب" data={filteredStudents} columns={{ name: 'الاسم', email: 'الإيميل', phone: 'الهاتف', grade: 'الصف' }} onEdit={item => handleOpenModal('student', item)} onDelete={createDeleteHandler('users')}>
                 <SearchControls {...searchProps}>
                     <select value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} className={filterSelectClass}><option value="">كل الصفوف</option>{grades.map(g => <option key={g} value={g}>{g}</option>)}</select>
                 </SearchControls>
             </DataTable>;
-            case 'teachers': return <DataTable title="المدرسون" data={filteredTeachers} columns={{ name: 'الاسم', subject: 'المادة', phone: 'الهاتف' }} onEdit={item => handleOpenModal('teacher', item)} onDelete={id => handleDelete(id, 'teachers')} onAdd={() => handleOpenModal('teacher')}>
+            case 'teachers': return <DataTable title="المدرسون" data={filteredTeachers} columns={{ name: 'الاسم', subject: 'المادة', phone: 'الهاتف' }} onEdit={item => handleOpenModal('teacher', item)} onDelete={createDeleteHandler('teachers')} onAdd={() => handleOpenModal('teacher')}>
                 <SearchControls {...searchProps} />
             </DataTable>;
-            case 'lessons': return <DataTable title="الحصص" data={filteredLessons} columns={{ subject: 'المادة', teacher: 'المدرس', day: 'اليوم', time: 'الوقت', hall: 'القاعة', grade: 'الصف' }} onEdit={item => handleOpenModal('lesson', item)} onDelete={id => handleDelete(id, 'lessons')} onAdd={() => handleOpenModal('lesson')} displayTransform={{ teacher: (item) => item.teachers?.name }}>
+            case 'lessons': return <DataTable title="الحصص" data={filteredLessons} columns={{ subject: 'المادة', teacher: 'المدرس', day: 'اليوم', time: 'الوقت', hall: 'القاعة', grade: 'الصف' }} onEdit={item => handleOpenModal('lesson', item)} onDelete={createDeleteHandler('lessons')} onAdd={() => handleOpenModal('lesson')} displayTransform={{ teacher: (item) => item.teachers?.name }}>
                 <SearchControls {...searchProps}>
                     <select value={dayFilter} onChange={e => setDayFilter(e.target.value)} className={filterSelectClass}><option value="">كل الأيام</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
                     <select value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} className={filterSelectClass}><option value="">كل الصفوف</option>{grades.map(g => <option key={g} value={g}>{g}</option>)}</select>
                 </SearchControls>
             </DataTable>;
-            case 'posts': return <DataTable title="الإعلانات" data={filteredPosts} columns={{ title: 'العنوان', author: 'الكاتب', timestamp: 'التاريخ' }} onEdit={item => handleOpenModal('post', item)} onDelete={id => handleDelete(id, 'posts')} onAdd={() => handleOpenModal('post')} displayTransform={{ timestamp: (item) => new Date(item.timestamp).toLocaleDateString() }}>
+            case 'posts': return <DataTable title="الإعلانات" data={filteredPosts} columns={{ title: 'العنوان', author: 'الكاتب', timestamp: 'التاريخ' }} onEdit={item => handleOpenModal('post', item)} onDelete={createDeleteHandler('posts')} onAdd={() => handleOpenModal('post')} displayTransform={{ timestamp: (item) => new Date(item.timestamp).toLocaleDateString() }}>
                  <SearchControls {...searchProps} />
             </DataTable>;
             case 'notifications': return <NotificationSender students={students} centerId={selectedCenterId} />;
