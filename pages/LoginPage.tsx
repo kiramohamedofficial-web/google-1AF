@@ -561,9 +561,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 <div className="relative z-10 w-full max-w-md animate-fade-in-up">
                     <div className="text-center mb-8">
                         <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#38bdf8" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6-2.292m0 0v14.25" /></svg>
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12">
+                                <defs>
+                                    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style={{stopColor: '#67e8f9', stopOpacity: 1}} />
+                                        <stop offset="100%" style={{stopColor: '#3b82f6', stopOpacity: 1}} />
+                                    </linearGradient>
+                                </defs>
+                                <g stroke="url(#iconGradient)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 2.25L3.75 6.375v6.375c0 6.5 8.25 9 8.25 9s8.25-2.5 8.25-9V6.375L12 2.25z" />
+                                    <path d="M12 7L18 10L12 13L6 10L12 7Z" />
+                                    <path d="M18 10V14" />
+                                </g>
+                            </svg>
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">المنصة التعليمية</h1>
+                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
                         <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     

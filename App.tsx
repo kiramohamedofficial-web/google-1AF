@@ -440,7 +440,7 @@ const App: React.FC = () => {
                 setTheme={setTheme}
             />
             <div className={`flex flex-col h-full lg:pl-64`}>
-                <main className={`flex-grow pt-20`}>
+                <main className={`flex-grow pt-20 overflow-y-auto`}>
                     <div className='p-4 md:p-6'>
                         {renderPageContent()}
                     </div>
