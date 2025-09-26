@@ -7,13 +7,13 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate, insideApp }) => {
-    const baseClass = "w-full text-center p-4 text-sm";
+    const baseClass = "w-full text-center p-2 text-xs";
     const appClass = "text-[hsl(var(--color-text-secondary))]";
     const publicClass = "bg-transparent text-slate-400";
     
     return (
         <footer className={`${baseClass} ${insideApp ? appClass : publicClass}`}>
-            <div className="flex justify-center items-center gap-4 mb-2">
+            <div className="flex justify-center items-center gap-2 mb-1">
                 <button onClick={() => onNavigate('privacy-policy')} className="hover:underline">سياسة الخصوصية</button>
                 <span>|</span>
                 <button onClick={() => onNavigate('terms-of-service')} className="hover:underline">شروط الاستخدام</button>
