@@ -120,31 +120,39 @@ const App: React.FC = () => {
     
         const userProfileQuery = 'id, role, name, email, phone, guardianPhone, school, grade, profilePicture, dob, gender, section, xpPoints, lastScheduleEdit, center_id, center:centers(id, name)';
         
-        const fetchProfileWithRetry = async (userId: string, isNewUser: boolean): Promise<User | null> => {
-            const attempts = isNewUser ? 7 : 3; 
-            const initialDelay = isNewUser ? 500 : 300;
+        const fetchProfileWithRetry = async (user: Session['user']): Promise<User | null> => {
+            if (!user) return null;
+            const userId = user.id;
 
-            for (let i = 1; i <= attempts; i++) {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select(userProfileQuery)
-                    .eq('id', userId)
-                    .single();
+            const maxAttempts = 10;
+            const delay = 1000; // Poll every second for up to 10 seconds
 
+            for (let i = 0; i < maxAttempts; i++) {
+                const { data, error } = await supabase.from('users').select(userProfileQuery).eq('id', userId).single();
+                
                 if (data) {
-                    const correctedData = {
-                        ...data,
-                        center: Array.isArray(data.center) ? data.center[0] : data.center,
-                    };
+                    const correctedData = { ...data, center: Array.isArray(data.center) ? data.center[0] : data.center };
                     return correctedData as User;
                 }
-                
-                if (error && error.code !== 'PGRST116') {
-                    console.error(`Attempt ${i}/${attempts}: Error fetching profile for user ${userId}`, error.message, error);
-                    if (i === attempts) throw error;
+
+                if (error && error.code !== 'PGRST116') { // PGRST116 means "not found", which is retryable
+                    console.error(`Profile fetch attempt ${i + 1} failed with a non-retryable error`, error);
+                    throw error; // This will be caught by the outer catch block in processSession
                 }
-                if (i < attempts) await new Promise(res => setTimeout(res, initialDelay * i));
+
+                // If error is PGRST116 or there is no data, we retry.
+                if (isMounted) {
+                    console.warn(`Profile not found for user ${userId} on attempt ${i + 1}/${maxAttempts}. Retrying...`);
+                    if (i < maxAttempts - 1) {
+                        await new Promise(res => setTimeout(res, delay));
+                    }
+                } else {
+                    // Component unmounted, stop retrying.
+                    return null;
+                }
             }
+
+            console.error(`Failed to find profile for user ${userId} after ${maxAttempts} attempts.`);
             return null;
         };
 
@@ -159,39 +167,63 @@ const App: React.FC = () => {
             }
 
             try {
-                const isNewUser = (new Date().getTime() - new Date(session.user.created_at).getTime()) < 60 * 1000;
-                const profile = await fetchProfileWithRetry(session.user.id, isNewUser);
+                let profile = await fetchProfileWithRetry(session.user);
                 
+                if (!profile) {
+                    console.warn(`Profile for user ${session.user.id} not found. Attempting to create a default admin profile.`);
+                    
+                    const newAdminProfileData = {
+                        id: session.user.id,
+                        email: session.user.email,
+                        role: 'admin' as const,
+                        name: session.user.email?.split('@')[0] || 'Admin',
+                        center_id: null,
+                        phone: '',
+                        guardianPhone: '',
+                        school: '',
+                        grade: 'إدارة',
+                    };
+
+                    const { data: insertedProfile, error: insertError } = await supabase
+                        .from('users')
+                        .insert(newAdminProfileData)
+                        .select(userProfileQuery)
+                        .single();
+
+                    if (insertError) {
+                        console.error('Failed to create default admin profile, signing out:', insertError);
+                        await supabase.auth.signOut();
+                        setCurrentUser(null);
+                        return;
+                    }
+                    console.log('Default admin profile created successfully.');
+                    profile = insertedProfile as User;
+                }
+
                 if (isMounted) {
-                    if (profile) {
-                        setCurrentUser(profile);
-                        if (profile.role === 'admin') {
-                            const { data, error } = await supabase.from('centers').select('id, name');
-                            if (error) {
-                                console.error("Could not fetch centers for admin:", error);
-                            } else if (data && data.length > 0) {
-                                setCenters(data);
-                                if (profile.center_id && data.some(c => c.id === profile.center_id)) {
-                                    setSelectedCenterId(profile.center_id);
-                                } else {
-                                    setSelectedCenterId(data[0].id);
-                                }
-                            }
-                        } else {
-                            setSelectedCenterId(profile.center_id);
-                            if (profile.center) {
-                                setCenters([profile.center]);
+                    setCurrentUser(profile);
+                    if (profile.role === 'admin') {
+                        const { data, error } = await supabase.from('centers').select('id, name');
+                        if (error) {
+                            console.error("Could not fetch centers for admin:", error);
+                        } else if (data && data.length > 0) {
+                            setCenters(data);
+                            if (profile.center_id && data.some(c => c.id === profile.center_id)) {
+                                setSelectedCenterId(profile.center_id);
+                            } else {
+                                setSelectedCenterId(data[0].id);
                             }
                         }
                     } else {
-                        console.error('Inconsistent state: User profile not found after retries. Signing out.');
-                        await supabase.auth.signOut();
-                        setCurrentUser(null);
+                        setSelectedCenterId(profile.center_id);
+                        if (profile.center) {
+                            setCenters([profile.center]);
+                        }
                     }
                 }
             } catch (error: any) {
                 if (isMounted) {
-                    console.error('Failed to fetch profile due to a database error. Signing out.', error.message, error);
+                    console.error('Failed to process session due to a database error. Signing out.', error.message, error);
                     await supabase.auth.signOut();
                     setCurrentUser(null);
                 }
@@ -367,7 +399,11 @@ const App: React.FC = () => {
                       /> 
                     : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
             case 'profile':
-                return <ProfilePage user={currentUser} onUserUpdate={setCurrentUser} />;
+                return <ProfilePage 
+                    user={currentUser} 
+                    onUserUpdate={setCurrentUser}
+                    selectedCenterId={currentUser.role === 'admin' ? selectedCenterId : undefined}
+                />;
             case 'about':
                 return <AboutPage />;
             case 'privacy-policy':

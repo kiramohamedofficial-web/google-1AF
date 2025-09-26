@@ -353,6 +353,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     const showSectionField = grade.includes('الثانوي');
 
     useEffect(() => {
+        try {
+            const loginError = sessionStorage.getItem('loginError');
+            if (loginError) {
+                setError(loginError);
+                sessionStorage.removeItem('loginError');
+            }
+        } catch (e) {
+            console.warn("Could not read sessionStorage for login error", e);
+        }
+    }, []);
+
+    useEffect(() => {
         const fetchCenters = async () => {
             const { data, error } = await supabase.from('centers').select('id, name');
             if (error) {

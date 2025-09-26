@@ -34,7 +34,7 @@ export interface User {
     section?: 'علمي علوم' | 'علمي رياضة' | 'أدبي' | 'عام';
     lastScheduleEdit?: number;
     xpPoints?: number;
-    center_id: string;
+    center_id: string | null;
     center?: Center;
 }
 
