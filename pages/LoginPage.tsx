@@ -681,9 +681,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                     </div>
                 </div>
             </div>
-            <div className="relative z-10">
-                 <Footer onNavigate={onNavigate} insideApp={false} />
-            </div>
+            <Footer onNavigate={onNavigate} insideApp={false} />
         </div>
     );
 };

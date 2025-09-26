@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Post } from '../types.ts';
 
@@ -18,7 +19,7 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
             {post.imageUrls && post.imageUrls.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                     {post.imageUrls.map((url, index) => (
-                        <img key={index} src={url} alt={`${post.title} image ${index + 1}`} className="w-full h-56 object-cover"/>
+                        <img loading="lazy" key={index} src={url} alt={`${post.title} image ${index + 1}`} className="w-full h-56 object-cover"/>
                     ))}
                 </div>
             )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../services/supabaseClient.ts';
 import type { DefaultProfilePicture } from '../types.ts';
@@ -50,7 +51,7 @@ const PictureGrid: React.FC<{
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {pictures.map(pic => (
                         <div key={pic.id} className="relative group aspect-square">
-                            <img src={pic.image_url} alt={`Profile picture ${pic.id}`} className="w-full h-full object-cover rounded-lg" />
+                            <img loading="lazy" src={pic.image_url} alt={`Profile picture ${pic.id}`} className="w-full h-full object-cover rounded-lg" />
                             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
                                 <button
                                     onClick={() => onDelete(pic.id, pic.image_url)}

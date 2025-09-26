@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Teacher } from '../types.ts';
 import { generateAvatar } from '../constants.ts';
@@ -17,6 +18,7 @@ const TeachersPage: React.FC<{ teachers: Teacher[] }> = ({ teachers }) => {
                 {teachers.map(teacher => (
                     <div key={teacher.id} className="bg-[hsl(var(--color-surface))] rounded-xl shadow-lg text-center p-6 transform hover:-translate-y-2 transition-transform duration-300 border border-[hsl(var(--color-border))]">
                         <img 
+                            loading="lazy"
                             src={teacher.imageUrl || generateAvatar(teacher.name)} 
                             alt={teacher.name} 
                             className="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-[hsl(var(--color-primary))] object-cover"
