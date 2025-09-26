@@ -18,7 +18,14 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
         const sorted = [...lessons].sort((a, b) => a.time.localeCompare(b.time, 'ar-EG-u-nu-latn'));
         if (showMyGradeOnly) {
             const normalizedUserGrade = normalizeArabic(user.grade);
-            return sorted.filter(lesson => normalizeArabic(lesson.grade) === normalizedUserGrade);
+            if (!normalizedUserGrade) return [];
+
+            return sorted.filter(lesson => {
+                 const normalizedLessonGrade = normalizeArabic(lesson.grade);
+                 if (!normalizedLessonGrade) return false;
+                 // Use flexible matching consistent with HomePage
+                 return normalizedUserGrade.includes(normalizedLessonGrade) || normalizedLessonGrade.includes(normalizedUserGrade);
+            });
         }
         return sorted;
     }, [lessons, showMyGradeOnly, user.grade]);

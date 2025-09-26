@@ -26,6 +26,7 @@ export const getSubjectStyle = (subject: string) => {
 
 /**
  * Normalizes an Arabic string for more reliable comparisons.
+ * - Handles colloquialisms for numbers (e.g., 'تالته' -> 'الثالث').
  * - Replaces different forms of alef with a plain alef.
  * - Replaces 'ى' (Alef Maqsura) with 'ي' (Yeh).
  * - Replaces 'ة' (Teh Marbuta) with 'ه' (Heh).
@@ -37,6 +38,9 @@ export const getSubjectStyle = (subject: string) => {
 export const normalizeArabic = (str: string | undefined): string => {
     if (!str) return '';
     return str
+        .replace(/تالته|تالتة|ثالثة/g, 'الثالث')
+        .replace(/تانيه|تانية|ثانية/g, 'الثاني')
+        .replace(/اولى|أولى/g, 'الأول')
         .replace(/[أإآ]/g, 'ا') // Normalize Alef
         .replace(/ى/g, 'ي')     // Normalize Alef Maqsura to Yeh
         .replace(/ة/g, 'ه')     // Normalize Teh Marbuta to Heh

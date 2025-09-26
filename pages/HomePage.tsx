@@ -99,7 +99,17 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
     const userLessons = useMemo(() => {
         const normalizedUserGrade = normalizeArabic(user.grade);
-        return lessons.filter(l => normalizeArabic(l.grade) === normalizedUserGrade);
+        // If user has no grade, don't show any lessons to avoid confusion.
+        if (!normalizedUserGrade) return [];
+        
+        return lessons.filter(l => {
+            const normalizedLessonGrade = normalizeArabic(l.grade);
+            if (!normalizedLessonGrade) return false;
+
+            // Match if one grade string contains the other for more flexible matching.
+            // e.g. "الصف الثالث الثانوي" contains "الثالث الثانوي"
+            return normalizedUserGrade.includes(normalizedLessonGrade) || normalizedLessonGrade.includes(normalizedUserGrade);
+        });
     }, [lessons, user.grade]);
     
     const today = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
