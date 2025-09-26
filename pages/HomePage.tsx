@@ -48,28 +48,28 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => {
                 if (dayLessons.length === 0) return null;
 
                 return (
-                    <div key={day} className="flex-shrink-0 w-72 md:w-80 h-[50vh] flex flex-col bg-[hsl(var(--color-surface))] rounded-2xl shadow-xl border border-[hsl(var(--color-border))] overflow-hidden animate-fade-in-up" style={{ animationDelay: `${dayIndex * 150}ms` }}>
+                    <div key={day} className="flex-shrink-0 w-64 md:w-72 flex flex-col bg-[hsl(var(--color-surface))] rounded-2xl shadow-xl border border-[hsl(var(--color-border))] overflow-hidden animate-fade-in-up" style={{ animationDelay: `${dayIndex * 150}ms` }}>
                         <div className="p-4 border-b-2 border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
-                            <h3 className="text-2xl font-bold text-center text-[hsl(var(--color-primary))]">{day}</h3>
+                            <h3 className="text-xl font-bold text-center text-[hsl(var(--color-primary))]">{day}</h3>
                         </div>
-                        <div className="p-2 md:p-4 space-y-3 flex-grow overflow-y-auto">
+                        <div className="p-2 md:p-3 space-y-2.5 flex-grow overflow-y-auto">
                             {dayLessons.map((lesson, lessonIndex) => {
                                 const style = getSubjectStyle(lesson.subject);
                                 return (
                                     <div
                                         key={lesson.id}
-                                        className={`lesson-card w-full text-right p-3 rounded-xl transition-all duration-300 border-2 bg-[hsl(var(--color-background))] border-transparent lesson-card-cocktail lesson-card-ocean`}
+                                        className={`lesson-card w-full text-right p-2.5 rounded-xl transition-all duration-300 border-2 bg-[hsl(var(--color-background))] border-transparent lesson-card-cocktail lesson-card-ocean`}
                                         style={{ 
                                             animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`,
                                             '--card-index': dayIndex * 5 + lessonIndex
                                         } as React.CSSProperties}
                                         data-subject={lesson.subject}
                                     >
-                                        <div className="flex items-center gap-3 mb-2.5">
-                                            <span className="lesson-card-icon text-3xl p-2 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
-                                            <h4 className="lesson-card-subject text-lg font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="lesson-card-icon text-2xl p-1.5 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
+                                            <h4 className="lesson-card-subject text-base font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
                                         </div>
-                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-sm text-[hsl(var(--color-text-secondary))] items-center">
+                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs text-[hsl(var(--color-text-secondary))] items-center">
                                             <TeacherIcon />
                                             <span className="truncate">{lesson.teacher}</span>
                                             
