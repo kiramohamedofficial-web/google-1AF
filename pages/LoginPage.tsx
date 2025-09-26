@@ -25,7 +25,7 @@ const CenterIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 
 // --- Input Field Component ---
 const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'select', icon: React.ReactNode, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void, children?: React.ReactNode, required?: boolean }> = 
 ({ label, type = 'text', as = 'input', icon, value, onChange, children, required = true }) => {
-    const commonClasses = "peer block w-full rounded-lg border border-slate-600 bg-black/20 focus:border-blue-500 focus:ring-blue-500 shadow-sm p-3 pr-10 transition text-white font-bold";
+    const commonClasses = "peer block w-full rounded-lg border border-slate-600 bg-black/20 focus:border-blue-500 focus:ring-blue-500 shadow-sm p-2.5 pr-10 transition text-white font-bold";
     const placeholderClass = value ? "" : "placeholder-transparent";
 
     return (
@@ -51,7 +51,7 @@ const InputField: React.FC<{ label: string, type?: string, as?: 'input' | 'selec
                         {children}
                     </select>
                 )}
-                <label className={`absolute right-3 -top-2.5 bg-slate-900 px-1 text-sm text-slate-300 transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-400 peer-focus:font-bold font-bold
+                <label className={`absolute right-3 -top-2.5 bg-slate-900 px-1 text-sm text-slate-300 transition-all peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-400 peer-focus:font-bold font-bold
                     ${as === 'select' && value ? '!-top-2.5 !text-sm !text-blue-400 !font-bold' : ''}
                 `}>
                     {label}
@@ -561,8 +561,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             <div className="flex-grow flex items-center justify-center p-4 pb-12">
                 <div className="relative z-10 w-full max-w-md animate-fade-in-up">
                     <div className="text-center mb-8">
-                        <div className="inline-block p-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
-                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-12 h-12">
+                        <div className="inline-block p-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-10 h-10">
                                 <defs>
                                     <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                         <stop offset="0%" style={{stopColor: '#67e8f9', stopOpacity: 1}} />
@@ -576,26 +576,26 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                 </g>
                             </svg>
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
-                        <p className="text-slate-400 mt-3 text-lg font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
+                        <h1 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-blue-500 tracking-wide">سنتر جوجل التعليمي</h1>
+                        <p className="text-slate-400 mt-2 text-base font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     
                     <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/20 border border-slate-700 overflow-hidden">
                         <div className="flex">
-                            <button onClick={() => { setActiveTab('login'); setIsForgotPassword(false); setError(''); setMessage(''); }} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
-                            <button onClick={() => { setActiveTab('signup'); setSignupStep(1); setError(''); setMessage(''); }} className={`flex-1 p-4 font-bold text-lg transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
+                            <button onClick={() => { setActiveTab('login'); setIsForgotPassword(false); setError(''); setMessage(''); }} className={`flex-1 p-3 font-bold text-base transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
+                            <button onClick={() => { setActiveTab('signup'); setSignupStep(1); setError(''); setMessage(''); }} className={`flex-1 p-3 font-bold text-base transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>
                         </div>
                         
-                        <div className="p-8">
+                        <div className="p-6">
                             {activeTab === 'login' ? (
                                 isForgotPassword ? (
-                                    <form onSubmit={handlePasswordReset} className="space-y-6">
+                                    <form onSubmit={handlePasswordReset} className="space-y-5">
                                         <h3 className="text-xl font-bold text-center">إعادة تعيين كلمة المرور</h3>
                                         {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
                                         {message && <p className="text-green-400 text-center font-semibold bg-green-500/10 p-3 rounded-lg">{message}</p>}
                                         <p className="text-slate-400 text-center text-sm">أدخل بريدك الإلكتروني المسجل وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.</p>
                                         <InputField label="البريد الإلكتروني" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} icon={<EmailIcon />}/>
-                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all text-base shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
                                             {isLoading ? 'جاري الإرسال...' : 'إرسال رابط إعادة التعيين'}
                                         </button>
                                         <button type="button" onClick={() => {setIsForgotPassword(false); setMessage(''); setError('')}} className="w-full text-center text-slate-400 hover:text-white transition-colors pt-2">
@@ -603,7 +603,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                         </button>
                                     </form>
                                 ) : (
-                                    <form onSubmit={handleLoginSubmit} className="space-y-6">
+                                    <form onSubmit={handleLoginSubmit} className="space-y-5">
                                         {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
                                         {message && <p className="text-green-400 text-center font-semibold bg-green-500/10 p-3 rounded-lg">{message}</p>}
                                         <InputField label="البريد الإلكتروني" type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} icon={<EmailIcon />}/>
@@ -613,13 +613,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                                 نسيت كلمة المرور؟
                                             </button>
                                         </div>
-                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                        <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all text-base shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
                                             {isLoading ? 'جاري الدخول...' : 'دخول'}
                                         </button>
                                     </form>
                                 )
                             ) : (
-                                <form onSubmit={handleSignupSubmit} className="space-y-6">
+                                <form onSubmit={handleSignupSubmit} className="space-y-5">
                                     {error && <p className="text-red-400 text-center font-semibold bg-red-500/10 p-3 rounded-lg">{error}</p>}
                                     
                                     {signupStep === 1 ? (
@@ -629,7 +629,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                             <InputField label="البريد الإلكتروني" type="email" value={email} onChange={e => setEmail(e.target.value)} icon={<EmailIcon />}/>
                                             <InputField label="كلمة المرور" type="password" value={password} onChange={e => setPassword(e.target.value)} icon={<LockIcon />}/>
                                             <InputField label="تأكيد كلمة المرور" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} icon={<LockIcon />}/>
-                                            <button type="button" onClick={handleNextStep} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg">
+                                            <button type="button" onClick={handleNextStep} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all text-base">
                                                 التالي
                                             </button>
                                         </>
@@ -653,11 +653,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                             <div>
                                                 <label className="text-sm font-bold text-slate-300 mb-2 block">الجنس</label>
                                                 <div className="flex gap-4">
-                                                    <label className={`flex-1 p-3 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'ذكر' ? 'bg-blue-600/80 border-blue-500 text-white' : 'bg-black/20 border-slate-600'}`}>
+                                                    <label className={`flex-1 p-2.5 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'ذكر' ? 'bg-blue-600/80 border-blue-500 text-white' : 'bg-black/20 border-slate-600'}`}>
                                                         <input type="radio" name="gender" value="ذكر" checked={gender === 'ذكر'} onChange={() => setGender('ذكر')} className="sr-only" />
                                                         ذكر
                                                     </label>
-                                                    <label className={`flex-1 p-3 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'أنثى' ? 'bg-pink-600/80 border-pink-500 text-white' : 'bg-black/20 border-slate-600'}`}>
+                                                    <label className={`flex-1 p-2.5 rounded-lg text-center font-bold border-2 transition-all cursor-pointer ${gender === 'أنثى' ? 'bg-pink-600/80 border-pink-500 text-white' : 'bg-black/20 border-slate-600'}`}>
                                                         <input type="radio" name="gender" value="أنثى" checked={gender === 'أنثى'} onChange={() => setGender('أنثى')} className="sr-only" />
                                                         أنثى
                                                     </label>
@@ -666,10 +666,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                                             <InputField label="المدرسة" type="text" value={school} onChange={e => setSchool(e.target.value)} icon={<SchoolIcon />} required={false} />
 
                                             <div className="flex gap-4">
-                                                <button type="button" onClick={() => setSignupStep(1)} className="w-1/2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg">
+                                                <button type="button" onClick={() => setSignupStep(1)} className="w-1/2 bg-slate-600 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all text-base">
                                                     السابق
                                                 </button>
-                                                <button type="submit" disabled={isLoading} className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
+                                                <button type="submit" disabled={isLoading} className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all text-base shadow-[0_4px_14px_0_rgba(0,118,255,0.39)] transform hover:scale-105 disabled:bg-slate-500 disabled:cursor-not-allowed">
                                                     {isLoading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
                                                 </button>
                                             </div>
