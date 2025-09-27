@@ -135,12 +135,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                         </NavSection>
                     </nav>
 
-                    <div className="p-3 border-t border-[hsl(var(--color-border))]">
-                        <div className="bg-[hsl(var(--color-background))] p-2 rounded-xl">
-                            <p className="text-xs font-bold text-center mb-2 text-[hsl(var(--color-text-secondary))]">اختر الثيم</p>
+                    <div className="p-2 border-t border-[hsl(var(--color-border))]">
+                        <div className="bg-[hsl(var(--color-background))] p-1 rounded-lg">
+                            <p className="text-xs font-bold text-center mb-1 text-[hsl(var(--color-text-secondary))]">اختر الثيم</p>
                             <ThemeSwitcher currentTheme={theme} onChangeTheme={setTheme} />
                         </div>
-                        <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-2">
+                        <button onClick={onLogout} className="w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-1">
                            <ArrowLeftOnRectangleIcon/>
                            <span className="font-medium">تسجيل الخروج</span>
                         </button>
