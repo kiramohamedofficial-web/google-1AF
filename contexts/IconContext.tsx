@@ -26,7 +26,7 @@ export const IconProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data, error } = await supabase.from('icon_settings').select('key, value');
         if (error) {
             console.error('Error fetching icon settings:', error);
-            if (loading) setLoading(false);
+            setLoading(false); // Ensure loading is false even on error
             return;
         }
         const settingsMap = data.reduce((acc, row) => {
@@ -34,8 +34,8 @@ export const IconProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             return acc;
         }, {} as IconSettings);
         setIconSettings(settingsMap);
-        if (loading) setLoading(false);
-    }, [loading]);
+        setLoading(false); // Set loading to false after fetch completes. This is idempotent.
+    }, []); // Empty dependency array ensures the function is stable for subscriptions.
 
     useEffect(() => {
         fetchIcons();

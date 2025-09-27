@@ -168,7 +168,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     const [gradeFilter, setGradeFilter] = useState('');
     const [dayFilter, setDayFilter] = useState('');
     
-    const grades = useMemo(() => Array.from(new Set(students.map(s => s.grade).concat(lessons.map(l => l.grade)))), [students, lessons]);
+    const grades = useMemo(() => Array.from(new Set([...students.map(s => s.grade), ...lessons.map(l => l.grade)])).filter(Boolean).sort(), [students, lessons]);
     const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
     useEffect(() => {
@@ -319,7 +319,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         
         <div>{renderContent()}</div>
 
-        {modalType && <AdminModal type={modalType} item={currentItem} onClose={handleCloseModal} centerId={selectedCenterId} teachers={teachers} user={user} students={students} />}
+        {modalType && <AdminModal type={modalType} item={currentItem} onClose={handleCloseModal} centerId={selectedCenterId} teachers={teachers} user={user} students={students} grades={grades} />}
     </div>;
 };
 
@@ -351,9 +351,9 @@ const DataTable: React.FC<{ title: string; data: any[]; columns: Record<string, 
 
 
 // --- Modal and Forms ---
-interface AdminModalProps { type: ModalType; item: any; onClose: (refresh?: boolean) => void; centerId: string | null; teachers: Teacher[]; user: User; students: User[] }
+interface AdminModalProps { type: ModalType; item: any; onClose: (refresh?: boolean) => void; centerId: string | null; teachers: Teacher[]; user: User; students: User[]; grades: string[]; }
 
-const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, teachers, user, students }) => {
+const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, teachers, user, students, grades }) => {
     const isEdit = !!item;
     const [formData, setFormData] = useState(item || {});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -536,7 +536,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
                     <div><label>وقت الانتهاء</label><FormInput type="time" value={endTime} onChange={e => setEndTime(e.target.value)} required/></div>
                 </div>
                 <FormInput name="hall" placeholder="القاعة" required value={formData.hall || ''} onChange={handleChange} />
-                <FormInput name="grade" placeholder="الصف الدراسي" required value={formData.grade || ''} onChange={handleChange} />
+                <FormSelect name="grade" required value={formData.grade || ''} onChange={handleChange}>
+                    <option value="" disabled>اختر الصف الدراسي</option>
+                    {grades.map(g => <option key={g} value={g}>{g}</option>)}
+                </FormSelect>
                 <FormTextarea name="notes" placeholder="ملاحظات" value={formData.notes || ''} onChange={handleChange} />
             </>;
             case 'post': return <>

@@ -2,25 +2,38 @@
 import { User, Lesson, Teacher } from './types.ts';
 
 // Centralized subject styles to be used across the application
-export const subjectStyles: Record<string, { icon: string; progressBarClass: string; bgColor: string }> = {
-    'فيزياء': { icon: '⚛️', progressBarClass: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20' },
-    'كيمياء': { icon: '🧪', progressBarClass: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20' },
-    'لغة عربية': { icon: '📖', progressBarClass: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20' },
-    'رياضيات': { icon: '➗', progressBarClass: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20' },
-    'أحياء': { icon: '🧬', progressBarClass: 'bg-teal-500', bgColor: 'bg-teal-500/10 border-teal-500/20' },
+export const subjectStyles: Record<string, { icon: string; progressBarClass: string; bgColor: string; aliases?: string[] }> = {
+    'فيزياء': { icon: '⚛️', progressBarClass: 'bg-blue-500', bgColor: 'bg-blue-500/10 border-blue-500/20', aliases: ['فيزيا'] },
+    'كيمياء': { icon: '🧪', progressBarClass: 'bg-green-500', bgColor: 'bg-green-500/10 border-green-500/20', aliases: ['كيميا'] },
+    'لغة عربية': { icon: '📖', progressBarClass: 'bg-red-500', bgColor: 'bg-red-500/10 border-red-500/20', aliases: ['عربي', 'عربى'] },
+    'رياضيات': { icon: '➗', progressBarClass: 'bg-purple-500', bgColor: 'bg-purple-500/10 border-purple-500/20', aliases: ['رياضة', 'رياضه'] },
+    'أحياء': { icon: '🧬', progressBarClass: 'bg-teal-500', bgColor: 'bg-teal-500/10 border-teal-500/20', aliases: ['احياء'] },
     'جيولوجيا': { icon: '🌍', progressBarClass: 'bg-orange-500', bgColor: 'bg-orange-500/10 border-orange-500/20' },
-    'لغة إنجليزية': { icon: '🇬🇧', progressBarClass: 'bg-indigo-500', bgColor: 'bg-indigo-500/10 border-indigo-500/20' },
+    'لغة إنجليزية': { icon: '🇬🇧', progressBarClass: 'bg-indigo-500', bgColor: 'bg-indigo-500/10 border-indigo-500/20', aliases: ['إنجليزي', 'انجليزي', 'english'] },
     'تاريخ': { icon: '📜', progressBarClass: 'bg-amber-500', bgColor: 'bg-amber-500/10 border-amber-500/20' },
-    'فلسفة وعلم نفس': { icon: '🤔', progressBarClass: 'bg-pink-500', bgColor: 'bg-pink-500/10 border-pink-500/20' },
-    'لغة فرنسية': { icon: '🇫🇷', progressBarClass: 'bg-cyan-500', bgColor: 'bg-cyan-500/10 border-cyan-500/20' },
-    'لغة إيطالية': { icon: '🇮🇹', progressBarClass: 'bg-lime-500', bgColor: 'bg-lime-500/10 border-lime-500/20' },
+    'فلسفة وعلم نفس': { icon: '🤔', progressBarClass: 'bg-pink-500', bgColor: 'bg-pink-500/10 border-pink-500/20', aliases: ['فلسفة', 'علم نفس'] },
+    'لغة فرنسية': { icon: '🇫🇷', progressBarClass: 'bg-cyan-500', bgColor: 'bg-cyan-500/10 border-cyan-500/20', aliases: ['فرنسي', 'فرنساوى', 'فرنسساوي'] },
+    'لغة إيطالية': { icon: '🇮🇹', progressBarClass: 'bg-lime-500', bgColor: 'bg-lime-500/10 border-lime-500/20', aliases: ['إيطالي', 'ايطالي'] },
     'دين': { icon: '🕌', progressBarClass: 'bg-emerald-500', bgColor: 'bg-emerald-500/10 border-emerald-500/20' },
     'جغرافيا': { icon: '🗺️', progressBarClass: 'bg-sky-500', bgColor: 'bg-sky-500/10 border-sky-500/20'},
     'Default': { icon: '📚', progressBarClass: 'bg-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20' },
 };
 
 export const getSubjectStyle = (subject: string, iconSettings: Record<string, string> = {}) => {
-    const key = Object.keys(subjectStyles).find(s => subject.includes(s) && s !== 'Default') || 'Default';
+    // Use normalizeArabic for basic consistency (e.g., handles 'ة' vs 'ه')
+    const normalizedSubject = normalizeArabic(subject); 
+
+    const key = Object.keys(subjectStyles).find(s => {
+        if (s === 'Default') return false;
+
+        const style = subjectStyles[s as keyof typeof subjectStyles];
+        // Combine the main key and its aliases into a list of terms to check
+        const terms = [s, ...(style.aliases || [])].map(term => normalizeArabic(term));
+        
+        // Check if the normalized subject name contains any of the terms
+        return terms.some(term => normalizedSubject.includes(term));
+    }) || 'Default';
+    
     const style = subjectStyles[key as keyof typeof subjectStyles];
 
     const iconKey = `subject_${key}`;
