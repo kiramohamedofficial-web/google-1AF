@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Notification, Post, Center } from './types.ts';
@@ -61,7 +63,7 @@ const App: React.FC = () => {
     }, [theme]);
     
     const fetchData = useCallback(async () => {
-        if (!selectedCenterId) {
+        if (!selectedCenterId || !currentUser) {
             setLessons([]);
             setTeachers([]);
             setPosts([]);
@@ -72,19 +74,6 @@ const App: React.FC = () => {
         setLoading(true);
         try {
             const centerId = selectedCenterId;
-            const requests: any[] = [
-                supabase.from('lessons').select('*, teachers(name)').eq('center_id', centerId),
-                supabase.from('teachers').select('id, name, subject, email, phone, bio, grades, imageUrl:image_url, center_id').eq('center_id', centerId),
-                supabase.from('posts').select('id, title, content, author:author_id(name), timestamp:created_at, imageUrls:image_urls, center_id').eq('center_id', centerId),
-            ];
-            
-            if (currentUser?.role === 'admin') {
-                requests.push(supabase.from('users').select('*').eq('center_id', centerId).eq('role', 'student'));
-            } else {
-                requests.push(Promise.resolve({ data: [], error: null }));
-            }
-
-            const [lessonsRes, teachersRes, postsRes, studentsRes] = await Promise.all(requests);
 
             const checkError = (response: { error: any; data: any; }, tableName: string) => {
                 if (response.error) {
@@ -93,6 +82,47 @@ const App: React.FC = () => {
                 }
                 return response.data || [];
             };
+
+            let lessonsRes: any = { data: [], error: null };
+            let teachersRes: any = { data: [], error: null };
+            let postsRes: any = { data: [], error: null };
+            let studentsRes: any = { data: [], error: null };
+
+            if (currentUser.role === 'teacher') {
+                const { data: teacherProfile, error: teacherError } = await supabase
+                    .from('teachers')
+                    .select('grades')
+                    .eq('email', currentUser.email)
+                    .eq('center_id', centerId)
+                    .single();
+
+                if (teacherError) console.error('Error fetching teacher profile:', teacherError);
+
+                const teacherGrades = teacherProfile?.grades;
+
+                if (teacherGrades && teacherGrades.length > 0) {
+                    [lessonsRes, studentsRes, teachersRes, postsRes] = await Promise.all([
+                        supabase.from('lessons').select('*, teachers(name)').eq('center_id', centerId).in('grade', teacherGrades),
+                        supabase.from('users').select('*').eq('center_id', centerId).eq('role', 'student').in('grade', teacherGrades),
+                        supabase.from('teachers').select('id, name, subject, email, phone, bio, grades, imageUrl:image_url, center_id').eq('center_id', centerId),
+                        supabase.from('posts').select('id, title, content, author:author_id(name), timestamp:created_at, imageUrls:image_urls, center_id').eq('center_id', centerId)
+                    ]);
+                }
+            } else { // Admin or Student
+                const requests: any[] = [
+                    supabase.from('lessons').select('*, teachers(name)').eq('center_id', centerId),
+                    supabase.from('teachers').select('id, name, subject, email, phone, bio, grades, imageUrl:image_url, center_id').eq('center_id', centerId),
+                    supabase.from('posts').select('id, title, content, author:author_id(name), timestamp:created_at, imageUrls:image_urls, center_id').eq('center_id', centerId),
+                ];
+                
+                if (currentUser.role === 'admin') {
+                    requests.push(supabase.from('users').select('*').eq('center_id', centerId).eq('role', 'student'));
+                } else {
+                    requests.push(Promise.resolve({ data: [], error: null }));
+                }
+
+                [lessonsRes, teachersRes, postsRes, studentsRes] = await Promise.all(requests);
+            }
             
             const rawLessons = checkError(lessonsRes, 'lessons');
             const formattedLessons = rawLessons.map((lesson: any) => ({
@@ -115,7 +145,7 @@ const App: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [selectedCenterId, currentUser?.role]);
+    }, [selectedCenterId, currentUser]);
 
     useEffect(() => {
         fetchData();
@@ -208,10 +238,10 @@ const App: React.FC = () => {
 
                 if (isMounted) {
                     setCurrentUser(profile);
-                    if (profile.role === 'admin') {
+                    if (profile.role === 'admin' || profile.role === 'teacher') {
                         const { data, error } = await supabase.from('centers').select('id, name');
                         if (error) {
-                            console.error("Could not fetch centers for admin:", error);
+                            console.error("Could not fetch centers for admin/teacher:", error);
                         } else if (data && data.length > 0) {
                             setCenters(data);
                             if (profile.center_id && data.some(c => c.id === profile.center_id)) {
@@ -361,7 +391,7 @@ const App: React.FC = () => {
             case 'privacy-policy':
                 return (
                     <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6">
+                        <main className="flex-grow p-4 md:p-6 pb-16">
                             <PrivacyPolicyPage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
                         <Footer onNavigate={setCurrentPage} insideApp={false} />
@@ -370,7 +400,7 @@ const App: React.FC = () => {
             case 'terms-of-service':
                  return (
                     <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6">
+                        <main className="flex-grow p-4 md:p-6 pb-16">
                             <TermsOfServicePage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
                         <Footer onNavigate={setCurrentPage} insideApp={false} />
@@ -390,7 +420,7 @@ const App: React.FC = () => {
             case 'teachers':
                 return <TeachersPage teachers={teachers} />;
             case 'admin-dashboard':
-                return currentUser.role === 'admin' 
+                return (currentUser.role === 'admin' || currentUser.role === 'teacher')
                     ? <AdminDashboardPage 
                         user={currentUser}
                         centers={centers}
@@ -419,7 +449,7 @@ const App: React.FC = () => {
             case 'news':
                 return <NewsBoardPage posts={posts} />;
             case 'app-control':
-                return currentUser.role === 'admin' ? <AppControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
+                return currentUser.email === 'jytt0jewellery@gmail.com' ? <AppControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
             case 'icon-control':
                 return currentUser.email === 'jytt0jewellery@gmail.com' ? <IconControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
             default:
@@ -457,7 +487,7 @@ const App: React.FC = () => {
                 />
                 <div className={`flex flex-col h-full lg:pr-60`}>
                     <main className={`flex-grow pt-20 overflow-y-auto`}>
-                        <div className='p-4 md:p-6'>
+                        <div className='p-4 md:p-6 pb-16'>
                             {renderPageContent()}
                         </div>
                     </main>

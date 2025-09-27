@@ -228,7 +228,7 @@ export const MOCK_LESSONS: Lesson[] = [
 ];
 
 export const MOCK_TEACHERS: Teacher[] = [
-    { id: 't1', name: 'أ. نيوتن', subject: 'فيزياء', imageUrl: 'https://picsum.photos/seed/newton/200/200', bio: 'خبير في الفيزياء الحديثة والكلاسيكية مع 15 عامًا من الخبرة.', phone: '01012345678', email: 'newton@googlecenter.com', grades: 'الصف الثالث الثانوي', center_id: 'center-123' },
-    { id: 't2', name: 'أ. سيبويه', subject: 'لغة عربية', imageUrl: 'https://picsum.photos/seed/sibawayh/200/200', bio: 'متخصص في النحو والبلاغة، ويعمل على تبسيط قواعد اللغة للطلاب.', phone: '01123456789', email: 'sibawayh@googlecenter.com', grades: 'جميع الصفوف الثانوية', center_id: 'center-123' },
-    { id: 't3', name: 'أ. فيثاغورس', subject: 'رياضيات', imageUrl: 'https://picsum.photos/seed/pythagoras/200/200', bio: 'مدرس رياضيات شغوف يجعل أصعب المسائل سهلة وممتعة.', phone: '01234567890', email: 'pythagoras@googlecenter.com', grades: 'الصف الأول والثاني الثانوي', center_id: 'center-123' },
+    { id: 't1', name: 'أ. نيوتن', subject: 'فيزياء', imageUrl: 'https://picsum.photos/seed/newton/200/200', bio: 'خبير في الفيزياء الحديثة والكلاسيكية مع 15 عامًا من الخبرة.', phone: '01012345678', email: 'newton@googlecenter.com', grades: ['الصف الثالث الثانوي'], center_id: 'center-123' },
+    { id: 't2', name: 'أ. سيبويه', subject: 'لغة عربية', imageUrl: 'https://picsum.photos/seed/sibawayh/200/200', bio: 'متخصص في النحو والبلاغة، ويعمل على تبسيط قواعد اللغة للطلاب.', phone: '01123456789', email: 'sibawayh@googlecenter.com', grades: ['الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'], center_id: 'center-123' },
+    { id: 't3', name: 'أ. فيثاغورس', subject: 'رياضيات', imageUrl: 'https://picsum.photos/seed/pythagoras/200/200', bio: 'مدرس رياضيات شغوف يجعل أصعب المسائل سهلة وممتعة.', phone: '01234567890', email: 'pythagoras@googlecenter.com', grades: ['الصف الأول الثانوي', 'الصف الثاني الثانوي'], center_id: 'center-123' },
 ];

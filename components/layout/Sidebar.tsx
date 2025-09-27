@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { User, Page } from '../../types.ts';
 import { 
@@ -125,8 +126,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                          {user.role === 'admin' && (
                              <NavSection title="تحكم التطبيق">
                                 {renderNavLink(adminDashboardLink)}
-                                {renderNavLink(appControlLink)}
-                                {user.email === 'jytt0jewellery@gmail.com' && renderNavLink(iconControlLink)}
+                                {user.email === 'jytt0jewellery@gmail.com' && (
+                                    <>
+                                        {renderNavLink(appControlLink)}
+                                        {renderNavLink(iconControlLink)}
+                                    </>
+                                )}
                             </NavSection>
                         )}
                         <NavSection title="مساعدة">

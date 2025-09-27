@@ -1,5 +1,6 @@
 
 
+
 export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave' | 'royal' | 'paper';
 
 export type Page = 
@@ -22,7 +23,7 @@ export interface Center {
 
 export interface User {
     id: string;
-    role: 'student' | 'admin';
+    role: 'student' | 'admin' | 'teacher';
     name: string;
     email: string;
     phone: string;
@@ -65,7 +66,7 @@ export interface Teacher {
     bio: string;
     phone?: string;
     email?: string;
-    grades?: string;
+    grades?: string[];
     center_id: string;
 }
 

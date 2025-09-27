@@ -78,7 +78,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate, selectedC
 
         let updatePayload: Partial<User> = {};
         
-        if (user.role === 'admin') {
+        if (user.role === 'admin' || user.role === 'teacher') {
             updatePayload = {
                 name: formData.name,
                 phone: formData.phone,
@@ -117,7 +117,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate, selectedC
     // Common input field classes
     const inputClass = "mt-1 block w-full rounded-md border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))] shadow-sm disabled:opacity-70 p-2";
 
-    const renderAdminProfile = () => (
+    const renderStaffProfile = () => (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -210,7 +210,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, onUserUpdate, selectedC
                 
                 {error && <div className="mb-4 p-3 bg-red-500/10 text-red-500 rounded-lg text-center font-semibold">{error}</div>}
 
-                {user.role === 'admin' ? renderAdminProfile() : renderStudentProfile()}
+                {user.role === 'student' ? renderStudentProfile() : renderStaffProfile()}
                 
                 <div className="mt-8 flex gap-4">
                     {isEditing ? (

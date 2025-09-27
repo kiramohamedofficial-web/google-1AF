@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Page } from '../../types.ts';
 
@@ -8,12 +9,12 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate, insideApp }) => {
-    // Changed from 'fixed' to a static footer that's part of the flex layout.
-    const baseClass = "w-full text-center p-2 text-[11px] flex-shrink-0";
+    // Make the footer fixed to the bottom of the viewport.
+    const baseClass = "fixed bottom-0 right-0 left-0 z-30 w-full text-center p-2 text-[11px]";
     // Style for inside the authenticated app. It respects the sidebar.
     const appClass = "bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] lg:pr-60 border-t border-[hsl(var(--color-border))]";
     // Style for public pages (Login, Privacy, Terms). It has a blurred dark background.
-    const publicClass = "relative z-10 bg-slate-900/75 backdrop-blur-xl text-slate-400 border-t border-slate-700";
+    const publicClass = "bg-slate-900/75 backdrop-blur-xl text-slate-400 border-t border-slate-700";
     
     return (
         <footer className={`${baseClass} ${insideApp ? appClass : publicClass}`}>

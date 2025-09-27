@@ -32,6 +32,8 @@ const to12Hour = (timeStr: string): string => {
     return `${displayHours}:${minutes} ${modifier}`;
 };
 
+const TEACHER_GRADE_OPTIONS = ['المرحلة الإعدادية', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
+
 // --- Reusable Form Field Components (defined top-level to prevent re-renders) ---
 const inputSharedClass = "w-full p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]";
 
@@ -70,7 +72,7 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.Re
     </div>
 );
 
-const CenterSwitcher: React.FC<{ centers: Center[], selectedCenterId: string | null, onSelect: (id: string) => void }> = ({ centers, selectedCenterId, onSelect }) => (
+const CenterSwitcher: React.FC<{ centers: Center[], selectedCenterId: string | null, onSelect: (id: string) => void, userRole: User['role'] }> = ({ centers, selectedCenterId, onSelect, userRole }) => (
     <div className="bg-[hsl(var(--color-surface))] p-4 rounded-2xl shadow-lg border border-[hsl(var(--color-border))] flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl font-bold text-center sm:text-right">
             لوحة تحكم <span className="text-[hsl(var(--color-primary))]">{centers.find(c => c.id === selectedCenterId)?.name || 'المالك'}</span>
@@ -81,7 +83,8 @@ const CenterSwitcher: React.FC<{ centers: Center[], selectedCenterId: string | n
                 id="center-select"
                 value={selectedCenterId || ''}
                 onChange={(e) => onSelect(e.target.value)}
-                className="p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]">
+                disabled={userRole !== 'admin'}
+                className="p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))] disabled:opacity-70 disabled:cursor-not-allowed">
                 {centers.map(center => (
                     <option key={center.id} value={center.id}>{center.name}</option>
                 ))}
@@ -176,7 +179,13 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         setActiveSearchQuery('');
         setGradeFilter('');
         setDayFilter('');
-    }, [activeTab, selectedCenterId]);
+        // If a teacher is viewing, default to students tab
+        if (user.role === 'teacher') {
+            setActiveTab('students');
+        } else {
+            setActiveTab('stats');
+        }
+    }, [activeTab, selectedCenterId, user.role]);
 
     // FIX: Define handleSearch and clearFilters to be passed to SearchControls.
     const handleSearch = () => {
@@ -262,7 +271,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         );
     }, [posts, activeSearchQuery]);
     
-    const tabItems = [
+    const adminTabItems = [
         { id: 'stats', label: 'الإحصائيات', icon: <AcademicCapIcon /> },
         { id: 'students', label: 'الطلاب', icon: <UsersIcon /> },
         { id: 'teachers', label: 'المدرسون', icon: <UsersIcon className="w-6 h-6 transform scale-x-[-1]" /> },
@@ -270,6 +279,14 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         { id: 'posts', label: 'الإعلانات', icon: <NewsIcon /> },
         { id: 'notifications', label: 'إرسال إشعار', icon: <BellIcon /> },
     ];
+    
+    const teacherTabItems = [
+        { id: 'students', label: 'الطلاب', icon: <UsersIcon /> },
+        { id: 'lessons', label: 'الحصص', icon: <CalendarIcon /> },
+    ];
+
+    const tabItems = user.role === 'admin' ? adminTabItems : teacherTabItems;
+
 
     const renderContent = () => {
         if (loading && students.length === 0) return <div className="text-center p-10"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--color-primary))] mx-auto"></div></div>;
@@ -282,36 +299,36 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         const filterSelectClass = "p-2 h-full rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]";
 
         switch (activeTab) {
-            case 'stats': return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            case 'stats': return user.role === 'admin' ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard title="إجمالي الطلاب" value={students.length} icon={<UsersIcon />} color="#3b82f6" />
                 <StatCard title="إجمالي المدرسين" value={teachers.length} icon={<AcademicCapIcon />} color="#8b5cf6" />
                 <StatCard title="إجمالي الحصص" value={lessons.length} icon={<CalendarIcon />} color="#10b981" />
                 <StatCard title="إجمالي الإعلانات" value={posts.length} icon={<NewsIcon />} color="#f97316" />
-            </div>;
-            case 'students': return <DataTable title="الطلاب" data={filteredStudents} columns={{ name: 'الاسم', email: 'الإيميل', phone: 'الهاتف', grade: 'الصف' }} onEdit={item => handleOpenModal('student', item)} onDelete={createDeleteHandler('users')}>
+            </div> : null;
+            case 'students': return <DataTable title="الطلاب" data={filteredStudents} columns={{ name: 'الاسم', email: 'الإيميل', phone: 'الهاتف', grade: 'الصف' }} onEdit={item => handleOpenModal('student', item)} onDelete={user.role === 'admin' ? createDeleteHandler('users') : undefined}>
                 <SearchControls {...searchProps}>
                     <select value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} className={filterSelectClass}><option value="">كل الصفوف</option>{grades.map(g => <option key={g} value={g}>{g}</option>)}</select>
                 </SearchControls>
             </DataTable>;
-            case 'teachers': return <DataTable title="المدرسون" data={filteredTeachers} columns={{ name: 'الاسم', subject: 'المادة', phone: 'الهاتف' }} onEdit={item => handleOpenModal('teacher', item)} onDelete={createDeleteHandler('teachers')} onAdd={() => handleOpenModal('teacher')}>
+            case 'teachers': return user.role === 'admin' ? <DataTable title="المدرسون" data={filteredTeachers} columns={{ name: 'الاسم', subject: 'المادة', phone: 'الهاتف' }} onEdit={item => handleOpenModal('teacher', item)} onDelete={createDeleteHandler('teachers')} onAdd={() => handleOpenModal('teacher')}>
                 <SearchControls {...searchProps} />
-            </DataTable>;
-            case 'lessons': return <DataTable title="الحصص" data={filteredLessons} columns={{ subject: 'المادة', teacher: 'المدرس', day: 'اليوم', time: 'الوقت', hall: 'القاعة', grade: 'الصف' }} onEdit={item => handleOpenModal('lesson', item)} onDelete={createDeleteHandler('lessons')} onAdd={() => handleOpenModal('lesson')} displayTransform={{ teacher: (item) => item.teachers?.name }}>
+            </DataTable> : null;
+            case 'lessons': return <DataTable title="الحصص" data={filteredLessons} columns={{ subject: 'المادة', teacher: 'المدرس', day: 'اليوم', time: 'الوقت', hall: 'القاعة', grade: 'الصف' }} onEdit={user.role === 'admin' ? item => handleOpenModal('lesson', item) : undefined} onDelete={user.role === 'admin' ? createDeleteHandler('lessons') : undefined} onAdd={user.role === 'admin' ? () => handleOpenModal('lesson') : undefined} displayTransform={{ teacher: (item) => item.teachers?.name }}>
                 <SearchControls {...searchProps}>
                     <select value={dayFilter} onChange={e => setDayFilter(e.target.value)} className={filterSelectClass}><option value="">كل الأيام</option>{days.map(d => <option key={d} value={d}>{d}</option>)}</select>
                     <select value={gradeFilter} onChange={e => setGradeFilter(e.target.value)} className={filterSelectClass}><option value="">كل الصفوف</option>{grades.map(g => <option key={g} value={g}>{g}</option>)}</select>
                 </SearchControls>
             </DataTable>;
-            case 'posts': return <DataTable title="الإعلانات" data={filteredPosts} columns={{ title: 'العنوان', author: 'الكاتب', timestamp: 'التاريخ' }} onEdit={item => handleOpenModal('post', item)} onDelete={createDeleteHandler('posts')} onAdd={() => handleOpenModal('post')} displayTransform={{ timestamp: (item) => new Date(item.timestamp).toLocaleDateString() }}>
+            case 'posts': return user.role === 'admin' ? <DataTable title="الإعلانات" data={filteredPosts} columns={{ title: 'العنوان', author: 'الكاتب', timestamp: 'التاريخ' }} onEdit={item => handleOpenModal('post', item)} onDelete={createDeleteHandler('posts')} onAdd={() => handleOpenModal('post')} displayTransform={{ timestamp: (item) => new Date(item.timestamp).toLocaleDateString() }}>
                  <SearchControls {...searchProps} />
-            </DataTable>;
-            case 'notifications': return <NotificationSender students={students} centerId={selectedCenterId} />;
+            </DataTable> : null;
+            case 'notifications': return user.role === 'admin' ? <NotificationSender students={students} centerId={selectedCenterId} /> : null;
             default: return null;
         }
     };
 
     return <div className="space-y-8 animate-fade-in-up">
-        {centers.length > 0 && <CenterSwitcher centers={centers} selectedCenterId={selectedCenterId} onSelect={onSelectCenter} />}
+        {centers.length > 0 && <CenterSwitcher centers={centers} selectedCenterId={selectedCenterId} onSelect={onSelectCenter} userRole={user.role} />}
         
         <div className="bg-[hsl(var(--color-surface))] rounded-xl shadow-lg p-2 border border-[hsl(var(--color-border))] flex flex-wrap items-center gap-2">
             {tabItems.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id as AdminTab)} className={`flex-grow text-center py-2 px-4 font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === tab.id ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>{tab.icon}{tab.label}</button>)}
@@ -324,7 +341,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 };
 
 // --- Data Table Component ---
-const DataTable: React.FC<{ title: string; data: any[]; columns: Record<string, string>; children?: React.ReactNode; onAdd?: () => void; onEdit: (item: any) => void; onDelete: (id: string) => void; displayTransform?: Record<string, (item: any) => string> }> = ({ title, data, columns, children, onAdd, onEdit, onDelete, displayTransform }) => (
+const DataTable: React.FC<{ title: string; data: any[]; columns: Record<string, string>; children?: React.ReactNode; onAdd?: () => void; onEdit?: (item: any) => void; onDelete?: (id: string) => void; displayTransform?: Record<string, (item: any) => string> }> = ({ title, data, columns, children, onAdd, onEdit, onDelete, displayTransform }) => (
     <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg border border-[hsl(var(--color-border))] overflow-hidden">
         <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-[hsl(var(--color-border))] flex-wrap">
             <h2 className="text-xl font-bold flex-shrink-0">{title}</h2>
@@ -334,13 +351,16 @@ const DataTable: React.FC<{ title: string; data: any[]; columns: Record<string, 
         <div className="overflow-x-auto"><table className="w-full text-right">
             <thead className="bg-[hsl(var(--color-background))]"><tr className="border-b border-[hsl(var(--color-border))]">
                 {Object.values(columns).map(label => <th key={label} className="p-3 font-semibold uppercase text-sm text-[hsl(var(--color-text-secondary))]">{label}</th>)}
-                <th className="p-3 font-semibold uppercase text-sm text-[hsl(var(--color-text-secondary))]">إجراءات</th>
+                {(onEdit || onDelete) && <th className="p-3 font-semibold uppercase text-sm text-[hsl(var(--color-text-secondary))]">إجراءات</th>}
             </tr></thead>
             <tbody className="divide-y divide-[hsl(var(--color-border))]">
                 {data.length > 0 ? data.map(item => (
                     <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                         {Object.keys(columns).map(key => <td key={key} className="p-3 whitespace-nowrap">{displayTransform?.[key] ? displayTransform[key](item) : item[key]?.toString() || ''}</td>)}
-                        <td className="p-3 flex gap-2"><button onClick={() => onEdit(item)} className="p-2 rounded-md hover:bg-blue-500/10 text-blue-500"><PencilIcon /></button><button onClick={() => onDelete(item.id)} className="p-2 rounded-md hover:bg-red-500/10 text-red-500"><TrashIcon /></button></td>
+                        {(onEdit || onDelete) && <td className="p-3 flex gap-2">
+                            {onEdit && <button onClick={() => onEdit(item)} className="p-2 rounded-md hover:bg-blue-500/10 text-blue-500"><PencilIcon /></button>}
+                            {onDelete && <button onClick={() => onDelete(item.id)} className="p-2 rounded-md hover:bg-red-500/10 text-red-500"><TrashIcon /></button>}
+                        </td>}
                     </tr>
                 )) : <tr><td colSpan={Object.keys(columns).length + 1} className="text-center p-8 text-[hsl(var(--color-text-secondary))]">لا توجد بيانات.</td></tr>}
             </tbody>
@@ -390,6 +410,10 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
 
     const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleGradesChange = (newGrades: string[]) => {
+        setFormData(prev => ({ ...prev, grades: newGrades }));
     };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -502,6 +526,34 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
         if (!hasError) onClose(true);
     };
 
+    const GradesCheckboxGroup: React.FC<{ selectedGrades: string[], onChange: (grades: string[]) => void }> = ({ selectedGrades = [], onChange }) => {
+        const handleCheckboxChange = (grade: string) => {
+            const newSelection = selectedGrades.includes(grade)
+                ? selectedGrades.filter(g => g !== grade)
+                : [...selectedGrades, grade];
+            onChange(newSelection);
+        };
+
+        return (
+            <div>
+                <label className="block text-sm font-medium text-[hsl(var(--color-text-secondary))] mb-1">الصفوف الدراسية</label>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 p-3 bg-[hsl(var(--color-background))] rounded-lg border border-[hsl(var(--color-border))]">
+                    {TEACHER_GRADE_OPTIONS.map(grade => (
+                        <label key={grade} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={selectedGrades.includes(grade)}
+                                onChange={() => handleCheckboxChange(grade)}
+                                className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <span className="text-sm">{grade}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     const renderForm = () => {
         switch (type) {
             case 'teacher': return <>
@@ -514,7 +566,7 @@ const AdminModal: React.FC<AdminModalProps> = ({ type, item, onClose, centerId, 
                 )}
                 <FormInput name="name" placeholder="الاسم" required value={formData.name || ''} onChange={handleChange} />
                 <FormInput name="subject" placeholder="المادة" required value={formData.subject || ''} onChange={handleChange} />
-                <FormInput name="grades" placeholder="الصفوف التي يدرسها" value={formData.grades || ''} onChange={handleChange} />
+                <GradesCheckboxGroup selectedGrades={formData.grades || []} onChange={handleGradesChange} />
                 <FormInput name="phone" placeholder="الهاتف" value={formData.phone || ''} onChange={handleChange} />
                 <FormInput name="email" type="email" placeholder="البريد الإلكتروني" value={formData.email || ''} onChange={handleChange} />
                 <FormTextarea name="bio" placeholder="نبذة تعريفية" value={formData.bio || ''} onChange={handleChange} />
