@@ -32,7 +32,7 @@ const to12Hour = (timeStr: string): string => {
     return `${displayHours}:${minutes} ${modifier}`;
 };
 
-const TEACHER_GRADE_OPTIONS = ['المرحلة الإعدادية', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
+const TEACHER_GRADE_OPTIONS = ['الصف الأول الإعدادي', 'الصف الثاني الإعدادي', 'الصف الثالث الإعدادي', 'الصف الأول الثانوي', 'الصف الثاني الثانوي', 'الصف الثالث الثانوي'];
 
 // --- Reusable Form Field Components (defined top-level to prevent re-renders) ---
 const inputSharedClass = "w-full p-2 rounded-lg bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]";
@@ -185,7 +185,7 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         } else {
             setActiveTab('stats');
         }
-    }, [activeTab, selectedCenterId, user.role]);
+    }, [selectedCenterId, user.role]);
 
     // FIX: Define handleSearch and clearFilters to be passed to SearchControls.
     const handleSearch = () => {

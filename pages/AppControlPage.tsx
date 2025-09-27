@@ -80,7 +80,7 @@ const AppControlPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const BUCKET_NAME = 'profile-pictures';
+    const BUCKET_NAME = 'teacher-avatars';
 
     const fetchPictures = useCallback(async () => {
         setIsLoading(true);

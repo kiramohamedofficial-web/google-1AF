@@ -1,8 +1,5 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import AnimatedCat from '../components/common/AnimatedCat.tsx';
-import Footer from '../components/layout/Footer.tsx';
 import { Page, User, Center } from '../types.ts';
 import { supabase } from '../services/supabaseClient.ts';
 import { generateAvatar } from '../constants.ts';
@@ -559,7 +556,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         <div className="min-h-screen flex flex-col bg-[#0a192f] text-slate-200 overflow-hidden">
             <ParticleNetwork />
             <AnimatedCat />
-            <div className="flex-grow flex items-center justify-center p-4 pb-16">
+            <div className="flex-grow flex items-center justify-center p-4">
                 <div className="relative z-10 w-full max-w-md animate-fade-in-up">
                     <div className="text-center mb-8">
                         <div className="inline-block p-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg mb-4 border border-slate-700">
@@ -682,7 +679,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                     </div>
                 </div>
             </div>
-            <Footer onNavigate={onNavigate} insideApp={false} />
         </div>
     );
 };

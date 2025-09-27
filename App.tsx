@@ -1,13 +1,8 @@
-
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Notification, Post, Center } from './types.ts';
 import Header from './components/layout/Header.tsx';
 import Sidebar from './components/layout/Sidebar.tsx';
-import Footer from './components/layout/Footer.tsx';
 import HomePage from './pages/HomePage.tsx';
 import FullSchedulePage from './pages/FullSchedulePage.tsx';
 import TeachersPage from './pages/TeachersPage.tsx';
@@ -390,20 +385,18 @@ const App: React.FC = () => {
         switch (currentPage) {
             case 'privacy-policy':
                 return (
-                    <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6 pb-16">
+                    <div className="bg-[hsl(var(--color-background))] min-h-screen">
+                        <main className="p-4 md:p-6">
                             <PrivacyPolicyPage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
-                        <Footer onNavigate={setCurrentPage} insideApp={false} />
                     </div>
                 );
             case 'terms-of-service':
                  return (
-                    <div className="min-h-screen bg-[hsl(var(--color-background))] flex flex-col">
-                        <main className="flex-grow p-4 md:p-6 pb-16">
+                    <div className="bg-[hsl(var(--color-background))] min-h-screen">
+                        <main className="p-4 md:p-6">
                             <TermsOfServicePage onNavigate={setCurrentPage} isInsideApp={false} />
                         </main>
-                        <Footer onNavigate={setCurrentPage} insideApp={false} />
                     </div>
                 );
             default:
@@ -487,11 +480,10 @@ const App: React.FC = () => {
                 />
                 <div className={`flex flex-col h-full lg:pr-60`}>
                     <main className={`flex-grow pt-20 overflow-y-auto`}>
-                        <div className='p-4 md:p-6 pb-16'>
+                        <div className='p-4 md:p-6'>
                             {renderPageContent()}
                         </div>
                     </main>
-                    <Footer onNavigate={setCurrentPage} insideApp={true} />
                 </div>
             </div>
         </IconProvider>
