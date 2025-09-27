@@ -6,8 +6,10 @@ import {
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
     Cog6ToothIcon, ArrowLeftOnRectangleIcon, 
     PrivacyIcon, TermsIcon, BookOpenIcon,
-    NewsIcon, PhotoIcon
+    NewsIcon, PhotoIcon, SparklesIcon
 } from '../common/Icons.tsx';
+import { useIcons } from '../../contexts/IconContext.tsx';
+import IconDisplay from '../common/IconDisplay.tsx';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -43,32 +45,41 @@ const NavSection: React.FC<{title: string, children: React.ReactNode}> = ({title
 )
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, onNavigate, onLogout, theme, setTheme }) => {
+    const { iconSettings } = useIcons();
+    
     const handleNavigation = (page: Page) => {
         onNavigate(page);
         onClose();
     };
 
     const mainLinks = [
-        { page: 'home', label: 'الرئيسية', icon: <HomeIcon /> },
-        { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon /> },
+        { page: 'home', label: 'الرئيسية', icon: <HomeIcon />, key: 'nav_home' },
+        { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon />, key: 'nav_full-schedule' },
     ];
     
     const learnLinks = [
-        { page: 'teachers', label: 'المدرسين', icon: <UsersIcon /> },
+        { page: 'teachers', label: 'المدرسين', icon: <UsersIcon />, key: 'nav_teachers' },
     ];
 
     const centerLinks = [
-        { page: 'news', label: 'الأخبار', icon: <NewsIcon /> },
+        { page: 'news', label: 'الأخبار', icon: <NewsIcon />, key: 'nav_news' },
     ];
     
     const helpLinks = [
-        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon /> },
-        { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon /> },
-        { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon /> },
+        { page: 'about', label: 'من نحن', icon: <InformationCircleIcon />, key: 'nav_about' },
+        { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon />, key: 'nav_privacy-policy' },
+        { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon />, key: 'nav_terms-of-service' },
     ];
     
-    const adminDashboardLink = { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon /> };
-    const appControlLink = { page: 'app-control', label: 'صور البروفايل', icon: <PhotoIcon /> };
+    const adminDashboardLink = { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon />, key: 'nav_admin-dashboard' };
+    const appControlLink = { page: 'app-control', label: 'صور البروفايل', icon: <PhotoIcon />, key: 'nav_app-control' };
+    const iconControlLink = { page: 'icon-control', label: 'التحكم بالأيقونات', icon: <SparklesIcon />, key: 'nav_icon-control' };
+
+    // FIX: Replaced JSX.Element with React.ReactNode to resolve "Cannot find namespace 'JSX'" error.
+    const renderNavLink = (link: { page: string, label: string, icon: React.ReactNode, key: string }) => {
+        const icon = <IconDisplay value={iconSettings[link.key]} fallback={link.icon} className="w-6 h-6" />;
+        return <NavLink key={link.page} icon={icon} label={link.label} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />;
+    };
 
     return (
         <>
@@ -104,22 +115,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
                     <nav className="flex-grow p-3 overflow-y-auto">
                         <NavSection title="الرئيسية">
-                             {mainLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                             {mainLinks.map(renderNavLink)}
                         </NavSection>
                         <NavSection title="تعلم">
-                             {learnLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                             {learnLinks.map(renderNavLink)}
                         </NavSection>
                         <NavSection title="المركز">
-                             {centerLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                             {centerLinks.map(renderNavLink)}
                         </NavSection>
                          {user.role === 'admin' && (
                              <NavSection title="تحكم التطبيق">
-                                <NavLink {...adminDashboardLink} onClick={() => handleNavigation(adminDashboardLink.page as Page)} isActive={currentPage === adminDashboardLink.page} />
-                                <NavLink {...appControlLink} onClick={() => handleNavigation(appControlLink.page as Page)} isActive={currentPage === appControlLink.page} />
+                                {renderNavLink(adminDashboardLink)}
+                                {renderNavLink(appControlLink)}
+                                {user.email === 'jytt0jewellery@gmail.com' && renderNavLink(iconControlLink)}
                             </NavSection>
                         )}
                         <NavSection title="مساعدة">
-                             {helpLinks.map(link => <NavLink key={link.page} {...link} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />)}
+                             {helpLinks.map(renderNavLink)}
                         </NavSection>
                     </nav>
 

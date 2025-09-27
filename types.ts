@@ -12,7 +12,8 @@ export type Page =
     | 'privacy-policy'
     | 'terms-of-service'
     | 'news'
-    | 'app-control';
+    | 'app-control'
+    | 'icon-control';
 
 export interface Center {
     id: string;
@@ -94,4 +95,12 @@ export interface DefaultProfilePicture {
   gender: 'male' | 'female';
   image_url: string;
   created_at: string;
+}
+
+export interface IconSetting {
+  id: number;
+  key: string;
+  value: string;
+  category: 'subject' | 'sidebar' | 'general';
+  label: string;
 }

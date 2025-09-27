@@ -1,14 +1,16 @@
 
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { User, Lesson, Page } from '../types.ts';
 import { getSubjectStyle, normalizeArabic } from '../constants.ts';
+import { useIcons } from '../contexts/IconContext.tsx';
+import IconDisplay from '../components/common/IconDisplay.tsx';
 
 
-const DailyScheduleBar: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => (
+const DailyScheduleBar: React.FC<{ lessons: Lesson[], iconSettings: Record<string, string> }> = ({ lessons, iconSettings }) => (
     <div className="flex space-x-4 space-x-reverse overflow-x-auto pb-4 -mx-4 px-4">
         {lessons.length > 0 ? lessons.map((lesson, index) => {
-             const style = getSubjectStyle(lesson.subject);
+             const style = getSubjectStyle(lesson.subject, iconSettings);
             return (
                 <div 
                     key={lesson.id} 
@@ -17,7 +19,7 @@ const DailyScheduleBar: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => (
                     data-subject={lesson.subject}
                 >
                     <div className="flex items-center gap-2">
-                        <span className="lesson-card-icon text-2xl">{style.icon}</span>
+                        <IconDisplay value={style.icon} fallback="📚" className="w-8 h-8 lesson-card-icon" />
                         <h4 className="lesson-card-subject font-bold text-[hsl(var(--color-text-primary))] mt-2">{lesson.subject}</h4>
                     </div>
                     <p className="lesson-card-details text-sm text-[hsl(var(--color-text-secondary))]">{lesson.time}</p>
@@ -31,7 +33,7 @@ const TeacherIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4
 const TimeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" /></svg>;
 const LocationIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
 
-const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => {
+const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], iconSettings: Record<string, string> }> = ({ lessons, iconSettings }) => {
     const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
     const todayName = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayIndex = days.indexOf(todayName);
@@ -54,7 +56,7 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => {
                         </div>
                         <div className="p-2 md:p-3 space-y-2.5 flex-grow overflow-y-auto">
                             {dayLessons.map((lesson, lessonIndex) => {
-                                const style = getSubjectStyle(lesson.subject);
+                                const style = getSubjectStyle(lesson.subject, iconSettings);
                                 return (
                                     <div
                                         key={lesson.id}
@@ -66,7 +68,9 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[] }> = ({ lessons }) => {
                                         data-subject={lesson.subject}
                                     >
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="lesson-card-icon text-2xl p-1.5 rounded-lg" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>{style.icon}</span>
+                                            <div className="p-1.5 rounded-lg lesson-card-icon" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>
+                                                <IconDisplay value={style.icon} fallback="📚" className="w-6 h-6" />
+                                            </div>
                                             <h4 className="lesson-card-subject text-base font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
                                         </div>
                                         <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs text-[hsl(var(--color-text-secondary))] items-center">
@@ -97,6 +101,8 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
+    const { iconSettings } = useIcons();
+
     const userLessons = useMemo(() => {
         const normalizedUserGrade = normalizeArabic(user.grade);
         // If user has no grade, don't show any lessons to avoid confusion.
@@ -127,7 +133,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002 2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                     <span>حصص اليوم</span>
                 </h2>
-                <DailyScheduleBar lessons={todayLessons} />
+                <DailyScheduleBar lessons={todayLessons} iconSettings={iconSettings} />
             </section>
 
             <section>
@@ -135,7 +141,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     <span>الأسبوع القادم</span>
                 </h2>
-                <UpcomingWeekSchedule lessons={userLessons} />
+                <UpcomingWeekSchedule lessons={userLessons} iconSettings={iconSettings} />
             </section>
         </div>
     );

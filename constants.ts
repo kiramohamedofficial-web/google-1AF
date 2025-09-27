@@ -19,9 +19,17 @@ export const subjectStyles: Record<string, { icon: string; progressBarClass: str
     'Default': { icon: '📚', progressBarClass: 'bg-gray-500', bgColor: 'bg-gray-500/10 border-gray-500/20' },
 };
 
-export const getSubjectStyle = (subject: string) => {
+export const getSubjectStyle = (subject: string, iconSettings: Record<string, string> = {}) => {
     const key = Object.keys(subjectStyles).find(s => subject.includes(s) && s !== 'Default') || 'Default';
-    return subjectStyles[key];
+    const style = subjectStyles[key as keyof typeof subjectStyles];
+
+    const iconKey = `subject_${key}`;
+    const customIcon = iconSettings[iconKey];
+
+    return {
+        ...style,
+        icon: customIcon || style.icon, // Override icon if a custom one exists
+    };
 };
 
 /**

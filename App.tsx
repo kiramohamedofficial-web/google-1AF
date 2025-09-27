@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { User, Theme, Page, Teacher, Lesson, Notification, Post, Center } from './types.ts';
@@ -16,7 +17,9 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage.tsx';
 import TermsOfServicePage from './pages/TermsOfServicePage.tsx';
 import NewsBoardPage from './pages/NewsBoardPage.tsx';
 import AppControlPage from './pages/AppControlPage.tsx';
+import IconControlPage from './pages/IconControlPage.tsx';
 import { supabase } from './services/supabaseClient.ts';
+import { IconProvider } from './contexts/IconContext.tsx';
 
 const App: React.FC = () => {
     const [theme, setTheme] = useState<Theme>(() => {
@@ -415,39 +418,43 @@ const App: React.FC = () => {
                 return <NewsBoardPage posts={posts} />;
             case 'app-control':
                 return currentUser.role === 'admin' ? <AppControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
+            case 'icon-control':
+                return currentUser.email === 'jytt0jewellery@gmail.com' ? <IconControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
             default:
                 return <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
         }
     };
 
     return (
-        <div className="h-full bg-[hsl(var(--color-background))]">
-            <Header
-                user={currentUser}
-                onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
-                onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
-                notifications={notifications}
-                onMarkAllAsRead={handleMarkAllAsRead}
-            />
-            <Sidebar
-                isOpen={isSidebarOpen}
-                user={currentUser}
-                currentPage={currentPage}
-                onClose={() => setSidebarOpen(false)}
-                onNavigate={setCurrentPage}
-                onLogout={handleLogout}
-                theme={theme}
-                setTheme={setTheme}
-            />
-            <div className={`flex flex-col h-full lg:pr-64`}>
-                <main className={`flex-grow pt-20 overflow-y-auto`}>
-                    <div className='p-4 md:p-6'>
-                        {renderPageContent()}
-                    </div>
-                </main>
-                <Footer onNavigate={setCurrentPage} insideApp={true} />
+        <IconProvider>
+            <div className="h-full bg-[hsl(var(--color-background))]">
+                <Header
+                    user={currentUser}
+                    onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
+                    onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
+                    notifications={notifications}
+                    onMarkAllAsRead={handleMarkAllAsRead}
+                />
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    user={currentUser}
+                    currentPage={currentPage}
+                    onClose={() => setSidebarOpen(false)}
+                    onNavigate={setCurrentPage}
+                    onLogout={handleLogout}
+                    theme={theme}
+                    setTheme={setTheme}
+                />
+                <div className={`flex flex-col h-full lg:pr-64`}>
+                    <main className={`flex-grow pt-20 overflow-y-auto`}>
+                        <div className='p-4 md:p-6'>
+                            {renderPageContent()}
+                        </div>
+                    </main>
+                    <Footer onNavigate={setCurrentPage} insideApp={true} />
+                </div>
             </div>
-        </div>
+        </IconProvider>
     );
 };
 

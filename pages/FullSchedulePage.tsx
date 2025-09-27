@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { User, Lesson } from '../types.ts';
 import { getSubjectStyle, normalizeArabic } from '../constants.ts';
+import { useIcons } from '../contexts/IconContext.tsx';
+import IconDisplay from '../components/common/IconDisplay.tsx';
 
 interface FullSchedulePageProps {
   user: User;
@@ -11,6 +13,7 @@ interface FullSchedulePageProps {
 
 const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) => {
     const [showMyGradeOnly, setShowMyGradeOnly] = useState(false);
+    const { iconSettings } = useIcons();
     
     const daysOfWeek = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
 
@@ -70,7 +73,7 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
                             <div className={`p-3 space-y-2 flex-grow transition-colors duration-300 ${showMyGradeOnly ? 'bg-[hsl(var(--color-primary)/0.05)]' : ''}`}>
                                 {dayLessons.length > 0 ? (
                                     dayLessons.map((lesson, lessonIndex) => {
-                                        const style = getSubjectStyle(lesson.subject);
+                                        const style = getSubjectStyle(lesson.subject, iconSettings);
                                         const isMyGrade = normalizeArabic(lesson.grade) === normalizeArabic(user.grade);
                                         return (
                                             <div 
@@ -82,7 +85,7 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
                                                 <div className="flex justify-between items-start gap-3">
                                                     <div>
                                                         <h3 className="text-lg font-bold text-[hsl(var(--color-text-primary))] flex items-center gap-2">
-                                                            <span className="lesson-card-icon text-2xl">{style.icon}</span>
+                                                            <IconDisplay value={style.icon} fallback="📚" className="w-6 h-6 lesson-card-icon" />
                                                             <span className="lesson-card-subject">{lesson.subject}</span>
                                                         </h3>
                                                         <div className="lesson-card-details">
