@@ -1,12 +1,12 @@
+
 import React from 'react';
-import { User, Theme, Page } from '../../types.ts';
-import ThemeSwitcher from './ThemeSwitcher.tsx';
+import { User, Page } from '../../types.ts';
 import { 
     HomeIcon, CalendarIcon, UsersIcon, 
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
     Cog6ToothIcon, ArrowLeftOnRectangleIcon, 
     PrivacyIcon, TermsIcon, BookOpenIcon,
-    NewsIcon, PhotoIcon, SparklesIcon
+    NewsIcon, PhotoIcon, SparklesIcon, PaintBrushIcon
 } from '../common/Icons.tsx';
 import { useIcons } from '../../contexts/IconContext.tsx';
 import IconDisplay from '../common/IconDisplay.tsx';
@@ -18,8 +18,7 @@ interface SidebarProps {
     onClose: () => void;
     onNavigate: (page: Page) => void;
     onLogout: () => void;
-    theme: Theme;
-    setTheme: (theme: Theme) => void;
+    onOpenThemeModal: () => void;
 }
 
 const NavLink: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isActive: boolean }> = ({ icon, label, onClick, isActive }) => (
@@ -44,7 +43,7 @@ const NavSection: React.FC<{title: string, children: React.ReactNode}> = ({title
     </div>
 )
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, onNavigate, onLogout, theme, setTheme }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, onNavigate, onLogout, onOpenThemeModal }) => {
     const { iconSettings } = useIcons();
     
     const handleNavigation = (page: Page) => {
@@ -83,12 +82,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
 
     return (
         <>
-            <div className={`fixed top-0 right-0 h-full w-64 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))]`}>
+            <div className={`fixed top-0 right-0 h-full w-60 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))] rounded-l-2xl overflow-hidden`}>
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-[hsl(var(--color-border))] flex flex-col items-center h-16 justify-center">
-                         <div className="flex items-center gap-2 text-xl font-bold text-[hsl(var(--color-primary))]">
+                         <div className="flex items-center gap-2 text-lg font-bold text-[hsl(var(--color-primary))]">
                             <BookOpenIcon />
-                            <span className="font-extrabold">{user.center?.name || 'المنصة التعليمية'}</span>
+                            <span className="font-extrabold">{user.center?.name || 'سنتر جوجل'}</span>
                         </div>
                     </div>
 
@@ -136,12 +135,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                     </nav>
 
                     <div className="p-2 border-t border-[hsl(var(--color-border))]">
-                        <div className="bg-[hsl(var(--color-background))] p-1 rounded-lg">
-                            <p className="text-xs font-bold text-center mb-1 text-[hsl(var(--color-text-secondary))]">اختر الثيم</p>
-                            <ThemeSwitcher currentTheme={theme} onChangeTheme={setTheme} />
-                        </div>
-                        <button onClick={onLogout} className="w-full flex items-center gap-2 px-2 py-1 text-sm rounded-md text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-1">
-                           <ArrowLeftOnRectangleIcon/>
+                        <button onClick={onOpenThemeModal} className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-[hsl(var(--color-text-secondary))] hover:bg-black/5 dark:hover:bg-white/10 hover:text-[hsl(var(--color-text-primary))] transition-colors duration-200">
+                           <IconDisplay value={iconSettings['nav_themes']} fallback={<PaintBrushIcon />} className="w-6 h-6" />
+                           <span className="font-medium">تغيير الثيم</span>
+                        </button>
+                        <button onClick={onLogout} className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md text-[hsl(var(--color-text-secondary))] hover:bg-red-500/10 hover:text-red-500 transition-colors duration-200 mt-1">
+                           <IconDisplay value={iconSettings['nav_logout']} fallback={<ArrowLeftOnRectangleIcon />} className="w-6 h-6" />
                            <span className="font-medium">تسجيل الخروج</span>
                         </button>
                     </div>

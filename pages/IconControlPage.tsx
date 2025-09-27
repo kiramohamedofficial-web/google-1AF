@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { supabase } from '../services/supabaseClient.ts';
 import { subjectStyles } from '../constants.ts';
 import type { IconSetting } from '../types.ts';
-import { HomeIcon, CalendarIcon, UsersIcon, NewsIcon, InformationCircleIcon, PrivacyIcon, TermsIcon, PhotoIcon, Cog6ToothIcon, SparklesIcon } from '../components/common/Icons.tsx';
+import { HomeIcon, CalendarIcon, UsersIcon, NewsIcon, InformationCircleIcon, PrivacyIcon, TermsIcon, PhotoIcon, Cog6ToothIcon, SparklesIcon, PaintBrushIcon, ArrowLeftOnRectangleIcon } from '../components/common/Icons.tsx';
 import { useIcons } from '../contexts/IconContext.tsx';
 import IconDisplay from '../components/common/IconDisplay.tsx';
 
@@ -18,6 +18,8 @@ const REQUIRED_SIDEBAR_ICONS = [
     { key: 'nav_admin-dashboard', label: 'لوحة التحكم', fallback: <Cog6ToothIcon /> },
     { key: 'nav_app-control', label: 'صور البروفايل', fallback: <PhotoIcon /> },
     { key: 'nav_icon-control', label: 'التحكم بالأيقونات', fallback: <SparklesIcon /> },
+    { key: 'nav_themes', label: 'تغيير الثيم', fallback: <PaintBrushIcon /> },
+    { key: 'nav_logout', label: 'تسجيل الخروج', fallback: <ArrowLeftOnRectangleIcon /> },
 ];
 
 const IconEditor: React.FC<{

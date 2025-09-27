@@ -11,7 +11,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, insideApp }) => {
     // Changed from 'fixed' to a static footer that's part of the flex layout.
     const baseClass = "w-full text-center p-2 text-[11px] flex-shrink-0";
     // Style for inside the authenticated app. It respects the sidebar.
-    const appClass = "bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] lg:pr-64 border-t border-[hsl(var(--color-border))]";
+    const appClass = "bg-[hsl(var(--color-background))] text-[hsl(var(--color-text-secondary))] lg:pr-60 border-t border-[hsl(var(--color-border))]";
     // Style for public pages (Login, Privacy, Terms). It has a blurred dark background.
     const publicClass = "relative z-10 bg-slate-900/75 backdrop-blur-xl text-slate-400 border-t border-slate-700";
     

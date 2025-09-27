@@ -47,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ user, onMenuClick, onNavigate, notifica
     }, []);
 
     return (
-        <header className="fixed top-0 right-0 left-0 z-40 h-20 lg:pr-64 transition-all duration-300">
+        <header className="fixed top-0 right-0 left-0 z-40 h-20 lg:pr-60 transition-all duration-300">
             <div className="container mx-auto px-4 sm:px-6 h-full flex items-center">
                 <div className="w-full flex items-center justify-between relative bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg p-2 border border-[hsl(var(--color-border))]">
                     <button

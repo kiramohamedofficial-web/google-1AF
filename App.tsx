@@ -20,6 +20,7 @@ import AppControlPage from './pages/AppControlPage.tsx';
 import IconControlPage from './pages/IconControlPage.tsx';
 import { supabase } from './services/supabaseClient.ts';
 import { IconProvider } from './contexts/IconContext.tsx';
+import { ThemeModal } from './components/common/Card3D.tsx';
 
 const App: React.FC = () => {
     const [theme, setTheme] = useState<Theme>(() => {
@@ -42,6 +43,7 @@ const App: React.FC = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
     const [centers, setCenters] = useState<Center[]>([]);
     const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
@@ -442,10 +444,18 @@ const App: React.FC = () => {
                     onClose={() => setSidebarOpen(false)}
                     onNavigate={setCurrentPage}
                     onLogout={handleLogout}
-                    theme={theme}
-                    setTheme={setTheme}
+                    onOpenThemeModal={() => setIsThemeModalOpen(true)}
                 />
-                <div className={`flex flex-col h-full lg:pr-64`}>
+                <ThemeModal
+                    isOpen={isThemeModalOpen}
+                    onClose={() => setIsThemeModalOpen(false)}
+                    currentTheme={theme}
+                    onChangeTheme={(newTheme) => {
+                        setTheme(newTheme);
+                        setIsThemeModalOpen(false);
+                    }}
+                />
+                <div className={`flex flex-col h-full lg:pr-60`}>
                     <main className={`flex-grow pt-20 overflow-y-auto`}>
                         <div className='p-4 md:p-6'>
                             {renderPageContent()}
