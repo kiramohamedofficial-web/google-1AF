@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback, ChangeEvent } from 'react';
 import { Lesson, Teacher, User, Post, Center } from '../types.ts';
 import { supabase } from '../services/supabaseClient.ts';
@@ -187,7 +188,6 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         }
     }, [selectedCenterId, user.role]);
 
-    // FIX: Define handleSearch and clearFilters to be passed to SearchControls.
     const handleSearch = () => {
         setActiveSearchQuery(searchInput.trim());
     };
