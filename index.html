@@ -784,6 +784,21 @@
       .admin-data-table tbody tr:hover {
         background-color: hsla(var(--color-text-primary), 0.06);
       }
+
+      /* --- NOTIFICATION GLOW EFFECT --- */
+      @keyframes notification-glow {
+        0%, 100% {
+          filter: drop-shadow(0 0 4px hsla(var(--color-primary), 0.4));
+        }
+        50% {
+          filter: drop-shadow(0 0 10px hsla(var(--color-primary), 0.7));
+        }
+      }
+      
+      .has-unread-notifications {
+          animation: notification-glow 2s ease-in-out infinite;
+          color: hsl(var(--color-primary)) !important; /* Use important to override text-secondary */
+      }
     </style>
 <script type="importmap">
 {
