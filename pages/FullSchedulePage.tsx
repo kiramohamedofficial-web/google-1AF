@@ -66,7 +66,7 @@ const FullSchedulePage: React.FC<FullSchedulePageProps> = ({ user, lessons }) =>
                 {daysOfWeek.map((day, dayIndex) => {
                     const dayLessons = lessonsByDay[day] || [];
                     return (
-                        <div key={day} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg border border-[hsl(var(--color-border))] overflow-hidden flex flex-col">
+                        <div key={day} className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg border border-[hsl(var(--color-border))] overflow-hidden flex flex-col card-hover-lift">
                             <h2 className="text-2xl font-bold p-4 text-center text-white bg-gradient-to-br from-[hsl(var(--color-primary))] to-blue-500/80">
                                 {day}
                             </h2>

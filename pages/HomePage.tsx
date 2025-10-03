@@ -14,7 +14,7 @@ const DailyScheduleBar: React.FC<{ lessons: Lesson[], iconSettings: Record<strin
             return (
                 <div 
                     key={lesson.id} 
-                    className={`lesson-card flex-shrink-0 w-56 p-4 rounded-xl shadow-md text-right ${style.bgColor} lesson-card-cocktail lesson-card-ocean`}
+                    className={`lesson-card flex-shrink-0 w-56 p-4 rounded-xl shadow-md text-right ${style.bgColor} lesson-card-cocktail lesson-card-ocean card-hover-lift`}
                     style={{ '--card-index': index } as React.CSSProperties}
                     data-subject={lesson.subject}
                 >
@@ -33,7 +33,7 @@ const TeacherIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4
 const TimeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" /></svg>;
 const LocationIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>;
 
-const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], iconSettings: Record<string, string> }> = ({ lessons, iconSettings }) => {
+const UpcomingDaysGrid: React.FC<{ lessons: Lesson[], iconSettings: Record<string, string> }> = ({ lessons, iconSettings }) => {
     const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
     const todayName = new Date().toLocaleDateString('ar-EG-u-nu-latn', { weekday: 'long' });
     const todayIndex = days.indexOf(todayName);
@@ -43,53 +43,59 @@ const UpcomingWeekSchedule: React.FC<{ lessons: Lesson[], iconSettings: Record<s
         ? [...days.slice(todayIndex + 1), ...days.slice(0, todayIndex)] 
         : days;
 
-    return (
-        <div className="flex space-x-6 space-x-reverse overflow-x-auto pb-4 -mx-6 px-6">
-            {orderedDays.map((day, dayIndex) => {
-                const dayLessons = lessons.filter(l => l.day === day).sort((a,b) => a.time.localeCompare(b.time));
-                if (dayLessons.length === 0) return null;
+    const lessonsByDay = useMemo(() => {
+        return orderedDays.map(day => ({
+            day,
+            lessons: lessons.filter(l => l.day === day).sort((a,b) => a.time.localeCompare(b.time))
+        })).filter(d => d.lessons.length > 0);
+    }, [lessons, orderedDays]);
+    
+    if (lessonsByDay.length === 0) {
+        return <p className="text-center text-[hsl(var(--color-text-secondary))] w-full py-8">لا توجد حصص مجدولة لبقية الأسبوع.</p>
+    }
 
-                return (
-                    <div key={day} className="flex-shrink-0 w-64 md:w-72 flex flex-col bg-[hsl(var(--color-surface))] rounded-2xl shadow-xl border border-[hsl(var(--color-border))] overflow-hidden animate-fade-in-up" style={{ animationDelay: `${dayIndex * 150}ms` }}>
-                        <div className="p-4 border-b-2 border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
-                            <h3 className="text-xl font-bold text-center text-[hsl(var(--color-primary))]">{day}</h3>
-                        </div>
-                        <div className="p-2 md:p-3 space-y-2.5 flex-grow overflow-y-auto">
-                            {dayLessons.map((lesson, lessonIndex) => {
-                                const style = getSubjectStyle(lesson.subject, iconSettings);
-                                return (
-                                    <div
-                                        key={lesson.id}
-                                        className={`lesson-card w-full text-right p-2.5 rounded-xl transition-all duration-300 border-2 bg-[hsl(var(--color-background))] border-transparent lesson-card-cocktail lesson-card-ocean`}
-                                        style={{ 
-                                            animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`,
-                                            '--card-index': dayIndex * 5 + lessonIndex
-                                        } as React.CSSProperties}
-                                        data-subject={lesson.subject}
-                                    >
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="p-1.5 rounded-lg lesson-card-icon" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>
-                                                <IconDisplay value={style.icon} fallback="📚" className="w-6 h-6" />
-                                            </div>
-                                            <h4 className="lesson-card-subject text-base font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
-                                        </div>
-                                        <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs text-[hsl(var(--color-text-secondary))] items-center">
-                                            <TeacherIcon />
-                                            <span className="truncate">{lesson.teacher}</span>
-                                            
-                                            <TimeIcon />
-                                            <span>{lesson.time}</span>
-                                            
-                                            <LocationIcon />
-                                            <span className="truncate">{lesson.hall}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {lessonsByDay.map(({ day, lessons: dayLessons }, dayIndex) => (
+                <div key={day} className="flex flex-col bg-[hsl(var(--color-surface))] rounded-2xl shadow-xl border border-[hsl(var(--color-border))] overflow-hidden animate-fade-in-up card-hover-lift" style={{ animationDelay: `${dayIndex * 150}ms` }}>
+                    <div className="p-4 border-b-2 border-[hsl(var(--color-border))] bg-[hsl(var(--color-background))]">
+                        <h3 className="text-xl font-bold text-center text-[hsl(var(--color-primary))]">{day}</h3>
                     </div>
-                );
-            })}
+                    <div className="p-2 md:p-3 space-y-2.5 flex-grow overflow-y-auto">
+                        {dayLessons.map((lesson, lessonIndex) => {
+                            const style = getSubjectStyle(lesson.subject, iconSettings);
+                            return (
+                                <div
+                                    key={lesson.id}
+                                    className={`lesson-card w-full text-right p-2.5 rounded-xl transition-all duration-300 border-2 bg-[hsl(var(--color-background))] border-transparent lesson-card-cocktail lesson-card-ocean`}
+                                    style={{ 
+                                        animation: `fadeIn-up 0.5s ${(dayIndex * 150) + (lessonIndex * 80)}ms backwards cubic-bezier(0.25, 1, 0.5, 1)`,
+                                        '--card-index': dayIndex * 5 + lessonIndex
+                                    } as React.CSSProperties}
+                                    data-subject={lesson.subject}
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="p-1.5 rounded-lg lesson-card-icon" style={{ backgroundColor: `hsla(var(--color-primary), 0.1)` }}>
+                                            <IconDisplay value={style.icon} fallback="📚" className="w-6 h-6" />
+                                        </div>
+                                        <h4 className="lesson-card-subject text-base font-bold text-[hsl(var(--color-text-primary))] truncate">{lesson.subject}</h4>
+                                    </div>
+                                    <div className="lesson-card-details grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs text-[hsl(var(--color-text-secondary))] items-center">
+                                        <TeacherIcon />
+                                        <span className="truncate">{lesson.teacher}</span>
+                                        
+                                        <TimeIcon />
+                                        <span>{lesson.time}</span>
+                                        
+                                        <LocationIcon />
+                                        <span className="truncate">{lesson.hall}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };
@@ -122,7 +128,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
     const todayLessons = userLessons.filter(l => l.day === today);
 
     return (
-        <div className="space-y-12 animate-fade-in-up">
+        <div className="space-y-12">
             <div>
                 <h1 className="text-4xl font-extrabold mb-1">مرحباً بك، {user.name.split(' ')[0]}!</h1>
                 <p className="text-lg text-[hsl(var(--color-text-secondary))]">إليك ملخص يومك وأهم الأحداث القادمة.</p>
@@ -141,7 +147,7 @@ const HomePage: React.FC<HomePageProps> = ({ user, lessons, onNavigate }) => {
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[hsl(var(--color-primary))]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     <span>الأسبوع القادم</span>
                 </h2>
-                <UpcomingWeekSchedule lessons={userLessons} iconSettings={iconSettings} />
+                <UpcomingDaysGrid lessons={userLessons} iconSettings={iconSettings} />
             </section>
         </div>
     );

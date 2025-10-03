@@ -1,6 +1,4 @@
 
-
-
 export type Theme = 'light' | 'dark' | 'pink' | 'cocktail' | 'ocean' | 'forest' | 'sunset' | 'matrix' | 'wave' | 'royal' | 'paper';
 
 export type Page = 
@@ -14,7 +12,8 @@ export type Page =
     | 'terms-of-service'
     | 'news'
     | 'app-control'
-    | 'icon-control';
+    | 'icon-control'
+    | 'educational-platform';
 
 export interface Center {
     id: string;
@@ -102,6 +101,6 @@ export interface IconSetting {
   id: number;
   key: string;
   value: string;
-  category: 'subject' | 'sidebar' | 'general';
+  category: 'subject' | 'sidebar' | 'general' | 'header';
   label: string;
 }

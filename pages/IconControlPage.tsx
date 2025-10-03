@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '../services/supabaseClient.ts';
 import { subjectStyles } from '../constants.ts';
 import type { IconSetting } from '../types.ts';
-import { HomeIcon, CalendarIcon, UsersIcon, NewsIcon, InformationCircleIcon, PrivacyIcon, TermsIcon, PhotoIcon, Cog6ToothIcon, SparklesIcon, PaintBrushIcon, ArrowLeftOnRectangleIcon } from '../components/common/Icons.tsx';
+import { HomeIcon, CalendarIcon, UsersIcon, NewsIcon, InformationCircleIcon, PrivacyIcon, TermsIcon, PhotoIcon, Cog6ToothIcon, SparklesIcon, PaintBrushIcon, ArrowLeftOnRectangleIcon, GlobeAltIcon, BookOpenIcon, BellIcon, UserCircleIcon } from '../components/common/Icons.tsx';
 import { useIcons } from '../contexts/IconContext.tsx';
 import IconDisplay from '../components/common/IconDisplay.tsx';
 
@@ -11,6 +12,7 @@ const REQUIRED_SIDEBAR_ICONS = [
     { key: 'nav_home', label: 'الرئيسية', fallback: <HomeIcon /> },
     { key: 'nav_full-schedule', label: 'جدول الحصص', fallback: <CalendarIcon /> },
     { key: 'nav_teachers', label: 'المدرسين', fallback: <UsersIcon /> },
+    { key: 'nav_educational-platform', label: 'المنصة التعليمية', fallback: <GlobeAltIcon /> },
     { key: 'nav_news', label: 'الأخبار', fallback: <NewsIcon /> },
     { key: 'nav_about', label: 'من نحن', fallback: <InformationCircleIcon /> },
     { key: 'nav_privacy-policy', label: 'سياسة الخصوصية', fallback: <PrivacyIcon /> },
@@ -20,6 +22,13 @@ const REQUIRED_SIDEBAR_ICONS = [
     { key: 'nav_icon-control', label: 'التحكم بالأيقونات', fallback: <SparklesIcon /> },
     { key: 'nav_themes', label: 'تغيير الثيم', fallback: <PaintBrushIcon /> },
     { key: 'nav_logout', label: 'تسجيل الخروج', fallback: <ArrowLeftOnRectangleIcon /> },
+];
+
+const REQUIRED_HEADER_ICONS = [
+    { key: 'header_logo', label: 'شعار الهيدر', fallback: <BookOpenIcon /> },
+    { key: 'header_notifications', label: 'أيقونة الإشعارات', fallback: <BellIcon /> },
+    { key: 'header_profile', label: 'أيقونة الملف الشخصي (القائمة)', fallback: <UserCircleIcon /> },
+    { key: 'header_logout', label: 'أيقونة تسجيل الخروج (القائمة)', fallback: <ArrowLeftOnRectangleIcon /> },
 ];
 
 const IconEditor: React.FC<{
@@ -84,7 +93,7 @@ const IconEditor: React.FC<{
 
 
 const IconControlPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'subjects' | 'sidebar'>('subjects');
+    const [activeTab, setActiveTab] = useState<'subjects' | 'sidebar' | 'header'>('subjects');
     const { iconSettings, loading: iconsLoading } = useIcons();
 
     const [localSettings, setLocalSettings] = useState<Record<string, string>>({});
@@ -116,7 +125,8 @@ const IconControlPage: React.FC = () => {
     const allIconDefinitions = useMemo(() => {
         return [
             ...subjectIconKeys.map(i => ({ ...i, category: 'subject' as const })),
-            ...REQUIRED_SIDEBAR_ICONS.map(i => ({ ...i, category: 'sidebar' as const }))
+            ...REQUIRED_SIDEBAR_ICONS.map(i => ({ ...i, category: 'sidebar' as const })),
+            ...REQUIRED_HEADER_ICONS.map(i => ({ ...i, category: 'header' as const }))
         ];
     }, [subjectIconKeys]);
 
@@ -170,8 +180,8 @@ const IconControlPage: React.FC = () => {
             return {
                 key,
                 value: value || '',
-                label: definition?.label || key.replace(/^(subject_|nav_)/, ''),
-                category: definition?.category || (key.startsWith('subject_') ? 'subject' : 'sidebar')
+                label: definition?.label || key.replace(/^(subject_|nav_|header_)/, ''),
+                category: definition?.category || (key.startsWith('subject_') ? 'subject' : (key.startsWith('header_') ? 'header' : 'sidebar'))
             };
         });
 
@@ -204,6 +214,7 @@ const IconControlPage: React.FC = () => {
             <div className="bg-[hsl(var(--color-surface))] rounded-xl shadow-lg p-2 border border-[hsl(var(--color-border))] flex flex-wrap items-center gap-2">
                 <button onClick={() => setActiveTab('subjects')} className={`flex-grow text-center py-2 px-4 font-semibold rounded-lg transition-all duration-300 ${activeTab === 'subjects' ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>أيقونات المواد</button>
                 <button onClick={() => setActiveTab('sidebar')} className={`flex-grow text-center py-2 px-4 font-semibold rounded-lg transition-all duration-300 ${activeTab === 'sidebar' ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>أيقونات القائمة</button>
+                <button onClick={() => setActiveTab('header')} className={`flex-grow text-center py-2 px-4 font-semibold rounded-lg transition-all duration-300 ${activeTab === 'header' ? 'bg-[hsl(var(--color-primary))] text-white shadow-md' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}>أيقونات الهيدر</button>
             </div>
 
             {iconsLoading ? (
@@ -222,6 +233,17 @@ const IconControlPage: React.FC = () => {
                         />
                     ))}
                      {activeTab === 'sidebar' && REQUIRED_SIDEBAR_ICONS.map(({ key, label, fallback }) => (
+                        <IconEditor 
+                            key={key}
+                            iconKey={key}
+                            label={label}
+                            currentValue={localSettings[key] || ''}
+                            fallbackIcon={fallback}
+                            onChange={handleSettingChange}
+                            onFileUpload={handleFileUpload}
+                        />
+                    ))}
+                    {activeTab === 'header' && REQUIRED_HEADER_ICONS.map(({ key, label, fallback }) => (
                         <IconEditor 
                             key={key}
                             iconKey={key}

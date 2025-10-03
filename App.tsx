@@ -15,9 +15,12 @@ import TermsOfServicePage from './pages/TermsOfServicePage.tsx';
 import NewsBoardPage from './pages/NewsBoardPage.tsx';
 import AppControlPage from './pages/AppControlPage.tsx';
 import IconControlPage from './pages/IconControlPage.tsx';
+import ExternalPlatformPage from './pages/ExternalPlatformPage.tsx';
 import { supabase } from './services/supabaseClient.ts';
 import { IconProvider } from './contexts/IconContext.tsx';
 import { ThemeModal } from './components/common/Card3D.tsx';
+import DigitalRain from './components/common/DigitalRain.tsx';
+import { BookOpenIcon } from './components/common/Icons.tsx';
 
 const App: React.FC = () => {
     const [theme, setTheme] = useState<Theme>(() => {
@@ -375,8 +378,10 @@ const App: React.FC = () => {
 
     if (loading && !currentUser) {
         return (
-            <div className="min-h-screen bg-[hsl(var(--color-background))] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[hsl(var(--color-primary))]"></div>
+            <div className="loader-container">
+                <div className="pulsing-logo">
+                    <BookOpenIcon />
+                </div>
             </div>
         );
     }
@@ -445,6 +450,8 @@ const App: React.FC = () => {
                 return currentUser.email === 'jytt0jewellery@gmail.com' ? <AppControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
             case 'icon-control':
                 return currentUser.email === 'jytt0jewellery@gmail.com' ? <IconControlPage /> : <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
+            case 'educational-platform':
+                return <ExternalPlatformPage />;
             default:
                 return <HomePage user={currentUser} lessons={lessons} onNavigate={setCurrentPage} />;
         }
@@ -452,6 +459,7 @@ const App: React.FC = () => {
 
     return (
         <IconProvider>
+            <DigitalRain />
             <div className="h-full bg-[hsl(var(--color-background))]">
                 <Header
                     user={currentUser}
@@ -459,6 +467,7 @@ const App: React.FC = () => {
                     onNavigate={(page) => { setCurrentPage(page); setSidebarOpen(false); }}
                     notifications={notifications}
                     onMarkAllAsRead={handleMarkAllAsRead}
+                    onLogout={handleLogout}
                 />
                 <Sidebar
                     isOpen={isSidebarOpen}
@@ -480,7 +489,7 @@ const App: React.FC = () => {
                 />
                 <div className={`flex flex-col h-full lg:pr-60`}>
                     <main className={`flex-grow pt-20 overflow-y-auto`}>
-                        <div className='p-4 md:p-6'>
+                         <div key={currentPage} className={`animate-page-fade-in ${currentPage === 'educational-platform' ? 'h-full' : 'p-4 md:p-6'}`}>
                             {renderPageContent()}
                         </div>
                     </main>

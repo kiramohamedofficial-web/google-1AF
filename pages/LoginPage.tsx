@@ -578,7 +578,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                         <p className="text-slate-400 mt-2 text-base font-medium">بوابتك نحو مستقبل تعليمي مشرق</p>
                     </div>
                     
-                    <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/20 border border-slate-700 overflow-hidden">
+                    <div className="bg-slate-900/75 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden login-form-glow">
                         <div className="flex">
                             <button onClick={() => { setActiveTab('login'); setIsForgotPassword(false); setError(''); setMessage(''); }} className={`flex-1 p-3 font-bold text-base transition-all duration-300 ${activeTab === 'login' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>تسجيل الدخول</button>
                             <button onClick={() => { setActiveTab('signup'); setSignupStep(1); setError(''); setMessage(''); }} className={`flex-1 p-3 font-bold text-base transition-all duration-300 ${activeTab === 'signup' ? 'bg-blue-600/80 text-white' : 'bg-transparent text-slate-400 hover:bg-white/5'}`}>إنشاء حساب</button>

@@ -63,7 +63,7 @@ const FormFileInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (pr
 
 // --- Reusable UI Components ---
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
-    <div className="bg-[hsl(var(--color-surface))] p-5 rounded-2xl flex items-center gap-4 border-l-4" style={{ borderColor: color }}>
+    <div className="bg-[hsl(var(--color-surface))] p-5 rounded-2xl flex items-center gap-4 border-l-4 stat-card-bg card-hover-lift" style={{ borderColor: color }}>
         <div className="text-white p-4 rounded-full" style={{ backgroundColor: color }}>{icon}</div>
         <div>
             <p className="text-3xl font-bold text-[hsl(var(--color-text-primary))]">{value}</p>
@@ -348,14 +348,14 @@ const DataTable: React.FC<{ title: string; data: any[]; columns: Record<string, 
             <div className="flex-grow">{children}</div>
             {onAdd && <button onClick={onAdd} className="bg-[hsl(var(--color-primary))] text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 hover:opacity-90 flex-shrink-0"><PlusIcon /> إضافة جديد</button>}
         </div>
-        <div className="overflow-x-auto"><table className="w-full text-right">
+        <div className="overflow-x-auto"><table className="w-full text-right admin-data-table">
             <thead className="bg-[hsl(var(--color-background))]"><tr className="border-b border-[hsl(var(--color-border))]">
                 {Object.values(columns).map(label => <th key={label} className="p-3 font-semibold uppercase text-sm text-[hsl(var(--color-text-secondary))]">{label}</th>)}
                 {(onEdit || onDelete) && <th className="p-3 font-semibold uppercase text-sm text-[hsl(var(--color-text-secondary))]">إجراءات</th>}
             </tr></thead>
-            <tbody className="divide-y divide-[hsl(var(--color-border))]">
+            <tbody>
                 {data.length > 0 ? data.map(item => (
-                    <tr key={item.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <tr key={item.id} className="border-b border-[hsl(var(--color-border))] last:border-b-0">
                         {Object.keys(columns).map(key => <td key={key} className="p-3 whitespace-nowrap">{displayTransform?.[key] ? displayTransform[key](item) : item[key]?.toString() || ''}</td>)}
                         {(onEdit || onDelete) && <td className="p-3 flex gap-2">
                             {onEdit && <button onClick={() => onEdit(item)} className="p-2 rounded-md hover:bg-blue-500/10 text-blue-500"><PencilIcon /></button>}

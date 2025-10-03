@@ -202,7 +202,21 @@
       .bubbles-container span:nth-child(10) { left: 75%; animation-duration: 39s; animation-delay: 7s; width: 35px; height: 35px; }
       .bubbles-container span:nth-child(11) { left: 55%; animation-duration: 34s; animation-delay: 1s; width: 55px; height: 55px; }
       .bubbles-container span:nth-child(12) { left: 42%; animation-duration: 46s; animation-delay: 3s; width: 15px; height: 15px; }
-
+      
+      #digital-rain-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        display: none;
+      }
+      html.matrix #digital-rain-canvas {
+        display: block;
+      }
+      
       html.ocean body {
         background: linear-gradient(120deg, hsl(210, 30%, 95%), hsl(190, 40%, 92%));
       }
@@ -308,14 +322,21 @@
         color: hsl(var(--color-text-primary));
         transition: background-color 0.5s ease, color 0.5s ease;
       }
-
+      
+      /* New refined fade-in animation */
       @keyframes fadeIn-up {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        0% {
+          opacity: 0;
+          transform: translateY(30px) scale(0.98);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
 
       .animate-fade-in-up {
-        animation: fadeIn-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        animation: fadeIn-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
       @keyframes fadeIn-down {
@@ -326,6 +347,51 @@
       .animate-fade-in-down {
         animation: fadeIn-down 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
       }
+      
+      /* Page transition animation */
+      @keyframes page-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .animate-page-fade-in {
+        animation: page-fade-in 0.4s ease-in-out;
+      }
+
+
+      /* New Card Hover Effect */
+      .card-hover-lift {
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      .card-hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      }
+      .dark .card-hover-lift:hover,
+      .cocktail .card-hover-lift:hover,
+      .wave .card-hover-lift:hover,
+      .royal .card-hover-lift:hover,
+      .matrix .card-hover-lift:hover {
+        box-shadow: 0 8px 25px -5px hsla(var(--color-primary), 0.25), 0 4px 10px -4px hsla(var(--color-primary), 0.15);
+      }
+
+      /* Glassmorphism for Header and Sidebar on specific themes */
+      .dark header .bg-\[hsl\(var\(--color-surface\)\)\],
+      .cocktail header .bg-\[hsl\(var\(--color-surface\)\)\],
+      .wave header .bg-\[hsl\(var\(--color-surface\)\)\],
+      .royal header .bg-\[hsl\(var\(--color-surface\)\)\],
+      .matrix header .bg-\[hsl\(var\(--color-surface\)\)\],
+      .dark .sidebar-container,
+      .cocktail .sidebar-container,
+      .wave .sidebar-container,
+      .royal .sidebar-container,
+      .matrix .sidebar-container {
+        background-color: hsla(var(--color-surface), 0.85) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-color: hsla(var(--color-border), 0.5) !important;
+      }
+
 
       .walking-cat-container {
         position: fixed;
@@ -363,6 +429,24 @@
           transform: translateY(-8px);
         }
       }
+      
+      /* --- GLOBAL SCROLLBAR --- */
+      ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+          background-color: hsla(var(--color-text-secondary), 0.1);
+      }
+      ::-webkit-scrollbar-thumb {
+          background-color: hsla(var(--color-text-secondary), 0.4);
+          border-radius: 8px;
+          border: 2px solid transparent;
+          background-clip: content-box;
+      }
+       ::-webkit-scrollbar-thumb:hover {
+          background-color: hsla(var(--color-text-secondary), 0.6);
+       }
       
       /* For ThemeSwitcher scrollbar */
       .theme-switcher-container::-webkit-scrollbar {
@@ -642,6 +726,64 @@
         animation-direction: reverse;
         opacity: 0.25;
       }
+      
+      /* --- ENHANCED LOADER --- */
+      .loader-container {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: hsl(var(--color-background));
+        z-index: 100;
+      }
+      
+      @keyframes pulsing-glow {
+        0%, 100% {
+          transform: scale(1);
+          filter: drop-shadow(0 0 10px hsla(var(--color-primary), 0.5));
+        }
+        50% {
+          transform: scale(1.1);
+          filter: drop-shadow(0 0 20px hsla(var(--color-primary), 0.8));
+        }
+      }
+      
+      .pulsing-logo {
+        color: hsl(var(--color-primary));
+        animation: pulsing-glow 2s ease-in-out infinite;
+      }
+      
+      /* --- LOGIN PAGE GLOW --- */
+      .login-form-glow {
+        animation: login-form-glow-anim 5s ease-in-out infinite alternate;
+      }
+      @keyframes login-form-glow-anim {
+        from {
+          box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.2), 0 0 10px -6px rgba(59, 130, 246, 0.2);
+        }
+        to {
+          box-shadow: 0 0 35px -5px rgba(59, 130, 246, 0.4), 0 0 15px -6px rgba(59, 130, 246, 0.4);
+        }
+      }
+      
+      /* --- ADMIN DASHBOARD ENHANCEMENTS --- */
+      .stat-card-bg {
+        background-image: radial-gradient(hsla(0, 0%, 100%, 0.05) 1px, transparent 1px);
+        background-size: 10px 10px;
+      }
+      
+      .admin-data-table th {
+        text-align: right;
+      }
+      
+      .admin-data-table tbody tr:nth-child(even) {
+        background-color: hsla(var(--color-text-primary), 0.03);
+      }
+      
+      .admin-data-table tbody tr:hover {
+        background-color: hsla(var(--color-text-primary), 0.06);
+      }
     </style>
 <script type="importmap">
 {
@@ -671,6 +813,7 @@
         <span></span>
         <span></span>
     </div>
+    <canvas id="digital-rain-canvas"></canvas>
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>

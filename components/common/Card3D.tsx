@@ -1,6 +1,8 @@
 
+
 import React from 'react';
 import { Theme } from '../../types.ts';
+import { CheckIcon } from './Icons.tsx';
 
 interface ThemeModalProps {
     isOpen: boolean;
@@ -55,6 +57,11 @@ export const ThemeModal: React.FC<ThemeModalProps> = ({ isOpen, onClose, current
                              aria-label={`Switch to ${theme.label} theme`}
                         >
                             <div className={`absolute inset-0 ${theme.bg} rounded-xl opacity-80`}></div>
+                             {currentTheme === theme.name && (
+                                <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+                                    <CheckIcon className="w-10 h-10 text-white drop-shadow-lg" />
+                                </div>
+                            )}
                             <span className="relative text-3xl sm:text-4xl z-10" aria-hidden="true">{theme.icon}</span>
                             <span className={`relative z-10 font-bold text-sm ${['dark', 'matrix', 'royal', 'wave', 'cocktail', 'sunset', 'ocean', 'forest'].includes(theme.name) ? 'text-white drop-shadow-md' : 'text-slate-800'}`}>{theme.label}</span>
                         </button>

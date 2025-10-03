@@ -1,13 +1,13 @@
 
-
-import React from 'react';
+import React, { useState } from 'react';
 import { User, Page } from '../../types.ts';
 import { 
     HomeIcon, CalendarIcon, UsersIcon, 
     AcademicCapIcon, UserCircleIcon, InformationCircleIcon, 
     Cog6ToothIcon, ArrowLeftOnRectangleIcon, 
     PrivacyIcon, TermsIcon, BookOpenIcon,
-    NewsIcon, PhotoIcon, SparklesIcon, PaintBrushIcon
+    NewsIcon, PhotoIcon, SparklesIcon, PaintBrushIcon,
+    GlobeAltIcon, SearchIcon
 } from '../common/Icons.tsx';
 import { useIcons } from '../../contexts/IconContext.tsx';
 import IconDisplay from '../common/IconDisplay.tsx';
@@ -44,46 +44,67 @@ const NavSection: React.FC<{title: string, children: React.ReactNode}> = ({title
     </div>
 )
 
+type NavLinkItem = { page: Page; label: string; icon: React.ReactNode; key: string; };
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, onNavigate, onLogout, onOpenThemeModal }) => {
     const { iconSettings } = useIcons();
+    const [searchQuery, setSearchQuery] = useState('');
     
     const handleNavigation = (page: Page) => {
         onNavigate(page);
         onClose();
     };
 
-    const mainLinks = [
+    const mainLinks: NavLinkItem[] = [
         { page: 'home', label: 'الرئيسية', icon: <HomeIcon />, key: 'nav_home' },
         { page: 'full-schedule', label: 'جدول الحصص', icon: <CalendarIcon />, key: 'nav_full-schedule' },
     ];
     
-    const learnLinks = [
+    const platformLink: NavLinkItem = { page: 'educational-platform', label: 'المنصة التعليمية', icon: <GlobeAltIcon />, key: 'nav_educational-platform' };
+
+    const learnLinks: NavLinkItem[] = [
         { page: 'teachers', label: 'المدرسين', icon: <UsersIcon />, key: 'nav_teachers' },
     ];
 
-    const centerLinks = [
+    const centerLinks: NavLinkItem[] = [
         { page: 'news', label: 'الأخبار', icon: <NewsIcon />, key: 'nav_news' },
     ];
     
-    const helpLinks = [
+    const helpLinks: NavLinkItem[] = [
         { page: 'about', label: 'من نحن', icon: <InformationCircleIcon />, key: 'nav_about' },
         { page: 'privacy-policy', label: 'سياسة الخصوصية', icon: <PrivacyIcon />, key: 'nav_privacy-policy' },
         { page: 'terms-of-service', label: 'شروط الاستخدام', icon: <TermsIcon />, key: 'nav_terms-of-service' },
     ];
     
-    const adminDashboardLink = { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon />, key: 'nav_admin-dashboard' };
-    const appControlLink = { page: 'app-control', label: 'صور البروفايل', icon: <PhotoIcon />, key: 'nav_app-control' };
-    const iconControlLink = { page: 'icon-control', label: 'التحكم بالأيقونات', icon: <SparklesIcon />, key: 'nav_icon-control' };
-
-    // FIX: Replaced JSX.Element with React.ReactNode to resolve "Cannot find namespace 'JSX'" error.
-    const renderNavLink = (link: { page: string, label: string, icon: React.ReactNode, key: string }) => {
+    const adminDashboardLink: NavLinkItem = { page: 'admin-dashboard', label: 'لوحة التحكم', icon: <Cog6ToothIcon />, key: 'nav_admin-dashboard' };
+    const appControlLink: NavLinkItem = { page: 'app-control', label: 'صور البروفايل', icon: <PhotoIcon />, key: 'nav_app-control' };
+    const iconControlLink: NavLinkItem = { page: 'icon-control', label: 'التحكم بالأيقونات', icon: <SparklesIcon />, key: 'nav_icon-control' };
+    
+    const filterLinks = (links: NavLinkItem[]) => {
+        if (!searchQuery) return links;
+        return links.filter(link => 
+            link.label.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    };
+    
+    const renderNavLink = (link: NavLinkItem) => {
         const icon = <IconDisplay value={iconSettings[link.key]} fallback={link.icon} className="w-6 h-6" />;
         return <NavLink key={link.page} icon={icon} label={link.label} onClick={() => handleNavigation(link.page as Page)} isActive={currentPage === link.page} />;
     };
+    
+    const renderNavSection = (title: string, links: NavLinkItem[]) => {
+        const filtered = filterLinks(links);
+        if (filtered.length === 0) return null;
+        return (
+            <NavSection title={title}>
+                {filtered.map(renderNavLink)}
+            </NavSection>
+        );
+    }
 
     return (
         <>
-            <div className={`fixed top-0 right-0 h-full w-60 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))] rounded-l-2xl overflow-hidden`}>
+            <div className={`sidebar-container fixed top-0 right-0 h-full w-60 bg-[hsl(var(--color-surface))] shadow-2xl z-50 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 border-l border-[hsl(var(--color-border))] rounded-l-2xl overflow-hidden`}>
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-[hsl(var(--color-border))] flex flex-col items-center h-16 justify-center">
                          <div className="flex items-center gap-2 text-lg font-bold text-[hsl(var(--color-primary))]">
@@ -112,31 +133,36 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, user, currentPage, onClose, o
                             <span className="font-medium">الملف الشخصي</span>
                         </button>
                     </div>
+                    
+                     <div className="p-3 border-b border-[hsl(var(--color-border))]">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="ابحث في القائمة..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-[hsl(var(--color-background))] border border-[hsl(var(--color-border))] rounded-full py-2 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[hsl(var(--color-surface))] focus:ring-[hsl(var(--color-primary))]"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[hsl(var(--color-text-secondary))]">
+                                <SearchIcon className="w-5 h-5" />
+                            </div>
+                        </div>
+                    </div>
 
                     <nav className="flex-grow p-3 overflow-y-auto">
-                        <NavSection title="الرئيسية">
-                             {mainLinks.map(renderNavLink)}
-                        </NavSection>
-                        <NavSection title="تعلم">
-                             {learnLinks.map(renderNavLink)}
-                        </NavSection>
-                        <NavSection title="المركز">
-                             {centerLinks.map(renderNavLink)}
-                        </NavSection>
+                        {renderNavSection("الرئيسية", mainLinks)}
+                        {renderNavSection("المنصه التعليميه", [platformLink])}
+                        {renderNavSection("تعلم", learnLinks)}
+                        {renderNavSection("المركز", centerLinks)}
+                        
                          {user.role === 'admin' && (
-                             <NavSection title="تحكم التطبيق">
-                                {renderNavLink(adminDashboardLink)}
-                                {user.email === 'jytt0jewellery@gmail.com' && (
-                                    <>
-                                        {renderNavLink(appControlLink)}
-                                        {renderNavLink(iconControlLink)}
-                                    </>
-                                )}
-                            </NavSection>
+                             renderNavSection("تحكم التطبيق", 
+                                user.email === 'jytt0jewellery@gmail.com' 
+                                ? [adminDashboardLink, appControlLink, iconControlLink]
+                                : [adminDashboardLink]
+                             )
                         )}
-                        <NavSection title="مساعدة">
-                             {helpLinks.map(renderNavLink)}
-                        </NavSection>
+                        {renderNavSection("مساعدة", helpLinks)}
                     </nav>
 
                     <div className="p-2 border-t border-[hsl(var(--color-border))]">

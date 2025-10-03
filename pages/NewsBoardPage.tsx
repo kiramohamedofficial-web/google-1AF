@@ -15,7 +15,7 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
         : post.content;
 
     return (
-        <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden border border-[hsl(var(--color-border))] transition-all">
+        <div className="bg-[hsl(var(--color-surface))] rounded-2xl shadow-lg overflow-hidden border border-[hsl(var(--color-border))] transition-all card-hover-lift">
             {post.imageUrls && post.imageUrls.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                     {post.imageUrls.map((url, index) => (
